@@ -1,8 +1,12 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { WelcomeSection, QuickActions } from "@/components/features/dashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { getSupabaseClient } from "@/lib/supabase/client";
 import {
   ArrowRight,
   Clock,
@@ -105,10 +109,26 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function DashboardPage() {
+  const [userName, setUserName] = useState("there");
+  const supabase = getSupabaseClient();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Get first name from full name or email
+        const fullName = user.user_metadata?.full_name || user.email?.split("@")[0] || "there";
+        const firstName = fullName.split(" ")[0];
+        setUserName(firstName);
+      }
+    };
+    getUser();
+  }, [supabase.auth]);
+
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <WelcomeSection userName="Sarah" stats={mockStats} />
+      <WelcomeSection userName={userName} stats={mockStats} />
 
       {/* Quick Actions */}
       <section>

@@ -3,21 +3,38 @@
  *
  * Streaming chat endpoint for practice sessions with AI personas.
  * Uses Vercel AI SDK for real-time streaming responses.
+ * Includes credit checking for usage limiting.
  */
 
-import { StreamingTextResponse, streamText } from "ai";
+import { streamText } from "ai";
 import { getLanguageModel } from "@/lib/ai/providers";
 import {
   getPersonaById,
   generatePracticeSystemPrompt,
   PRACTICE_PERSONAS,
 } from "@/lib/ai/prompts/practice-personas";
+import { checkCredits, deductCredits } from "@/lib/credits";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
+    // Check credits first
+    const authHeader = req.headers.get("authorization");
+    const creditCheck = await checkCredits(authHeader, 1);
+
+    if (!creditCheck.hasCredits) {
+      return new Response(
+        JSON.stringify({
+          error: creditCheck.error || "Insufficient credits",
+          credits: creditCheck.credits,
+          code: "INSUFFICIENT_CREDITS",
+        }),
+        { status: 402, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     const {
       messages,
       personaId,
@@ -54,6 +71,20 @@ export async function POST(req: Request) {
     // Get the appropriate model
     const model = getLanguageModel();
 
+    // Deduct credit before making the AI call
+    if (creditCheck.userId) {
+      const deductResult = await deductCredits(creditCheck.userId, 1);
+      if (!deductResult.success) {
+        return new Response(
+          JSON.stringify({
+            error: "Failed to deduct credits",
+            code: "CREDIT_DEDUCT_FAILED",
+          }),
+          { status: 500, headers: { "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     // Stream the response
     const result = await streamText({
       model,
@@ -64,7 +95,7 @@ export async function POST(req: Request) {
     });
 
     // Return the streaming response (compatible with useChat hook)
-    return result.toAIStreamResponse();
+    return result.toDataStreamResponse();
   } catch (error) {
     console.error("Chat API Error:", error);
     return new Response(

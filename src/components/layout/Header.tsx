@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Bell, Sparkles, ChevronDown } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Search, Bell, Sparkles, ChevronDown, LogOut, Settings, User, Keyboard, Coins } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useCredits } from "@/hooks/useCredits";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +17,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { getSupabaseClient } from "@/lib/supabase/client";
+import type { User as SupabaseUser, Session, AuthChangeEvent } from "@supabase/supabase-js";
 
 interface HeaderProps {
   user?: {
@@ -26,32 +31,75 @@ interface HeaderProps {
 
 export function Header({ user }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [profileName, setProfileName] = useState("Dhruv");
-  const [profileEmail, setProfileEmail] = useState("aiwithdhruv@gmail.com");
+  const [profileName, setProfileName] = useState("Demo User");
+  const [profileEmail, setProfileEmail] = useState("demo@example.com");
+  const [profileAvatar, setProfileAvatar] = useState<string | undefined>();
+  const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
+  const router = useRouter();
+  const supabase = getSupabaseClient();
+  const { credits, isLoading: creditsLoading, hasCredits } = useCredits();
 
-  // Load profile from localStorage on mount
+  // Get user from Supabase and localStorage
   useEffect(() => {
-    const savedName = localStorage.getItem("profile_name");
-    const savedEmail = localStorage.getItem("profile_email");
-    if (savedName) setProfileName(savedName);
-    if (savedEmail) setProfileEmail(savedEmail);
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setSupabaseUser(user);
 
-    // Listen for storage changes (when profile is updated in settings)
+      if (user) {
+        // Use Supabase user data
+        setProfileName(user.user_metadata?.full_name || user.email?.split("@")[0] || "User");
+        setProfileEmail(user.email || "");
+        setProfileAvatar(user.user_metadata?.avatar_url);
+      } else {
+        // Fall back to localStorage for demo mode
+        const savedName = localStorage.getItem("profile_name");
+        const savedEmail = localStorage.getItem("profile_email");
+        if (savedName) setProfileName(savedName);
+        if (savedEmail) setProfileEmail(savedEmail);
+      }
+    };
+
+    getUser();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
+      const user = session?.user;
+      setSupabaseUser(user || null);
+      if (user) {
+        setProfileName(user.user_metadata?.full_name || user.email?.split("@")[0] || "User");
+        setProfileEmail(user.email || "");
+        setProfileAvatar(user.user_metadata?.avatar_url);
+      }
+    });
+
+    // Listen for localStorage changes (for demo mode)
     const handleStorageChange = () => {
-      const name = localStorage.getItem("profile_name");
-      const email = localStorage.getItem("profile_email");
-      if (name) setProfileName(name);
-      if (email) setProfileEmail(email);
+      if (!supabaseUser) {
+        const name = localStorage.getItem("profile_name");
+        const email = localStorage.getItem("profile_email");
+        if (name) setProfileName(name);
+        if (email) setProfileEmail(email);
+      }
     };
 
     window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [supabase.auth, supabaseUser]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  };
 
   const defaultUser = {
     name: profileName,
     email: profileEmail,
-    avatar: undefined as string | undefined,
+    avatar: profileAvatar,
     role: "sales_rep" as const,
   };
 
@@ -62,7 +110,8 @@ export function Header({ user }: HeaderProps) {
       .split(" ")
       .map((n) => n[0])
       .join("")
-      .toUpperCase();
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   const getRoleBadge = (role: string) => {
@@ -95,11 +144,26 @@ export function Header({ user }: HeaderProps) {
 
         {/* Right Side Actions */}
         <div className="flex items-center space-x-4">
+          {/* Credits Badge */}
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${
+            hasCredits
+              ? "bg-successgreen/10 text-successgreen"
+              : "bg-errorred/10 text-errorred"
+          }`}>
+            <Coins className="h-4 w-4" />
+            <span className="text-sm font-medium">
+              {creditsLoading ? "..." : credits}
+            </span>
+            <span className="text-xs opacity-70 hidden sm:inline">credits</span>
+          </div>
+
           {/* AI Coach Button */}
-          <Button className="bg-neonblue hover:bg-electricblue text-white gap-2 glow-blue">
-            <Sparkles className="h-4 w-4" />
-            <span className="hidden sm:inline">Ask AI Coach</span>
-          </Button>
+          <Link href="/dashboard/coach">
+            <Button className="bg-neonblue hover:bg-electricblue text-white gap-2 glow-blue">
+              <Sparkles className="h-4 w-4" />
+              <span className="hidden sm:inline">Ask AI Coach</span>
+            </Button>
+          </Link>
 
           {/* Notifications */}
           <DropdownMenu>
@@ -179,17 +243,28 @@ export function Header({ user }: HeaderProps) {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-gunmetal" />
+              <Link href="/settings">
+                <DropdownMenuItem className="text-silver hover:text-platinum hover:bg-onyx focus:bg-onyx focus:text-platinum cursor-pointer">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Profile Settings
+                </DropdownMenuItem>
+              </Link>
+              <Link href="/dashboard/analytics">
+                <DropdownMenuItem className="text-silver hover:text-platinum hover:bg-onyx focus:bg-onyx focus:text-platinum cursor-pointer">
+                  <User className="h-4 w-4 mr-2" />
+                  My Performance
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuItem className="text-silver hover:text-platinum hover:bg-onyx focus:bg-onyx focus:text-platinum cursor-pointer">
-                Profile Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-silver hover:text-platinum hover:bg-onyx focus:bg-onyx focus:text-platinum cursor-pointer">
-                My Performance
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-silver hover:text-platinum hover:bg-onyx focus:bg-onyx focus:text-platinum cursor-pointer">
+                <Keyboard className="h-4 w-4 mr-2" />
                 Keyboard Shortcuts
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-gunmetal" />
-              <DropdownMenuItem className="text-errorred hover:text-errorred hover:bg-errorred/10 focus:bg-errorred/10 focus:text-errorred cursor-pointer">
+              <DropdownMenuItem
+                onClick={handleSignOut}
+                className="text-errorred hover:text-errorred hover:bg-errorred/10 focus:bg-errorred/10 focus:text-errorred cursor-pointer"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </DropdownMenuItem>
             </DropdownMenuContent>

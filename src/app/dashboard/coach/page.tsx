@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getAuthToken } from "@/hooks/useCredits";
+import { useCredits } from "@/hooks/useCredits";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -162,6 +164,9 @@ export default function CoachPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Credits hook for refreshing after use
+  const { refetch: refetchCredits } = useCredits();
+
   // Load saved model preference
   useEffect(() => {
     const saved = localStorage.getItem("ai_model");
@@ -224,9 +229,16 @@ export default function CoachPage() {
     setError(null);
 
     try {
+      // Get auth token for credit deduction
+      const token = await getAuthToken();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const res = await fetch("/api/ai/coach", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           type: "objection",
           message: objection,
@@ -237,6 +249,9 @@ export default function CoachPage() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
+        if (res.status === 402) {
+          throw new Error("Out of credits! Request more credits to continue.");
+        }
         throw new Error(errorData.details || errorData.error || `Request failed with status ${res.status}`);
       }
 
@@ -251,6 +266,9 @@ export default function CoachPage() {
           setResponse((prev) => prev + text);
         }
       }
+
+      // Refetch credits after successful call
+      refetchCredits();
     } catch (err) {
       console.error("Error:", err);
       const errorMessage = err instanceof Error ? err.message : "Unknown error";

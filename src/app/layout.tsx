@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -31,7 +32,9 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased bg-obsidian text-platinum min-h-screen`}
         suppressHydrationWarning
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

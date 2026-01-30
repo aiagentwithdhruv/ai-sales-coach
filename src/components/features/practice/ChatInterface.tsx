@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { ChatMessage } from "./ChatMessage";
 import { VoiceControls, VoiceModeToggle, PermissionRequest } from "./VoiceControls";
 import { useAudioPractice, TTSProvider } from "@/hooks/useAudioPractice";
+import { useCredits, getAuthToken } from "@/hooks/useCredits";
+import { OutOfCredits } from "@/components/features/credits/OutOfCredits";
 import { Send, RotateCcw, Pause, Play, Volume2 } from "lucide-react";
 import {
   DropdownMenu,
@@ -40,11 +42,25 @@ export function ChatInterface({
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Credits state
+  const { credits, totalUsed, hasCredits, refetch: refetchCredits, isLoading: creditsLoading } = useCredits();
+  const [creditsError, setCreditsError] = useState(false);
+
   // Voice mode state
   const [voiceMode, setVoiceMode] = useState(false);
   const [speakerEnabled, setSpeakerEnabled] = useState(true);
   const [permissionChecked, setPermissionChecked] = useState(false);
   const [ttsProvider, setTtsProvider] = useState<TTSProvider>("openai");
+
+  // Custom fetch with auth token
+  const customFetch = useCallback(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const token = await getAuthToken();
+    const headers = new Headers(init?.headers);
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+    return fetch(input, { ...init, headers });
+  }, []);
 
   const {
     messages,
@@ -62,6 +78,7 @@ export function ChatInterface({
       personaId: persona.id,
       scenario,
     },
+    fetch: customFetch,
     initialMessages: [
       {
         id: "welcome",
@@ -70,9 +87,18 @@ export function ChatInterface({
       },
     ],
     onFinish: async (message) => {
+      // Refetch credits after each message
+      refetchCredits();
       // Play TTS for AI response in voice mode
       if (voiceMode && speakerEnabled && message.role === "assistant") {
         await playAudio(message.content, persona.id);
+      }
+    },
+    onError: (error) => {
+      // Check for insufficient credits error
+      if (error.message?.includes("402") || error.message?.includes("INSUFFICIENT_CREDITS")) {
+        setCreditsError(true);
+        refetchCredits();
       }
     },
   });
@@ -324,11 +350,22 @@ export function ChatInterface({
             isLoading
           />
         )}
+        {/* Out of Credits Message */}
+        {(creditsError || (!hasCredits && !creditsLoading)) && (
+          <div className="py-4">
+            <OutOfCredits credits={credits} totalUsed={totalUsed} />
+          </div>
+        )}
       </CardContent>
 
       {/* Input Area */}
       <div className="border-t border-gunmetal p-4 flex-shrink-0">
-        {voiceMode ? (
+        {/* Disabled when out of credits */}
+        {(creditsError || (!hasCredits && !creditsLoading)) ? (
+          <div className="text-center text-mist py-2">
+            <p className="text-sm">You&apos;ve run out of credits. Request more credits to continue practicing.</p>
+          </div>
+        ) : voiceMode ? (
           // Voice Mode Input
           <>
             {!hasPermission && permissionChecked ? (

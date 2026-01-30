@@ -2,6 +2,7 @@
  * AI Coach API Route
  *
  * Handles objection handling requests with model selection and attachments.
+ * Includes credit checking for usage limiting.
  */
 
 import { streamText } from "ai";
@@ -11,8 +12,9 @@ import {
   QUICK_COACH_PROMPT,
   generateObjectionPrompt,
 } from "@/lib/ai/prompts/coaching";
+import { checkCredits, deductCredits } from "@/lib/credits";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 export const maxDuration = 30;
 
 // Attachment types
@@ -68,6 +70,21 @@ async function processAttachments(attachments: Attachment[]): Promise<string> {
 
 export async function POST(req: Request) {
   try {
+    // Check credits first
+    const authHeader = req.headers.get("authorization");
+    const creditCheck = await checkCredits(authHeader, 1);
+
+    if (!creditCheck.hasCredits) {
+      return new Response(
+        JSON.stringify({
+          error: creditCheck.error || "Insufficient credits",
+          credits: creditCheck.credits,
+          code: "INSUFFICIENT_CREDITS",
+        }),
+        { status: 402, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     const body = await req.json();
     const {
       type,
@@ -127,6 +144,20 @@ export async function POST(req: Request) {
     // Add attachment context to user message
     if (attachmentContext) {
       userMessage = `${userMessage}\n\n--- COMPANY/CONTEXT INFORMATION ---${attachmentContext}\n\nUse this context to provide more relevant and specific objection handling advice.`;
+    }
+
+    // Deduct credit before making the AI call
+    if (creditCheck.userId) {
+      const deductResult = await deductCredits(creditCheck.userId, 1);
+      if (!deductResult.success) {
+        return new Response(
+          JSON.stringify({
+            error: "Failed to deduct credits",
+            code: "CREDIT_DEDUCT_FAILED",
+          }),
+          { status: 500, headers: { "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // Get the model - smart selection based on model ID format
