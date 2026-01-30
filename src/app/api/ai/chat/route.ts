@@ -1,0 +1,97 @@
+/**
+ * Practice Chat API Route
+ *
+ * Streaming chat endpoint for practice sessions with AI personas.
+ * Uses Vercel AI SDK for real-time streaming responses.
+ */
+
+import { StreamingTextResponse, streamText } from "ai";
+import { getLanguageModel } from "@/lib/ai/providers";
+import {
+  getPersonaById,
+  generatePracticeSystemPrompt,
+  PRACTICE_PERSONAS,
+} from "@/lib/ai/prompts/practice-personas";
+
+export const runtime = "edge";
+export const maxDuration = 30;
+
+export async function POST(req: Request) {
+  try {
+    const {
+      messages,
+      personaId,
+      scenario,
+    }: {
+      messages: Array<{ role: "user" | "assistant"; content: string }>;
+      personaId?: string;
+      scenario?: string;
+    } = await req.json();
+
+    // Validate messages
+    if (!messages || !Array.isArray(messages)) {
+      return new Response(
+        JSON.stringify({ error: "Messages array is required" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Get persona (default to first one if not specified)
+    const persona = personaId
+      ? getPersonaById(personaId)
+      : PRACTICE_PERSONAS[0];
+
+    if (!persona) {
+      return new Response(
+        JSON.stringify({ error: "Invalid persona ID" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Generate system prompt based on persona
+    const systemPrompt = generatePracticeSystemPrompt(persona, scenario);
+
+    // Get the appropriate model
+    const model = getLanguageModel();
+
+    // Stream the response
+    const result = await streamText({
+      model,
+      system: systemPrompt,
+      messages,
+      temperature: 0.8,
+      maxTokens: 500,
+    });
+
+    // Return the streaming response (compatible with useChat hook)
+    return result.toAIStreamResponse();
+  } catch (error) {
+    console.error("Chat API Error:", error);
+    return new Response(
+      JSON.stringify({
+        error: "Failed to process chat request",
+        details: error instanceof Error ? error.message : "Unknown error",
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}
+
+/**
+ * GET endpoint to list available personas
+ */
+export async function GET() {
+  const personas = PRACTICE_PERSONAS.map((p) => ({
+    id: p.id,
+    name: p.name,
+    title: p.title,
+    company: p.company,
+    personality: p.personality,
+    difficulty: p.difficulty,
+    industry: p.industry,
+  }));
+
+  return new Response(JSON.stringify({ personas }), {
+    headers: { "Content-Type": "application/json" },
+  });
+}
