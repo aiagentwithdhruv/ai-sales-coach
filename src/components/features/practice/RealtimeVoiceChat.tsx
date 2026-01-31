@@ -14,6 +14,9 @@ import {
   Volume2,
   RotateCcw,
   Loader2,
+  FileText,
+  Globe,
+  Image as ImageIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -35,24 +38,57 @@ interface Persona {
 interface RealtimeVoiceChatProps {
   persona: Persona;
   scenario?: string;
+  attachments?: {
+    type: "pdf" | "image" | "url";
+    name: string;
+    content?: string;
+    url?: string;
+  }[];
+  trainingFocus?: string;
+  scriptText?: string;
   onEndSession?: () => void;
 }
 
 export function RealtimeVoiceChat({
   persona,
   scenario,
+  attachments = [],
+  trainingFocus,
+  scriptText,
   onEndSession,
 }: RealtimeVoiceChatProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentUserText, setCurrentUserText] = useState("");
   const [currentAIText, setCurrentAIText] = useState("");
+  const [coachMode, setCoachMode] = useState(false);
   const messageIdRef = useRef(0);
 
-  // Build system prompt for persona
-  const systemPrompt = `${persona.systemPrompt || `You are ${persona.name}, ${persona.title} at ${persona.company}.`}
+  const attachmentList =
+    attachments.length > 0
+      ? attachments.map((att) => `${att.name} (${att.type})`).join(", ")
+      : "None";
+
+  const coachPrompt = `You are a real-time sales coach. The user is the sales rep practicing a live call.
+Use the provided script to guide them and give short, actionable feedback after each rep utterance.
+Keep responses very concise (1-2 sentences), direct, and focused on what to say next.
+Do NOT role-play as the prospect. Do NOT ask the user to upload anything.`;
+
+  // Build system prompt
+  const systemPrompt = coachMode && scriptText
+    ? `${coachPrompt}
+
+SCRIPT:
+${scriptText}
 
 ${scenario ? `CURRENT SCENARIO: ${scenario}` : ""}
+${trainingFocus ? `TRAINING FOCUS: ${trainingFocus}` : ""}
+MATERIALS PROVIDED: ${attachmentList}`
+    : `${persona.systemPrompt || `You are ${persona.name}, ${persona.title} at ${persona.company}.`}
+
+${scenario ? `CURRENT SCENARIO: ${scenario}` : ""}
+${trainingFocus ? `TRAINING FOCUS: ${trainingFocus}` : ""}
+MATERIALS PROVIDED: ${attachmentList}
 
 IMPORTANT: You are in a live voice conversation. Keep responses SHORT (1-3 sentences) and conversational. Wait for the person to finish speaking before responding. Be natural and react to what they say.`;
 
@@ -69,7 +105,9 @@ IMPORTANT: You are in a live voice conversation. Keep responses SHORT (1-3 sente
     error,
   } = useRealtimeVoice({
     systemPrompt,
-    voice: "nova",
+    voice: "alloy",
+    trainingFocus,
+    attachments,
     onTranscript: (text, isFinal) => {
       if (isFinal && text.trim()) {
         // Add user message
@@ -107,6 +145,12 @@ IMPORTANT: You are in a live voice conversation. Keep responses SHORT (1-3 sente
   useEffect(() => {
     setCurrentAIText(aiTranscript);
   }, [aiTranscript]);
+
+  useEffect(() => {
+    if (!scriptText) {
+      setCoachMode(false);
+    }
+  }, [scriptText]);
 
   // Auto-scroll
   useEffect(() => {
@@ -197,6 +241,21 @@ IMPORTANT: You are in a live voice conversation. Keep responses SHORT (1-3 sente
         ref={scrollRef}
         className="flex-1 overflow-y-auto p-4 space-y-3"
       >
+        {attachments.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {attachments.map((att, idx) => (
+              <div
+                key={`${att.type}-${att.name}-${idx}`}
+                className="flex items-center gap-2 px-3 py-1.5 bg-onyx border border-gunmetal rounded-lg text-xs"
+              >
+                {att.type === "pdf" && <FileText className="h-3 w-3 text-red-400" />}
+                {att.type === "image" && <ImageIcon className="h-3 w-3 text-blue-400" />}
+                {att.type === "url" && <Globe className="h-3 w-3 text-green-400" />}
+                <span className="text-silver truncate max-w-[180px]">{att.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
         {/* Initial message */}
         {messages.length === 0 && !isConnected && (
           <div className="flex flex-col items-center justify-center h-full text-center">
@@ -245,19 +304,41 @@ IMPORTANT: You are in a live voice conversation. Keep responses SHORT (1-3 sente
       {/* Call Controls */}
       <div className="border-t border-gunmetal p-4 flex-shrink-0">
         {error && (
-          <p className="text-xs text-errorred mb-3 text-center">{error}</p>
+          <div className="mb-3 p-3 bg-errorred/10 border border-errorred/30 rounded-lg">
+            <p className="text-xs text-errorred text-center font-medium">{error}</p>
+            {error.includes('Claude API key') && (
+              <p className="text-[10px] text-mist text-center mt-1">
+                Get your OpenAI API key at: https://platform.openai.com/api-keys
+              </p>
+            )}
+          </div>
         )}
 
         <div className="flex items-center justify-center gap-4">
           {!isConnected ? (
             // Start call button
-            <Button
-              onClick={handleStartCall}
-              className="bg-automationgreen hover:bg-automationgreen/80 text-white gap-2 px-8 py-6 text-lg"
-            >
-              <Phone className="h-5 w-5" />
-              Start Call
-            </Button>
+            <div className="flex flex-col items-center gap-3">
+              {scriptText && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCoachMode(!coachMode)}
+                  className={cn(
+                    "border-gunmetal text-silver hover:text-platinum",
+                    coachMode && "bg-neonblue/10 border-neonblue text-neonblue"
+                  )}
+                >
+                  {coachMode ? "Script Coaching: ON" : "Enable Script Coaching"}
+                </Button>
+              )}
+              <Button
+                onClick={handleStartCall}
+                className="bg-automationgreen hover:bg-automationgreen/80 text-white gap-2 px-8 py-6 text-lg"
+              >
+                <Phone className="h-5 w-5" />
+                {coachMode ? "Start Live Coaching" : "Start Call"}
+              </Button>
+            </div>
           ) : (
             // In-call controls
             <>

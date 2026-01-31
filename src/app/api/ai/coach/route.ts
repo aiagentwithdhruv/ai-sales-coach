@@ -13,60 +13,11 @@ import {
   generateObjectionPrompt,
 } from "@/lib/ai/prompts/coaching";
 import { checkCredits, deductCredits } from "@/lib/credits";
+import { processAttachmentsForContext, type Attachment } from "@/lib/ai/attachments";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-// Attachment types
-interface Attachment {
-  type: "pdf" | "image" | "url";
-  name: string;
-  content?: string; // Base64 for files
-  url?: string; // For website URLs
-}
-
-// Fetch website content (simple text extraction)
-async function fetchWebsiteContent(url: string): Promise<string> {
-  try {
-    const response = await fetch(url, {
-      headers: { "User-Agent": "AI Sales Coach Bot" },
-    });
-    if (!response.ok) return `[Could not fetch ${url}]`;
-
-    const html = await response.text();
-    // Simple HTML to text conversion
-    const text = html
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-      .slice(0, 3000); // Limit context size
-
-    return text;
-  } catch {
-    return `[Could not fetch ${url}]`;
-  }
-}
-
-// Process attachments into context string
-async function processAttachments(attachments: Attachment[]): Promise<string> {
-  const contextParts: string[] = [];
-
-  for (const att of attachments) {
-    if (att.type === "url" && att.url) {
-      const content = await fetchWebsiteContent(att.url);
-      contextParts.push(`\n--- Website Content (${att.name}) ---\n${content}`);
-    } else if (att.type === "pdf" && att.content) {
-      // For PDF, we'll note it's attached (full PDF parsing would need server-side library)
-      contextParts.push(`\n--- PDF Document: ${att.name} ---\n[PDF content attached - using document context]`);
-    } else if (att.type === "image" && att.content) {
-      contextParts.push(`\n--- Image: ${att.name} ---\n[Image attached for reference]`);
-    }
-  }
-
-  return contextParts.join("\n");
-}
 
 export async function POST(req: Request) {
   try {
@@ -116,7 +67,7 @@ export async function POST(req: Request) {
     // Process attachments if any
     let attachmentContext = "";
     if (attachments && attachments.length > 0) {
-      attachmentContext = await processAttachments(attachments);
+      attachmentContext = await processAttachmentsForContext(attachments);
     }
 
     // Determine system prompt based on type

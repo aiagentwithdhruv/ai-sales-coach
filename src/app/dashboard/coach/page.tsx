@@ -33,7 +33,7 @@ import {
 import { cn } from "@/lib/utils";
 
 // API Types
-type ApiType = "openrouter" | "openai" | "anthropic" | "perplexity";
+type ApiType = "openrouter" | "openai" | "anthropic";
 
 // Attachment types
 type AttachmentType = "pdf" | "image" | "url";
@@ -44,48 +44,35 @@ interface Attachment {
   url?: string;
 }
 
-// Available AI Models - Latest 2025/2026
+// Available AI Models - Latest 2026 Models
 const AI_MODELS: { id: string; name: string; provider: string; api: ApiType }[] = [
-  // ===== DIRECT API (Lower latency) =====
-  // Direct Anthropic
-  { id: "claude-opus-4-5-20251101", name: "Claude Opus 4.5", provider: "Anthropic (Direct)", api: "anthropic" },
+  // ===== TOP TIER - ANTHROPIC CLAUDE (Direct API) =====
   { id: "claude-sonnet-4-5-20250929", name: "Claude Sonnet 4.5", provider: "Anthropic (Direct)", api: "anthropic" },
+  { id: "claude-opus-4-5-20251101", name: "Claude Opus 4.5", provider: "Anthropic (Direct)", api: "anthropic" },
   { id: "claude-haiku-4-5-20251001", name: "Claude Haiku 4.5", provider: "Anthropic (Direct)", api: "anthropic" },
-  // Direct OpenAI
+
+  // ===== TOP TIER - OPENAI (Direct API) =====
+  { id: "gpt-5.2", name: "GPT-5.2", provider: "OpenAI (Direct)", api: "openai" },
+  { id: "gpt-5.1", name: "GPT-5.1", provider: "OpenAI (Direct)", api: "openai" },
+  { id: "gpt-5-mini", name: "GPT-5 Mini", provider: "OpenAI (Direct)", api: "openai" },
+  { id: "o3", name: "o3", provider: "OpenAI (Direct)", api: "openai" },
+  { id: "o3-mini", name: "o3 Mini", provider: "OpenAI (Direct)", api: "openai" },
   { id: "gpt-4.1", name: "GPT-4.1", provider: "OpenAI (Direct)", api: "openai" },
   { id: "gpt-4.1-mini", name: "GPT-4.1 Mini", provider: "OpenAI (Direct)", api: "openai" },
-  { id: "o3-mini", name: "o3 Mini", provider: "OpenAI (Direct)", api: "openai" },
 
-  // ===== VIA OPENROUTER (100+ models) =====
-  // Anthropic
-  { id: "anthropic/claude-opus-4.5", name: "Claude Opus 4.5", provider: "Anthropic", api: "openrouter" },
-  { id: "anthropic/claude-sonnet-4", name: "Claude Sonnet 4", provider: "Anthropic", api: "openrouter" },
-  { id: "anthropic/claude-haiku-4-5", name: "Claude Haiku 4.5", provider: "Anthropic", api: "openrouter" },
-  // OpenAI
-  { id: "openai/gpt-5", name: "GPT-5", provider: "OpenAI", api: "openrouter" },
+  // ===== FALLBACK - OPENROUTER (Budget Models) =====
+  { id: "x-ai/grok-4-fast", name: "Grok 4 Fast", provider: "xAI", api: "openrouter" },
+  { id: "google/gemini-3-flash-preview", name: "Gemini 3 Flash", provider: "Google", api: "openrouter" },
+  { id: "google/gemini-2.5-flash-preview", name: "Gemini 2.5 Flash", provider: "Google", api: "openrouter" },
   { id: "openai/gpt-5-mini", name: "GPT-5 Mini", provider: "OpenAI", api: "openrouter" },
-  { id: "openai/gpt-4.1", name: "GPT-4.1", provider: "OpenAI", api: "openrouter" },
   { id: "openai/gpt-4.1-mini", name: "GPT-4.1 Mini", provider: "OpenAI", api: "openrouter" },
-  { id: "openai/o3", name: "o3", provider: "OpenAI", api: "openrouter" },
-  { id: "openai/o3-mini", name: "o3 Mini", provider: "OpenAI", api: "openrouter" },
-  // Google
-  { id: "google/gemini-3-pro", name: "Gemini 3 Pro", provider: "Google", api: "openrouter" },
-  { id: "google/gemini-3-flash", name: "Gemini 3 Flash", provider: "Google", api: "openrouter" },
-  { id: "google/gemini-2.5-flash", name: "Gemini 2.5 Flash", provider: "Google", api: "openrouter" },
-  // Meta
-  { id: "meta-llama/llama-4-maverick", name: "Llama 4 Maverick", provider: "Meta", api: "openrouter" },
-  { id: "meta-llama/llama-4-scout", name: "Llama 4 Scout", provider: "Meta", api: "openrouter" },
-  // Perplexity
-  { id: "perplexity/sonar-pro", name: "Sonar Pro", provider: "Perplexity", api: "openrouter" },
-  { id: "perplexity/sonar", name: "Sonar", provider: "Perplexity", api: "openrouter" },
 ];
 
 // API badge styles
 const API_INFO: Record<ApiType, { color: string; label: string }> = {
   openrouter: { color: "text-purple-400", label: "via OpenRouter" },
-  openai: { color: "text-green-400", label: "Direct OpenAI" },
-  anthropic: { color: "text-orange-400", label: "Direct Claude" },
-  perplexity: { color: "text-cyan-400", label: "via Perplexity" },
+  openai: { color: "text-green-400", label: "Direct API" },
+  anthropic: { color: "text-orange-400", label: "Direct API" },
 };
 
 // Common objections organized by category
@@ -152,7 +139,7 @@ export default function CoachPage() {
   const [response, setResponse] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [selectedModel, setSelectedModel] = useState("anthropic/claude-sonnet-4");
+  const [selectedModel, setSelectedModel] = useState("claude-sonnet-4-5-20250929");
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [websiteUrl, setWebsiteUrl] = useState("");
@@ -163,9 +150,24 @@ export default function CoachPage() {
   const responseRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Credits hook for refreshing after use
   const { refetch: refetchCredits } = useCredits();
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Abort any ongoing requests
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      // Stop any playing audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
+  }, []);
 
   // Load saved model preference
   useEffect(() => {
@@ -224,6 +226,14 @@ export default function CoachPage() {
     e.preventDefault();
     if (!objection.trim() || isLoading) return;
 
+    // Cancel any previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
+
     setIsLoading(true);
     setResponse("");
     setError(null);
@@ -245,6 +255,7 @@ export default function CoachPage() {
           model: selectedModel,
           attachments: attachments.length > 0 ? attachments : undefined,
         }),
+        signal: abortControllerRef.current.signal,
       });
 
       if (!res.ok) {
@@ -270,6 +281,12 @@ export default function CoachPage() {
       // Refetch credits after successful call
       refetchCredits();
     } catch (err) {
+      // Don't show error if request was aborted (user navigated away or cancelled)
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.log('Request aborted');
+        return;
+      }
+
       console.error("Error:", err);
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
       setError(errorMessage);
@@ -337,7 +354,10 @@ export default function CoachPage() {
 
       await audioRef.current.play();
     } catch (err) {
-      console.error("TTS Error:", err);
+      // Don't log error if it's just an abort
+      if (err instanceof Error && err.name !== 'AbortError') {
+        console.error("TTS Error:", err);
+      }
     } finally {
       setIsLoadingAudio(false);
     }

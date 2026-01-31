@@ -11,7 +11,7 @@ export const maxDuration = 30;
 // TTS Provider type
 type TTSProvider = "elevenlabs" | "openai";
 
-// Default provider - prefer OpenAI as fallback since it's more reliable
+// Default provider - use environment variable or fallback to ElevenLabs for best quality
 const DEFAULT_PROVIDER: TTSProvider =
   (process.env.TTS_PROVIDER as TTSProvider) || "elevenlabs";
 
@@ -76,10 +76,12 @@ async function generateElevenLabsSpeech(
       },
       body: JSON.stringify({
         text,
-        model_id: "eleven_monolingual_v1",
+        model_id: "eleven_turbo_v2_5", // Latest model for best quality and speed
         voice_settings: {
           stability: 0.5,
-          similarity_boost: 0.75,
+          similarity_boost: 0.8, // Higher for more natural tone
+          style: 0.0,
+          use_speaker_boost: true
         },
       }),
     }
@@ -116,7 +118,7 @@ async function generateOpenAISpeech(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "tts-1",
+      model: "tts-1-hd", // HD model for better quality
       input: text,
       voice: voice,
       response_format: "mp3",

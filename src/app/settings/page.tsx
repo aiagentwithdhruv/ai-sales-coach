@@ -25,9 +25,9 @@ import {
 import { cn } from "@/lib/utils";
 
 // API Types for models
-type ApiType = "openrouter" | "openai" | "anthropic" | "perplexity";
+type ApiType = "openrouter" | "openai" | "anthropic";
 
-// Available AI Models - Latest 2025/2026
+// Available AI Models - Latest 2026 Models
 const AI_MODELS: {
   id: string;
   name: string;
@@ -42,7 +42,17 @@ const AI_MODELS: {
   // DIRECT API MODELS (Lower latency, no middleman)
   // ===========================================
 
-  // Direct Anthropic API
+  // Direct Anthropic API - Claude 4.5 Series
+  {
+    id: "claude-sonnet-4-5-20250929",
+    name: "Claude Sonnet 4.5",
+    provider: "Anthropic",
+    api: "anthropic",
+    description: "Direct API - Best balance of intelligence & speed",
+    speed: "Fast",
+    quality: "Exceptional",
+    recommended: true,
+  },
   {
     id: "claude-opus-4-5-20251101",
     name: "Claude Opus 4.5",
@@ -51,16 +61,6 @@ const AI_MODELS: {
     description: "Direct API - Most capable, premium intelligence",
     speed: "Medium",
     quality: "Exceptional",
-    recommended: false,
-  },
-  {
-    id: "claude-sonnet-4-5-20250929",
-    name: "Claude Sonnet 4.5",
-    provider: "Anthropic",
-    api: "anthropic",
-    description: "Direct API - Smart model for complex agents",
-    speed: "Fast",
-    quality: "Excellent",
     recommended: false,
   },
   {
@@ -73,7 +73,62 @@ const AI_MODELS: {
     quality: "Very Good",
     recommended: false,
   },
-  // Direct OpenAI API
+
+  // Direct OpenAI API - GPT-5 Series (Latest 2026)
+  {
+    id: "gpt-5.2",
+    name: "GPT-5.2",
+    provider: "OpenAI",
+    api: "openai",
+    description: "Direct API - Latest flagship reasoning model",
+    speed: "Fast",
+    quality: "Exceptional",
+    recommended: false,
+  },
+  {
+    id: "gpt-5.1",
+    name: "GPT-5.1",
+    provider: "OpenAI",
+    api: "openai",
+    description: "Direct API - Previous flagship model",
+    speed: "Fast",
+    quality: "Exceptional",
+    recommended: false,
+  },
+  {
+    id: "gpt-5-mini",
+    name: "GPT-5 Mini",
+    provider: "OpenAI",
+    api: "openai",
+    description: "Direct API - Fast reasoning at lower cost",
+    speed: "Very Fast",
+    quality: "Excellent",
+    recommended: false,
+  },
+
+  // OpenAI o-Series (Reasoning Models)
+  {
+    id: "o3",
+    name: "o3",
+    provider: "OpenAI",
+    api: "openai",
+    description: "Direct API - Most powerful reasoning model",
+    speed: "Medium",
+    quality: "Exceptional",
+    recommended: false,
+  },
+  {
+    id: "o3-mini",
+    name: "o3 Mini",
+    provider: "OpenAI",
+    api: "openai",
+    description: "Direct API - Efficient reasoning model",
+    speed: "Fast",
+    quality: "Excellent",
+    recommended: false,
+  },
+
+  // OpenAI GPT-4.1 Series
   {
     id: "gpt-4.1",
     name: "GPT-4.1",
@@ -94,81 +149,64 @@ const AI_MODELS: {
     quality: "Very Good",
     recommended: false,
   },
+
+  // ===========================================
+  // OPENROUTER MODELS (Budget & Fallback)
+  // ===========================================
+
+  // xAI Grok
   {
-    id: "o3-mini",
-    name: "o3 Mini",
-    provider: "OpenAI",
-    api: "openai",
-    description: "Direct API - Efficient reasoning model",
-    speed: "Fast",
+    id: "x-ai/grok-4-fast",
+    name: "Grok 4 Fast",
+    provider: "xAI",
+    api: "openrouter",
+    description: "Via OpenRouter - Fast multimodal with 2M context",
+    speed: "Very Fast",
     quality: "Excellent",
     recommended: false,
   },
 
-  // ===========================================
-  // OPENROUTER MODELS (100+ models via gateway)
-  // ===========================================
-
-  // Anthropic Models (via OpenRouter)
+  // Google Gemini
   {
-    id: "anthropic/claude-opus-4.5",
-    name: "Claude Opus 4.5",
-    provider: "Anthropic",
+    id: "google/gemini-3-flash-preview",
+    name: "Gemini 3 Flash",
+    provider: "Google",
     api: "openrouter",
-    description: "Via OpenRouter - Most capable reasoning",
-    speed: "Medium",
-    quality: "Exceptional",
+    description: "Via OpenRouter - High-speed thinking model",
+    speed: "Very Fast",
+    quality: "Excellent",
     recommended: false,
   },
   {
-    id: "anthropic/claude-sonnet-4",
-    name: "Claude Sonnet 4",
-    provider: "Anthropic",
+    id: "google/gemini-2.5-flash-preview",
+    name: "Gemini 2.5 Flash",
+    provider: "Google",
     api: "openrouter",
-    description: "Via OpenRouter - Balanced speed and capability",
-    speed: "Fast",
-    quality: "Excellent",
-    recommended: true,
-  },
-  {
-    id: "anthropic/claude-haiku-4-5",
-    name: "Claude Haiku 4.5",
-    provider: "Anthropic",
-    api: "openrouter",
-    description: "Via OpenRouter - Fast and intelligent",
+    description: "Via OpenRouter - Advanced reasoning model",
     speed: "Very Fast",
     quality: "Very Good",
     recommended: false,
   },
-  // OpenAI Models (via OpenRouter)
-  {
-    id: "openai/gpt-5",
-    name: "GPT-5",
-    provider: "OpenAI",
-    api: "openrouter",
-    description: "Via OpenRouter - Latest flagship model",
-    speed: "Fast",
-    quality: "Exceptional",
-    recommended: false,
-  },
+
+  // OpenRouter - OpenAI
   {
     id: "openai/gpt-5-mini",
     name: "GPT-5 Mini",
     provider: "OpenAI",
     api: "openrouter",
-    description: "Compact version with great performance",
+    description: "Via OpenRouter - Fast & affordable",
     speed: "Very Fast",
     quality: "Excellent",
     recommended: false,
   },
   {
-    id: "openai/gpt-4.1",
-    name: "GPT-4.1",
+    id: "openai/gpt-4.1-mini",
+    name: "GPT-4.1 Mini",
     provider: "OpenAI",
     api: "openrouter",
-    description: "Improved GPT-4 with better instruction following",
-    speed: "Fast",
-    quality: "Excellent",
+    description: "Via OpenRouter - Efficient & budget-friendly",
+    speed: "Very Fast",
+    quality: "Very Good",
     recommended: false,
   },
   {
@@ -253,39 +291,17 @@ const AI_MODELS: {
     quality: "Very Good",
     recommended: false,
   },
-  // Perplexity Models (via OpenRouter)
-  {
-    id: "perplexity/sonar-pro",
-    name: "Sonar Pro",
-    provider: "Perplexity",
-    api: "openrouter",
-    description: "Best for research with real-time search",
-    speed: "Fast",
-    quality: "Excellent",
-    recommended: false,
-  },
-  {
-    id: "perplexity/sonar",
-    name: "Sonar",
-    provider: "Perplexity",
-    api: "openrouter",
-    description: "Fast research assistant",
-    speed: "Very Fast",
-    quality: "Good",
-    recommended: false,
-  },
 ];
 
 // API badge colors and labels
 const API_BADGES: Record<ApiType, { label: string; color: string }> = {
   openrouter: { label: "OpenRouter", color: "bg-purple-500/20 text-purple-400" },
-  openai: { label: "OpenAI API", color: "bg-green-500/20 text-green-400" },
-  anthropic: { label: "Claude API", color: "bg-orange-500/20 text-orange-400" },
-  perplexity: { label: "Perplexity API", color: "bg-cyan-500/20 text-cyan-400" },
+  openai: { label: "OpenAI Direct", color: "bg-green-500/20 text-green-400" },
+  anthropic: { label: "Claude Direct", color: "bg-orange-500/20 text-orange-400" },
 };
 
 export default function SettingsPage() {
-  const [selectedModel, setSelectedModel] = useState("anthropic/claude-sonnet-4");
+  const [selectedModel, setSelectedModel] = useState("claude-sonnet-4-5-20250929");
   const [saved, setSaved] = useState(false);
 
   // Profile state

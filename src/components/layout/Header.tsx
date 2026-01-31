@@ -90,6 +90,7 @@ export function Header({ user }: HeaderProps) {
     };
   }, [supabase.auth, supabaseUser]);
 
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.push("/login");

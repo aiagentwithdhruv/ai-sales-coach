@@ -14,6 +14,7 @@ import {
   PRACTICE_PERSONAS,
 } from "@/lib/ai/prompts/practice-personas";
 import { checkCredits, deductCredits } from "@/lib/credits";
+import { processAttachmentsForContext, type Attachment } from "@/lib/ai/attachments";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -39,10 +40,14 @@ export async function POST(req: Request) {
       messages,
       personaId,
       scenario,
+      attachments,
+      trainingFocus,
     }: {
       messages: Array<{ role: "user" | "assistant"; content: string }>;
       personaId?: string;
       scenario?: string;
+      attachments?: Attachment[];
+      trainingFocus?: string;
     } = await req.json();
 
     // Validate messages
@@ -66,7 +71,17 @@ export async function POST(req: Request) {
     }
 
     // Generate system prompt based on persona
-    const systemPrompt = generatePracticeSystemPrompt(persona, scenario);
+    const systemPromptBase = generatePracticeSystemPrompt(persona, scenario);
+    const attachmentContext =
+      attachments && attachments.length > 0
+        ? await processAttachmentsForContext(attachments)
+        : "";
+    const trainingFocusContext = trainingFocus
+      ? `\n\nTRAINING FOCUS: ${trainingFocus}\nEmphasize this focus during role-play.`
+      : "";
+    const systemPrompt = attachmentContext
+      ? `${systemPromptBase}${trainingFocusContext}\n\n--- TRAINING CONTEXT ---${attachmentContext}\n\nUse this context to make the role-play realistic and grounded.`
+      : `${systemPromptBase}${trainingFocusContext}`;
 
     // Get the appropriate model
     const model = getLanguageModel();

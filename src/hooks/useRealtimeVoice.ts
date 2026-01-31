@@ -7,7 +7,14 @@ interface UseRealtimeVoiceOptions {
   onAIResponse?: (text: string) => void;
   onError?: (error: string) => void;
   systemPrompt?: string;
-  voice?: "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer";
+  voice?: "alloy" | "ash" | "ballad" | "coral" | "echo" | "sage" | "shimmer" | "verse";
+  attachments?: {
+    type: "pdf" | "image" | "url";
+    name: string;
+    content?: string;
+    url?: string;
+  }[];
+  trainingFocus?: string;
 }
 
 interface UseRealtimeVoiceReturn {
@@ -29,7 +36,9 @@ export function useRealtimeVoice(options: UseRealtimeVoiceOptions = {}): UseReal
     onAIResponse,
     onError,
     systemPrompt = "You are a helpful sales prospect for practice. Respond naturally and conversationally.",
-    voice = "nova"
+    voice = "alloy",
+    attachments = [],
+    trainingFocus
   } = options;
 
   const [isConnected, setIsConnected] = useState(false);
@@ -80,32 +89,44 @@ export function useRealtimeVoice(options: UseRealtimeVoiceOptions = {}): UseReal
   const playAudioQueue = useCallback(async () => {
     if (isPlayingRef.current || playbackQueueRef.current.length === 0) return;
 
+    console.log("[Realtime] 🔊 Starting audio playback, queue size:", playbackQueueRef.current.length);
     isPlayingRef.current = true;
     setIsSpeaking(true);
 
-    const audioContext = audioContextRef.current || new AudioContext({ sampleRate: 24000 });
-    if (!audioContextRef.current) audioContextRef.current = audioContext;
-
-    while (playbackQueueRef.current.length > 0) {
-      const audioData = playbackQueueRef.current.shift()!;
-
-      // Convert Int16 to Float32
-      const float32Array = new Float32Array(audioData.length);
-      for (let i = 0; i < audioData.length; i++) {
-        float32Array[i] = audioData[i] / 32768;
+    try {
+      const audioContext = audioContextRef.current || new AudioContext({ sampleRate: 24000 });
+      if (!audioContextRef.current) audioContextRef.current = audioContext;
+      
+      // Resume audio context if suspended (browser autoplay policy)
+      if (audioContext.state === 'suspended') {
+        console.log("[Realtime] 🔊 Resuming suspended audio context");
+        await audioContext.resume();
       }
 
-      const audioBuffer = audioContext.createBuffer(1, float32Array.length, 24000);
-      audioBuffer.getChannelData(0).set(float32Array);
+      while (playbackQueueRef.current.length > 0) {
+        const audioData = playbackQueueRef.current.shift()!;
 
-      const source = audioContext.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(audioContext.destination);
+        // Convert Int16 to Float32
+        const float32Array = new Float32Array(audioData.length);
+        for (let i = 0; i < audioData.length; i++) {
+          float32Array[i] = audioData[i] / 32768;
+        }
 
-      await new Promise<void>((resolve) => {
-        source.onended = () => resolve();
-        source.start();
-      });
+        const audioBuffer = audioContext.createBuffer(1, float32Array.length, 24000);
+        audioBuffer.getChannelData(0).set(float32Array);
+
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioContext.destination);
+
+        await new Promise<void>((resolve) => {
+          source.onended = () => resolve();
+          source.start();
+        });
+      }
+      console.log("[Realtime] 🔊 Audio playback complete");
+    } catch (err) {
+      console.error("[Realtime] Audio playback error:", err);
     }
 
     isPlayingRef.current = false;
@@ -116,52 +137,103 @@ export function useRealtimeVoice(options: UseRealtimeVoiceOptions = {}): UseReal
   const handleMessage = useCallback((event: MessageEvent) => {
     try {
       const data = JSON.parse(event.data);
+      
+      // Log all events for debugging
+      if (!data.type?.includes("audio.delta") && !data.type?.includes("output_audio.delta")) {
+        console.log("[Realtime] Event:", data.type, data);
+      }
 
       switch (data.type) {
         case "session.created":
-          console.log("[Realtime] Session created");
+          console.log("[Realtime] Session created successfully");
           break;
 
         case "session.updated":
-          console.log("[Realtime] Session updated");
+          console.log("[Realtime] Session configured");
           break;
 
         case "input_audio_buffer.speech_started":
-          console.log("[Realtime] User started speaking");
+          console.log("[Realtime] 🎤 User started speaking");
           break;
 
         case "input_audio_buffer.speech_stopped":
-          console.log("[Realtime] User stopped speaking");
+          console.log("[Realtime] 🎤 User stopped speaking");
+          break;
+
+        case "input_audio_buffer.committed":
+          console.log("[Realtime] Audio buffer committed");
+          break;
+
+        case "conversation.item.created":
+        case "conversation.item.added":
+          console.log("[Realtime] Conversation item added");
+          break;
+
+        case "conversation.item.done":
+          console.log("[Realtime] Conversation item done");
           break;
 
         case "conversation.item.input_audio_transcription.completed":
           const userText = data.transcript || "";
+          console.log("[Realtime] 📝 User said:", userText);
           setUserTranscript(userText);
           onTranscript?.(userText, true);
           break;
 
+        case "response.created":
+          console.log("[Realtime] 🤖 AI response started");
+          break;
+
+        case "response.output_item.added":
+          console.log("[Realtime] Response output item added");
+          break;
+
         case "response.audio_transcript.delta":
+        case "response.output_audio_transcript.delta":
           const aiDelta = data.delta || "";
           setAiTranscript(prev => prev + aiDelta);
           break;
 
         case "response.audio_transcript.done":
+        case "response.output_audio_transcript.done":
           const fullAiText = data.transcript || "";
+          console.log("[Realtime] 🤖 AI said:", fullAiText);
           setAiTranscript(fullAiText);
           onAIResponse?.(fullAiText);
           break;
 
         case "response.audio.delta":
+        case "response.output_audio.delta":
           // Queue audio for playback
           if (data.delta) {
-            const audioData = base64ToInt16(data.delta);
-            playbackQueueRef.current.push(audioData);
-            playAudioQueue();
+            console.log("[Realtime] 🔊 Received audio chunk, length:", data.delta.length);
+            try {
+              const audioData = base64ToInt16(data.delta);
+              console.log("[Realtime] 🔊 Decoded audio samples:", audioData.length);
+              playbackQueueRef.current.push(audioData);
+              playAudioQueue();
+            } catch (err) {
+              console.error("[Realtime] Audio decode error:", err);
+            }
           }
           break;
 
         case "response.audio.done":
+        case "response.output_audio.done":
           console.log("[Realtime] AI audio complete");
+          break;
+
+        case "response.output_text.delta":
+          if (data.delta) {
+            setAiTranscript(prev => prev + data.delta);
+          }
+          break;
+
+        case "response.output_text.done":
+          if (data.text) {
+            setAiTranscript(data.text);
+            onAIResponse?.(data.text);
+          }
           break;
 
         case "response.done":
@@ -177,6 +249,10 @@ export function useRealtimeVoice(options: UseRealtimeVoiceOptions = {}): UseReal
           setError(fullError);
           onError?.(fullError);
           break;
+          
+        default:
+          // Log unknown events
+          console.log("[Realtime] Unknown event:", data.type);
       }
     } catch (err) {
       console.error("[Realtime] Failed to parse message:", err);
@@ -188,65 +264,58 @@ export function useRealtimeVoice(options: UseRealtimeVoiceOptions = {}): UseReal
     try {
       setError(null);
 
-      // Get ephemeral token from our API
+      // Get ephemeral token from our API with session config
       const tokenResponse = await fetch("/api/ai/realtime-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ voice, model: "gpt-4o-realtime-preview-2024-12-17" }),
+        body: JSON.stringify({ 
+          voice,
+          instructions: systemPrompt,
+          trainingFocus,
+          attachments: attachments.length > 0 ? attachments : undefined
+        }),
       });
       if (!tokenResponse.ok) {
-        throw new Error("Failed to get realtime token");
+        const errorData = await tokenResponse.json().catch(() => ({}));
+        const errorMsg = errorData.error || errorData.details || "Failed to get realtime token";
+        throw new Error(errorMsg);
       }
       const tokenData = await tokenResponse.json();
       const token = tokenData.token;
-      console.log("[Realtime] Token type:", tokenData.type);
+      const model = tokenData.model || "gpt-4o-realtime-preview-2024-12-17";
+      console.log("[Realtime] Token type:", tokenData.type, "Model:", model);
 
-      // Connect to OpenAI Realtime API (using latest model)
-      const ws = new WebSocket(
-        "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17",
-        ["realtime", `openai-insecure-api-key.${token}`]
-      );
+      // Connect to OpenAI Realtime API
+      const wsUrl = `wss://api.openai.com/v1/realtime?model=${model}`;
+      console.log("[Realtime] Connecting to:", wsUrl);
+      
+      const ws = new WebSocket(wsUrl, [
+        "realtime",
+        `openai-insecure-api-key.${token}`
+      ]);
 
       ws.onopen = () => {
-        console.log("[Realtime] Connected");
+        console.log("[Realtime] Connected - session already configured via client secret");
         setIsConnected(true);
-
-        // Configure session with latest API format
-        const sessionConfig = {
-          type: "session.update",
-          session: {
-            modalities: ["text", "audio"],
-            instructions: systemPrompt,
-            voice: voice,
-            input_audio_format: "pcm16",
-            output_audio_format: "pcm16",
-            input_audio_transcription: {
-              model: "whisper-1"
-            },
-            turn_detection: {
-              type: "server_vad",
-              threshold: 0.5,
-              prefix_padding_ms: 300,
-              silence_duration_ms: 500
-            }
-          }
-        };
-        console.log("[Realtime] Sending session config:", JSON.stringify(sessionConfig));
-        ws.send(JSON.stringify(sessionConfig));
+        // Session is fully configured when creating the client secret
+        // No session.update needed - this avoids potential config conflicts
       };
 
       ws.onmessage = handleMessage;
 
       ws.onerror = (err) => {
         console.error("[Realtime] WebSocket error:", err);
-        setError("Connection error");
+        setError("Connection error - check browser console for details");
         onError?.("Connection error");
       };
 
-      ws.onclose = () => {
-        console.log("[Realtime] Disconnected");
+      ws.onclose = (event) => {
+        console.log("[Realtime] Disconnected, code:", event.code, "reason:", event.reason);
         setIsConnected(false);
         setIsListening(false);
+        if (event.code !== 1000 && event.code !== 1005) {
+          setError(`Connection closed: ${event.reason || 'Unknown reason'}`);
+        }
       };
 
       wsRef.current = ws;
@@ -255,7 +324,7 @@ export function useRealtimeVoice(options: UseRealtimeVoiceOptions = {}): UseReal
       setError(message);
       onError?.(message);
     }
-  }, [systemPrompt, voice, handleMessage, onError]);
+  }, [systemPrompt, voice, attachments, handleMessage, onError]);
 
   // Disconnect
   const disconnect = useCallback(() => {

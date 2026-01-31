@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { PersonaSelector } from "@/components/features/practice/PersonaSelector";
-import { ChatInterface } from "@/components/features/practice/ChatInterface";
 import { RealtimeVoiceChat } from "@/components/features/practice/RealtimeVoiceChat";
 import {
   ArrowLeft,
@@ -15,8 +15,12 @@ import {
   Clock,
   TrendingUp,
   Trophy,
-  MessageSquare,
   Phone,
+  FileText,
+  Globe,
+  Image as ImageIcon,
+  Upload,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -111,13 +115,85 @@ const userStats = {
   improvement: "+12%",
 };
 
-type PracticeMode = "chat" | "realtime";
+type AttachmentType = "pdf" | "image" | "url";
+interface Attachment {
+  type: AttachmentType;
+  name: string;
+  content?: string; // Base64 for files
+  url?: string; // For website URLs
+}
+
+type TrainingFocus =
+  | "sales-call"
+  | "discovery"
+  | "demo"
+  | "objection-handling"
+  | "negotiation"
+  | "closing"
+  | "general";
+
+const TRAINING_FOCUS_OPTIONS: {
+  id: TrainingFocus;
+  title: string;
+  description: string;
+  icon: string;
+}[] = [
+  {
+    id: "sales-call",
+    title: "Sales Call",
+    description: "Full call flow from intro to next steps",
+    icon: "📞",
+  },
+  {
+    id: "discovery",
+    title: "Discovery",
+    description: "Uncover needs and pain points",
+    icon: "🔍",
+  },
+  {
+    id: "demo",
+    title: "Product Demo",
+    description: "Present value and handle questions",
+    icon: "💻",
+  },
+  {
+    id: "objection-handling",
+    title: "Objection Handling",
+    description: "Practice tough pushback scenarios",
+    icon: "🛡️",
+  },
+  {
+    id: "negotiation",
+    title: "Negotiation",
+    description: "Price, terms, and risk management",
+    icon: "💰",
+  },
+  {
+    id: "closing",
+    title: "Closing",
+    description: "Secure commitment and next steps",
+    icon: "🤝",
+  },
+  {
+    id: "general",
+    title: "General",
+    description: "Open-ended role-play practice",
+    icon: "🧠",
+  },
+];
 
 export default function PracticePage() {
   const [selectedPersonaId, setSelectedPersonaId] = useState(PERSONAS[0].id);
   const [selectedScenario, setSelectedScenario] = useState<string | null>(null);
   const [isSessionActive, setIsSessionActive] = useState(false);
-  const [practiceMode, setPracticeMode] = useState<PracticeMode>("realtime");
+  const [trainingFocus, setTrainingFocus] = useState<TrainingFocus>("sales-call");
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [allowNoContext, setAllowNoContext] = useState(false);
+  const [scriptText, setScriptText] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const scriptInputRef = useRef<HTMLInputElement>(null);
 
   const selectedPersona = PERSONAS.find((p) => p.id === selectedPersonaId)!;
 
@@ -127,6 +203,53 @@ export default function PracticePage() {
 
   const handleEndSession = () => {
     setIsSessionActive(false);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    for (const file of Array.from(files)) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        const type: AttachmentType = file.type === "application/pdf" ? "pdf" : "image";
+        setAttachments((prev) => [
+          ...prev,
+          { type, name: file.name, content: base64 },
+        ]);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleAddUrl = () => {
+    if (!websiteUrl.trim()) return;
+    const url = websiteUrl.startsWith("http") ? websiteUrl : `https://${websiteUrl}`;
+    setAttachments((prev) => [
+      ...prev,
+      { type: "url", name: new URL(url).hostname, url },
+    ]);
+    setWebsiteUrl("");
+    setShowUrlInput(false);
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleScriptUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = String(reader.result || "");
+      setScriptText(text.trim());
+    };
+    reader.readAsText(file);
+    if (scriptInputRef.current) scriptInputRef.current.value = "";
   };
 
   if (isSessionActive) {
@@ -141,27 +264,18 @@ export default function PracticePage() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Setup
           </Button>
-          {practiceMode === "realtime" ? (
-            <RealtimeVoiceChat
-              persona={selectedPersona}
-              scenario={
-                selectedScenario
-                  ? SCENARIOS.find((s) => s.id === selectedScenario)?.title
-                  : undefined
-              }
-              onEndSession={handleEndSession}
-            />
-          ) : (
-            <ChatInterface
-              persona={selectedPersona}
-              scenario={
-                selectedScenario
-                  ? SCENARIOS.find((s) => s.id === selectedScenario)?.title
-                  : undefined
-              }
-              onEndSession={handleEndSession}
-            />
-          )}
+          <RealtimeVoiceChat
+            persona={selectedPersona}
+            scenario={
+              selectedScenario
+                ? SCENARIOS.find((s) => s.id === selectedScenario)?.title
+                : undefined
+            }
+            trainingFocus={trainingFocus}
+            attachments={attachments}
+            scriptText={scriptText}
+            onEndSession={handleEndSession}
+          />
         </div>
       </DashboardLayout>
     );
@@ -296,6 +410,195 @@ export default function PracticePage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Training Focus */}
+            <Card className="bg-graphite border-gunmetal">
+              <CardHeader>
+                <CardTitle className="text-platinum">
+                  Training Focus{" "}
+                  <span className="text-mist font-normal text-sm">
+                    (required)
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {TRAINING_FOCUS_OPTIONS.map((focus) => (
+                    <button
+                      key={focus.id}
+                      onClick={() => setTrainingFocus(focus.id)}
+                      className={cn(
+                        "p-3 rounded-lg text-left transition-all duration-200 border",
+                        trainingFocus === focus.id
+                          ? "bg-automationgreen/10 border-automationgreen"
+                          : "bg-onyx border-gunmetal hover:border-automationgreen/50"
+                      )}
+                    >
+                      <span className="text-2xl">{focus.icon}</span>
+                      <h4 className="font-medium text-platinum mt-2 text-sm">
+                        {focus.title}
+                      </h4>
+                      <p className="text-xs text-mist mt-1">
+                        {focus.description}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Sales Script */}
+            <Card className="bg-graphite border-gunmetal">
+              <CardHeader>
+                <CardTitle className="text-platinum">
+                  Sales Script{" "}
+                  <span className="text-mist font-normal text-sm">
+                    (optional, enables live coaching)
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <textarea
+                  value={scriptText}
+                  onChange={(e) => setScriptText(e.target.value)}
+                  placeholder="Paste your sales script here. We'll use it to give real-time coaching during the live call."
+                  className="min-h-[120px] w-full rounded-lg bg-onyx border border-gunmetal text-platinum placeholder:text-mist px-3 py-2 text-sm focus:border-neonblue focus:outline-none"
+                />
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={scriptInputRef}
+                    type="file"
+                    accept=".txt,.md"
+                    onChange={handleScriptUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => scriptInputRef.current?.click()}
+                    className="border-gunmetal text-silver hover:text-platinum text-xs gap-1"
+                  >
+                    <Upload className="h-3 w-3" />
+                    Upload Script (.txt)
+                  </Button>
+                  {scriptText && (
+                    <span className="text-xs text-automationgreen">
+                      Script loaded
+                    </span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Practice Context */}
+            <Card className="bg-graphite border-gunmetal">
+              <CardHeader>
+                <CardTitle className="text-platinum">
+                  Add Context{" "}
+                  <span className="text-mist font-normal text-sm">
+                    (optional)
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {attachments.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {attachments.map((att, idx) => (
+                      <div
+                        key={`${att.type}-${att.name}-${idx}`}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-onyx border border-gunmetal rounded-lg text-sm"
+                      >
+                        {att.type === "pdf" && <FileText className="h-4 w-4 text-red-400" />}
+                        {att.type === "image" && <ImageIcon className="h-4 w-4 text-blue-400" />}
+                        {att.type === "url" && <Globe className="h-4 w-4 text-green-400" />}
+                        <span className="text-silver truncate max-w-[180px]">{att.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeAttachment(idx)}
+                          className="text-mist hover:text-red-400 transition-colors"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,image/*"
+                    multiple
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-gunmetal text-silver hover:text-platinum text-xs gap-1"
+                  >
+                    <Upload className="h-3 w-3" />
+                    PDF/Image
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowUrlInput(!showUrlInput)}
+                    className="border-gunmetal text-silver hover:text-platinum text-xs gap-1"
+                  >
+                    <Globe className="h-3 w-3" />
+                    Website URL
+                  </Button>
+
+                  {showUrlInput && (
+                    <div className="flex items-center gap-2 flex-1">
+                      <Input
+                        type="url"
+                        value={websiteUrl}
+                        onChange={(e) => setWebsiteUrl(e.target.value)}
+                        placeholder="https://company.com"
+                        className="h-8 text-xs bg-onyx border-gunmetal text-platinum"
+                        onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddUrl())}
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleAddUrl}
+                        className="h-8 bg-neonblue hover:bg-electricblue text-white text-xs"
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  )}
+
+                  <span className="text-xs text-mist ml-auto">
+                    Use product docs, PDFs, or a website for realism
+                  </span>
+                </div>
+
+                {attachments.length === 0 && (
+                  <div className="mt-2 p-3 bg-warningamber/10 border border-warningamber/30 rounded-lg text-xs text-warningamber">
+                    No context added yet. Upload a company profile or add a URL for best training results.
+                    <button
+                      type="button"
+                      onClick={() => setAllowNoContext(!allowNoContext)}
+                      className={cn(
+                        "ml-2 underline",
+                        allowNoContext ? "text-platinum" : "text-warningamber"
+                      )}
+                    >
+                      {allowNoContext ? "Proceed without context" : "Proceed anyway"}
+                    </button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
           {/* Right Column - Session Summary */}
@@ -353,85 +656,33 @@ export default function PracticePage() {
                 </div>
 
                 <div>
+                  <p className="text-xs text-mist mb-1">Training Focus</p>
+                  <p className="text-sm text-platinum">
+                    {TRAINING_FOCUS_OPTIONS.find((f) => f.id === trainingFocus)?.title}
+                  </p>
+                </div>
+
+                <div>
                   <p className="text-xs text-mist mb-1">Industry</p>
                   <p className="text-sm text-platinum">
                     {selectedPersona.industry}
                   </p>
                 </div>
 
-                {/* Practice Mode Selection */}
                 <div>
-                  <p className="text-xs text-mist mb-2">Practice Mode</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => setPracticeMode("realtime")}
-                      className={cn(
-                        "p-3 rounded-lg text-center transition-all duration-200 border",
-                        practiceMode === "realtime"
-                          ? "bg-automationgreen/10 border-automationgreen"
-                          : "bg-onyx border-gunmetal hover:border-automationgreen/50"
-                      )}
-                    >
-                      <Phone className={cn(
-                        "h-5 w-5 mx-auto mb-1",
-                        practiceMode === "realtime" ? "text-automationgreen" : "text-mist"
-                      )} />
-                      <p className={cn(
-                        "text-xs font-medium",
-                        practiceMode === "realtime" ? "text-automationgreen" : "text-silver"
-                      )}>
-                        Live Call
-                      </p>
-                      <p className="text-[10px] text-mist mt-0.5">
-                        Real-time voice
-                      </p>
-                    </button>
-                    <button
-                      onClick={() => setPracticeMode("chat")}
-                      className={cn(
-                        "p-3 rounded-lg text-center transition-all duration-200 border",
-                        practiceMode === "chat"
-                          ? "bg-neonblue/10 border-neonblue"
-                          : "bg-onyx border-gunmetal hover:border-neonblue/50"
-                      )}
-                    >
-                      <MessageSquare className={cn(
-                        "h-5 w-5 mx-auto mb-1",
-                        practiceMode === "chat" ? "text-neonblue" : "text-mist"
-                      )} />
-                      <p className={cn(
-                        "text-xs font-medium",
-                        practiceMode === "chat" ? "text-neonblue" : "text-silver"
-                      )}>
-                        Text/Voice
-                      </p>
-                      <p className="text-[10px] text-mist mt-0.5">
-                        Chat + recording
-                      </p>
-                    </button>
-                  </div>
+                  <p className="text-xs text-mist mb-1">Script</p>
+                  <p className="text-sm text-platinum">
+                    {scriptText ? "Added" : "Not added"}
+                  </p>
                 </div>
 
                 <Button
                   onClick={handleStartSession}
-                  className={cn(
-                    "w-full text-white mt-4",
-                    practiceMode === "realtime"
-                      ? "bg-automationgreen hover:bg-automationgreen/80"
-                      : "bg-neonblue hover:bg-electricblue"
-                  )}
+                  disabled={attachments.length === 0 && !allowNoContext}
+                  className="w-full text-white mt-4 bg-automationgreen hover:bg-automationgreen/80"
                 >
-                  {practiceMode === "realtime" ? (
-                    <>
-                      <Phone className="h-4 w-4 mr-2" />
-                      Start Live Call
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Start Practice Session
-                    </>
-                  )}
+                  <Phone className="h-4 w-4 mr-2" />
+                  Start Live Call
                 </Button>
               </CardContent>
             </Card>

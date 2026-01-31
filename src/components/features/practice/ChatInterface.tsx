@@ -31,12 +31,21 @@ interface Persona {
 interface ChatInterfaceProps {
   persona: Persona;
   scenario?: string;
+  attachments?: {
+    type: "pdf" | "image" | "url";
+    name: string;
+    content?: string;
+    url?: string;
+  }[];
+  trainingFocus?: string;
   onEndSession?: () => void;
 }
 
 export function ChatInterface({
   persona,
   scenario,
+  attachments = [],
+  trainingFocus,
   onEndSession,
 }: ChatInterfaceProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -77,6 +86,8 @@ export function ChatInterface({
     body: {
       personaId: persona.id,
       scenario,
+      trainingFocus,
+      attachments: attachments.length > 0 ? attachments : undefined,
     },
     fetch: customFetch,
     initialMessages: [
