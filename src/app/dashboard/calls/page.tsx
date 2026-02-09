@@ -245,7 +245,7 @@ export default function CallsPage() {
         title: `Uploaded Call - ${file.name}`,
         date: new Date().toISOString().slice(0, 10),
         duration: "Processing",
-        score: report.overallScore,
+        score: report.score,
         status: "analyzed",
         insights: report.insights || {
           discovery: 70,

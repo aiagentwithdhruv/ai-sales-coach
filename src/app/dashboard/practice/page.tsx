@@ -67,46 +67,6 @@ const PERSONAS = [
   },
 ];
 
-// Practice scenarios
-const SCENARIOS = [
-  {
-    id: "cold-call",
-    title: "Cold Call",
-    description: "Initial outreach to a new prospect",
-    icon: "📞",
-  },
-  {
-    id: "discovery",
-    title: "Discovery Call",
-    description: "Uncover needs and pain points",
-    icon: "🔍",
-  },
-  {
-    id: "demo",
-    title: "Product Demo",
-    description: "Present your solution",
-    icon: "💻",
-  },
-  {
-    id: "objection",
-    title: "Objection Handling",
-    description: "Handle tough pushback",
-    icon: "🛡️",
-  },
-  {
-    id: "negotiation",
-    title: "Price Negotiation",
-    description: "Navigate discount requests",
-    icon: "💰",
-  },
-  {
-    id: "closing",
-    title: "Closing the Deal",
-    description: "Seal the agreement",
-    icon: "🤝",
-  },
-];
-
 // Mock user stats
 const userStats = {
   sessionsThisWeek: 5,
@@ -124,6 +84,7 @@ interface Attachment {
 }
 
 type TrainingFocus =
+  | "cold-call"
   | "sales-call"
   | "discovery"
   | "demo"
@@ -139,9 +100,9 @@ const TRAINING_FOCUS_OPTIONS: {
   icon: string;
 }[] = [
   {
-    id: "sales-call",
-    title: "Sales Call",
-    description: "Full call flow from intro to next steps",
+    id: "cold-call",
+    title: "Cold Call",
+    description: "Initial outreach to a new prospect",
     icon: "📞",
   },
   {
@@ -175,6 +136,12 @@ const TRAINING_FOCUS_OPTIONS: {
     icon: "🤝",
   },
   {
+    id: "sales-call",
+    title: "Full Sales Call",
+    description: "Complete call flow from intro to close",
+    icon: "🎯",
+  },
+  {
     id: "general",
     title: "General",
     description: "Open-ended role-play practice",
@@ -184,9 +151,8 @@ const TRAINING_FOCUS_OPTIONS: {
 
 export default function PracticePage() {
   const [selectedPersonaId, setSelectedPersonaId] = useState(PERSONAS[0].id);
-  const [selectedScenario, setSelectedScenario] = useState<string | null>(null);
   const [isSessionActive, setIsSessionActive] = useState(false);
-  const [trainingFocus, setTrainingFocus] = useState<TrainingFocus>("sales-call");
+  const [trainingFocus, setTrainingFocus] = useState<TrainingFocus>("cold-call");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [showUrlInput, setShowUrlInput] = useState(false);
@@ -266,11 +232,7 @@ export default function PracticePage() {
           </Button>
           <RealtimeVoiceChat
             persona={selectedPersona}
-            scenario={
-              selectedScenario
-                ? SCENARIOS.find((s) => s.id === selectedScenario)?.title
-                : undefined
-            }
+            scenario={TRAINING_FOCUS_OPTIONS.find((f) => f.id === trainingFocus)?.title}
             trainingFocus={trainingFocus}
             attachments={attachments}
             scriptText={scriptText}
@@ -368,46 +330,6 @@ export default function PracticePage() {
                   selectedId={selectedPersonaId}
                   onSelect={setSelectedPersonaId}
                 />
-              </CardContent>
-            </Card>
-
-            {/* Scenario Selection */}
-            <Card className="bg-graphite border-gunmetal">
-              <CardHeader>
-                <CardTitle className="text-platinum">
-                  Select a Scenario{" "}
-                  <span className="text-mist font-normal text-sm">
-                    (optional)
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {SCENARIOS.map((scenario) => (
-                    <button
-                      key={scenario.id}
-                      onClick={() =>
-                        setSelectedScenario(
-                          selectedScenario === scenario.id ? null : scenario.id
-                        )
-                      }
-                      className={cn(
-                        "p-3 rounded-lg text-left transition-all duration-200 border",
-                        selectedScenario === scenario.id
-                          ? "bg-neonblue/10 border-neonblue"
-                          : "bg-onyx border-gunmetal hover:border-neonblue/50"
-                      )}
-                    >
-                      <span className="text-2xl">{scenario.icon}</span>
-                      <h4 className="font-medium text-platinum mt-2 text-sm">
-                        {scenario.title}
-                      </h4>
-                      <p className="text-xs text-mist mt-1">
-                        {scenario.description}
-                      </p>
-                    </button>
-                  ))}
-                </div>
               </CardContent>
             </Card>
 
@@ -644,15 +566,6 @@ export default function PracticePage() {
                     {selectedPersona.difficulty === "medium" && "Intermediate"}
                     {selectedPersona.difficulty === "hard" && "Advanced"}
                   </Badge>
-                </div>
-
-                <div>
-                  <p className="text-xs text-mist mb-1">Scenario</p>
-                  <p className="text-sm text-platinum">
-                    {selectedScenario
-                      ? SCENARIOS.find((s) => s.id === selectedScenario)?.title
-                      : "Free Practice"}
-                  </p>
                 </div>
 
                 <div>

@@ -33,7 +33,7 @@ export default function DashboardRootLayout({
     getUser();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: string, session: { user: { user_metadata?: Record<string, string>; email?: string } } | null) => {
       if (session?.user) {
         setUser({
           name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "User",
