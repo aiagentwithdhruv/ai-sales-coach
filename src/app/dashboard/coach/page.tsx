@@ -5,6 +5,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAuthToken } from "@/hooks/useCredits";
 import { useCredits } from "@/hooks/useCredits";
+import { saveSession } from "@/lib/session-history";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -31,9 +32,11 @@ import {
   Square,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 // API Types
-type ApiType = "openrouter" | "openai" | "anthropic";
+type ApiType = "openrouter" | "openai" | "anthropic" | "moonshot";
 
 // Attachment types
 type AttachmentType = "pdf" | "image" | "url";
@@ -46,12 +49,24 @@ interface Attachment {
 
 // Available AI Models - Latest 2026 Models
 const AI_MODELS: { id: string; name: string; provider: string; api: ApiType }[] = [
-  // ===== TOP TIER - ANTHROPIC CLAUDE (Direct API) =====
+  // ===== DEFAULT - FAST & DIRECT =====
+  { id: "gpt-4.1-mini", name: "GPT-4.1 Mini (Recommended)", provider: "OpenAI (Direct)", api: "openai" },
+
+  // ===== MOONSHOT DIRECT (Cheapest) =====
+  { id: "kimi-k2.5", name: "Kimi K2.5 (Direct)", provider: "Moonshot (Direct)", api: "moonshot" },
+
+  // ===== OPENROUTER (Budget Models) =====
+  { id: "google/gemini-3-flash-preview", name: "Gemini 3 Flash", provider: "Google", api: "openrouter" },
+  { id: "google/gemini-2.5-flash-preview", name: "Gemini 2.5 Flash", provider: "Google", api: "openrouter" },
+  { id: "x-ai/grok-4-fast", name: "Grok 4 Fast", provider: "xAI", api: "openrouter" },
+  { id: "openai/gpt-5-mini", name: "GPT-5 Mini", provider: "OpenAI", api: "openrouter" },
+
+  // ===== ANTHROPIC CLAUDE (Direct API) =====
   { id: "claude-sonnet-4-5-20250929", name: "Claude Sonnet 4.5", provider: "Anthropic (Direct)", api: "anthropic" },
   { id: "claude-opus-4-5-20251101", name: "Claude Opus 4.5", provider: "Anthropic (Direct)", api: "anthropic" },
   { id: "claude-haiku-4-5-20251001", name: "Claude Haiku 4.5", provider: "Anthropic (Direct)", api: "anthropic" },
 
-  // ===== TOP TIER - OPENAI (Direct API) =====
+  // ===== OPENAI (Direct API) =====
   { id: "gpt-5.2", name: "GPT-5.2", provider: "OpenAI (Direct)", api: "openai" },
   { id: "gpt-5.1", name: "GPT-5.1", provider: "OpenAI (Direct)", api: "openai" },
   { id: "gpt-5-mini", name: "GPT-5 Mini", provider: "OpenAI (Direct)", api: "openai" },
@@ -59,13 +74,6 @@ const AI_MODELS: { id: string; name: string; provider: string; api: ApiType }[] 
   { id: "o3-mini", name: "o3 Mini", provider: "OpenAI (Direct)", api: "openai" },
   { id: "gpt-4.1", name: "GPT-4.1", provider: "OpenAI (Direct)", api: "openai" },
   { id: "gpt-4.1-mini", name: "GPT-4.1 Mini", provider: "OpenAI (Direct)", api: "openai" },
-
-  // ===== FALLBACK - OPENROUTER (Budget Models) =====
-  { id: "x-ai/grok-4-fast", name: "Grok 4 Fast", provider: "xAI", api: "openrouter" },
-  { id: "google/gemini-3-flash-preview", name: "Gemini 3 Flash", provider: "Google", api: "openrouter" },
-  { id: "google/gemini-2.5-flash-preview", name: "Gemini 2.5 Flash", provider: "Google", api: "openrouter" },
-  { id: "openai/gpt-5-mini", name: "GPT-5 Mini", provider: "OpenAI", api: "openrouter" },
-  { id: "openai/gpt-4.1-mini", name: "GPT-4.1 Mini", provider: "OpenAI", api: "openrouter" },
 ];
 
 // API badge styles
@@ -73,6 +81,7 @@ const API_INFO: Record<ApiType, { color: string; label: string }> = {
   openrouter: { color: "text-purple-400", label: "via OpenRouter" },
   openai: { color: "text-green-400", label: "Direct API" },
   anthropic: { color: "text-orange-400", label: "Direct API" },
+  moonshot: { color: "text-blue-400", label: "Direct API" },
 };
 
 // Common objections organized by category
@@ -139,7 +148,7 @@ export default function CoachPage() {
   const [response, setResponse] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [selectedModel, setSelectedModel] = useState("claude-sonnet-4-5-20250929");
+  const [selectedModel, setSelectedModel] = useState("gpt-4.1-mini");
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [websiteUrl, setWebsiteUrl] = useState("");
@@ -169,10 +178,16 @@ export default function CoachPage() {
     };
   }, []);
 
-  // Load saved model preference
+  // Load saved model preference - migrate old users to Kimi K2.5 default
   useEffect(() => {
     const saved = localStorage.getItem("ai_model");
-    if (saved && AI_MODELS.some(m => m.id === saved)) {
+    const migrated = localStorage.getItem("ai_model_v3");
+    if (!migrated) {
+      // One-time migration: reset everyone to Kimi K2.5 default
+      localStorage.setItem("ai_model", "gpt-4.1-mini");
+      localStorage.setItem("ai_model_v3", "true");
+      setSelectedModel("gpt-4.1-mini");
+    } else if (saved && AI_MODELS.some(m => m.id === saved)) {
       setSelectedModel(saved);
     }
   }, []);
@@ -268,15 +283,26 @@ export default function CoachPage() {
 
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
+      let fullResponse = "";
 
       if (reader) {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
           const text = decoder.decode(value);
+          fullResponse += text;
           setResponse((prev) => prev + text);
         }
       }
+
+      // Auto-save to session history
+      saveSession({
+        type: "coach",
+        title: `Objection: ${objection.slice(0, 60)}${objection.length > 60 ? "..." : ""}`,
+        input: objection,
+        output: fullResponse,
+        model: selectedModel,
+      });
 
       // Refetch credits after successful call
       refetchCredits();
@@ -636,12 +662,10 @@ export default function CoachPage() {
                 <CardContent>
                   <div
                     ref={responseRef}
-                    className="prose prose-invert prose-sm max-w-none max-h-[500px] overflow-y-auto"
+                    className="prose prose-invert prose-sm max-w-none max-h-[500px] overflow-y-auto prose-headings:text-platinum prose-p:text-gray-200 prose-strong:text-white prose-li:text-gray-200 prose-td:text-gray-300 prose-th:text-platinum prose-th:bg-onyx prose-a:text-neonblue prose-code:text-automationgreen prose-blockquote:text-gray-300 prose-blockquote:border-neonblue/50"
                   >
                     {response ? (
-                      <div className="text-silver whitespace-pre-wrap">
-                        {response}
-                      </div>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{response}</ReactMarkdown>
                     ) : (
                       <div className="flex items-center gap-2 text-mist">
                         <Loader2 className="h-4 w-4 animate-spin" />

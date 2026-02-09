@@ -116,19 +116,25 @@ export async function POST(req: Request) {
       ? getModelByIdSmart(modelId)
       : getLanguageModel();
 
+    // Moonshot API only accepts temperature 0 or 1
+    const isMoonshot = modelId?.startsWith("kimi-");
+    const temperature = isMoonshot ? 1 : 0.6;
+
     // Stream the response
     const result = await streamText({
       model,
       system: systemPrompt,
       messages: [{ role: "user", content: userMessage }],
-      temperature: 0.7,
-      maxTokens: 800, // Increased for contextual responses
+      temperature,
+      maxTokens: 1200,
     });
 
     // Return plain text stream
     return new Response(result.textStream, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache",
+        "X-Content-Type-Options": "nosniff",
       },
     });
   } catch (error) {

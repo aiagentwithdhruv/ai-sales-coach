@@ -21,8 +21,14 @@ import {
   Edit3,
   X,
   Camera,
+  Crown,
+  CreditCard,
+  Loader2,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getSupabaseClient } from "@/lib/supabase/client";
+import Link from "next/link";
 
 // API Types for models
 type ApiType = "openrouter" | "openai" | "anthropic";
@@ -311,6 +317,39 @@ export default function SettingsPage() {
   const [tempName, setTempName] = useState("");
   const [tempEmail, setTempEmail] = useState("");
   const [profileSaved, setProfileSaved] = useState(false);
+
+  // Subscription state
+  const [loadingPortal, setLoadingPortal] = useState(false);
+  const currentPlan = typeof window !== "undefined" ? localStorage.getItem("user_plan") || "free" : "free";
+
+  const handleManageSubscription = async () => {
+    setLoadingPortal(true);
+    try {
+      const supabase = getSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        window.location.href = "/login?redirect=/settings";
+        return;
+      }
+      const res = await fetch("/api/stripe/portal", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || "Could not open billing portal.");
+      }
+    } catch {
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setLoadingPortal(false);
+    }
+  };
 
   // Load saved preferences on mount
   useEffect(() => {
@@ -631,6 +670,52 @@ export default function SettingsPage() {
                       Edit Profile
                     </Button>
                   </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Subscription */}
+            <Card className="bg-graphite border-gunmetal">
+              <CardHeader>
+                <CardTitle className="text-platinum flex items-center gap-2">
+                  <Crown className="h-5 w-5 text-warningamber" />
+                  Subscription
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-silver">Current Plan</span>
+                  <Badge className={cn(
+                    "text-xs",
+                    currentPlan === "pro" ? "bg-neonblue/20 text-neonblue" :
+                    currentPlan === "team" ? "bg-warningamber/20 text-warningamber" :
+                    "bg-steel/20 text-silver"
+                  )}>
+                    {currentPlan === "pro" ? "Pro" : currentPlan === "team" ? "Team" : "Free"}
+                  </Badge>
+                </div>
+                {currentPlan === "free" ? (
+                  <Link href="/pricing">
+                    <Button className="w-full bg-neonblue hover:bg-electricblue text-white gap-2">
+                      <Crown className="h-4 w-4" />
+                      Upgrade to Pro
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button
+                    onClick={handleManageSubscription}
+                    disabled={loadingPortal}
+                    variant="outline"
+                    className="w-full border-gunmetal text-silver hover:text-platinum gap-2"
+                  >
+                    {loadingPortal ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <CreditCard className="h-4 w-4" />
+                    )}
+                    Manage Billing
+                    <ExternalLink className="h-3 w-3" />
+                  </Button>
                 )}
               </CardContent>
             </Card>

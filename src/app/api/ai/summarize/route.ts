@@ -1,0 +1,107 @@
+/**
+ * Meeting Notes Summarizer API Route
+ * Upload meeting notes/transcript and get AI summary with action items
+ */
+
+import { streamText } from "ai";
+import { getModelByIdSmart, getLanguageModel } from "@/lib/ai/providers";
+import { checkCredits, deductCredits } from "@/lib/credits";
+
+export const runtime = "nodejs";
+export const maxDuration = 30;
+
+const SUMMARIZE_PROMPT = `You are a top sales operations analyst who summarizes meetings to maximize follow-through and deal velocity.
+
+FORMAT YOUR RESPONSE EXACTLY LIKE THIS:
+
+## Meeting Summary
+2-3 sentence overview of what was discussed and the outcome.
+
+## Key Decisions Made
+- [Decision 1]
+- [Decision 2]
+
+## Action Items
+
+| Owner | Action Item | Deadline |
+|-------|------------|----------|
+| [Us/Them/Name] | [Specific action] | [Suggested deadline] |
+| [Us/Them/Name] | [Specific action] | [Suggested deadline] |
+
+## Buying Signals Detected
+- [Signal 1] — What it means
+- [Signal 2] — What it means
+
+## Red Flags / Concerns
+- [Concern 1] — How to address it
+- [Concern 2] — How to address it
+
+## Deal Stage Assessment
+Current stage and recommended next steps.
+
+## Follow-Up Email Draft
+Write a brief follow-up email that references the meeting and confirms next steps.
+
+Be specific. Extract every actionable detail. Don't miss anything important.`;
+
+export async function POST(req: Request) {
+  try {
+    const authHeader = req.headers.get("authorization");
+    const creditCheck = await checkCredits(authHeader, 1);
+
+    if (!creditCheck.hasCredits) {
+      return new Response(
+        JSON.stringify({ error: creditCheck.error || "Insufficient credits", code: "INSUFFICIENT_CREDITS" }),
+        { status: 402, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const body = await req.json();
+    const { notes, model: modelId }: { notes: string; model?: string } = body;
+
+    if (!notes) {
+      return new Response(
+        JSON.stringify({ error: "Meeting notes are required" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    if (creditCheck.userId) {
+      const deductResult = await deductCredits(creditCheck.userId, 1);
+      if (!deductResult.success) {
+        return new Response(
+          JSON.stringify({ error: "Failed to deduct credits", code: "CREDIT_DEDUCT_FAILED" }),
+          { status: 500, headers: { "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    const model = modelId ? getModelByIdSmart(modelId) : getLanguageModel();
+    const isMoonshot = modelId?.startsWith("kimi-");
+
+    const result = await streamText({
+      model,
+      system: SUMMARIZE_PROMPT,
+      messages: [{ role: "user", content: `Summarize these meeting notes:\n\n${notes}` }],
+      temperature: isMoonshot ? 1 : 0.5,
+      maxTokens: 2000,
+    });
+
+    return new Response(result.textStream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
+  } catch (error) {
+    console.error("Summarize API Error:", error);
+    return new Response(
+      JSON.stringify({
+        error: "Failed to summarize meeting notes",
+        details: error instanceof Error ? error.message : "Unknown error",
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}

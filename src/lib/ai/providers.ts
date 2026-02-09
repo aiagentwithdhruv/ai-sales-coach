@@ -18,7 +18,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
 
 // Provider types
-export type ProviderType = "openai" | "anthropic" | "openrouter" | "perplexity";
+export type ProviderType = "openai" | "anthropic" | "openrouter" | "perplexity" | "moonshot";
 
 // AI Configuration from environment
 export const aiConfig = {
@@ -27,7 +27,7 @@ export const aiConfig = {
     models: {
       openai: process.env.AI_OPENAI_MODEL || "gpt-4-turbo",
       anthropic: process.env.AI_ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022",
-      openrouter: process.env.AI_OPENROUTER_MODEL || "anthropic/claude-3.5-sonnet",
+      openrouter: process.env.AI_OPENROUTER_MODEL || "moonshotai/kimi-k2.5",
     },
   },
   embeddings: {
@@ -58,6 +58,12 @@ const openrouter = createOpenAI({
     "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
     "X-Title": "AI Sales Coach",
   },
+});
+
+// Moonshot AI provider (Kimi K2.5 - Direct API, OpenAI-compatible)
+const moonshot = createOpenAI({
+  apiKey: process.env.MOONSHOT_API_KEY,
+  baseURL: "https://api.moonshot.ai/v1",
 });
 
 // Perplexity provider (OpenAI-compatible API)
@@ -140,6 +146,11 @@ export function getDirectAnthropicModel(modelId: string) {
  * - Direct Anthropic: starts with "claude-" (e.g., "claude-opus-4-5-20251101")
  */
 export function getModelByIdSmart(modelId: string) {
+  // Direct Moonshot/Kimi models
+  if (modelId.startsWith("kimi-")) {
+    return moonshot(modelId);
+  }
+
   // OpenRouter models have a "/" in the ID
   if (modelId.includes("/")) {
     return openrouter(modelId);
@@ -273,8 +284,13 @@ export function getLangChainOpenRouterModel(modelId: string) {
  * Full list: https://openrouter.ai/models
  */
 export const OPENROUTER_MODELS = {
+  // Cost-effective default
+  default: [
+    "moonshotai/kimi-k2.5",
+  ],
   // Fast & efficient (good for simple tasks)
   fast: [
+    "moonshotai/kimi-k2.5",
     "openai/gpt-4.1-mini",
     "openai/gpt-4.1-nano",
     "anthropic/claude-haiku-4-5",
@@ -283,6 +299,7 @@ export const OPENROUTER_MODELS = {
   ],
   // Balanced (good for most tasks)
   balanced: [
+    "moonshotai/kimi-k2.5",
     "openai/gpt-4.1",
     "anthropic/claude-sonnet-4",
     "google/gemini-3-flash",

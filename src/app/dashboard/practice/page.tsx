@@ -21,8 +21,11 @@ import {
   Image as ImageIcon,
   Upload,
   X,
+  BookOpen,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PRACTICE_SCENARIOS, getScenariosByCategory, type Scenario } from "@/lib/scenarios";
 
 // Personas data (matching the API)
 const PERSONAS = [
@@ -158,10 +161,40 @@ export default function PracticePage() {
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [allowNoContext, setAllowNoContext] = useState(false);
   const [scriptText, setScriptText] = useState("");
+  const [showScenarios, setShowScenarios] = useState(false);
+  const [scenarioFilter, setScenarioFilter] = useState<string>("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scriptInputRef = useRef<HTMLInputElement>(null);
 
+  const scenariosByCategory = getScenariosByCategory();
+  const filteredScenarios = scenarioFilter === "all"
+    ? PRACTICE_SCENARIOS
+    : PRACTICE_SCENARIOS.filter(s => s.category === scenarioFilter);
+
   const selectedPersona = PERSONAS.find((p) => p.id === selectedPersonaId)!;
+
+  const handleSelectScenario = (scenario: Scenario) => {
+    // Find matching persona or use first one
+    const matchingPersona = PERSONAS.find(p =>
+      p.industry.toLowerCase().includes(scenario.persona.industry.toLowerCase().split("/")[0].trim())
+    );
+    if (matchingPersona) setSelectedPersonaId(matchingPersona.id);
+
+    // Set training focus
+    const focusMatch = TRAINING_FOCUS_OPTIONS.find(f => f.id === scenario.trainingFocus);
+    if (focusMatch) setTrainingFocus(focusMatch.id);
+
+    // Set script text with scenario context
+    setScriptText(
+      `SCENARIO: ${scenario.title}\n` +
+      `PROSPECT: ${scenario.persona.name}, ${scenario.persona.title} at ${scenario.persona.company} (${scenario.persona.industry})\n` +
+      `SITUATION: ${scenario.situation}\n` +
+      `OBJECTIVE: ${scenario.objective}`
+    );
+
+    setShowScenarios(false);
+    setAllowNoContext(true);
+  };
 
   const handleStartSession = () => {
     setIsSessionActive(true);
@@ -314,6 +347,82 @@ export default function PracticePage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Practice Scenarios */}
+        <Card className="bg-graphite border-gunmetal">
+          <CardHeader className="cursor-pointer" onClick={() => setShowScenarios(!showScenarios)}>
+            <CardTitle className="text-platinum flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-neonblue" />
+                Practice Scenarios
+                <Badge className="bg-neonblue/10 text-neonblue text-xs">{PRACTICE_SCENARIOS.length} scenarios</Badge>
+              </div>
+              <ChevronRight className={cn("h-5 w-5 text-silver transition-transform", showScenarios && "rotate-90")} />
+            </CardTitle>
+          </CardHeader>
+          {showScenarios && (
+            <CardContent className="space-y-4">
+              {/* Category Filter */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={() => setScenarioFilter("all")}
+                  className={cn(
+                    "px-3 py-1 rounded-lg text-xs font-medium transition-colors",
+                    scenarioFilter === "all"
+                      ? "bg-neonblue/10 text-neonblue border border-neonblue/50"
+                      : "bg-onyx text-silver border border-gunmetal hover:border-neonblue/30"
+                  )}
+                >
+                  All
+                </button>
+                {Object.keys(scenariosByCategory).map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setScenarioFilter(cat)}
+                    className={cn(
+                      "px-3 py-1 rounded-lg text-xs font-medium transition-colors",
+                      scenarioFilter === cat
+                        ? "bg-neonblue/10 text-neonblue border border-neonblue/50"
+                        : "bg-onyx text-silver border border-gunmetal hover:border-neonblue/30"
+                    )}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              {/* Scenario Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[400px] overflow-y-auto">
+                {filteredScenarios.map((scenario) => (
+                  <button
+                    key={scenario.id}
+                    onClick={() => handleSelectScenario(scenario)}
+                    className="p-3 rounded-lg bg-onyx border border-gunmetal hover:border-neonblue/50 text-left transition-all group"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <Badge
+                        className={cn(
+                          "text-[10px]",
+                          scenario.difficulty === "easy" && "bg-automationgreen/20 text-automationgreen",
+                          scenario.difficulty === "medium" && "bg-warningamber/20 text-warningamber",
+                          scenario.difficulty === "hard" && "bg-errorred/20 text-errorred"
+                        )}
+                      >
+                        {scenario.difficulty}
+                      </Badge>
+                      <ChevronRight className="h-3 w-3 text-mist group-hover:text-neonblue transition-colors" />
+                    </div>
+                    <h4 className="text-sm font-medium text-platinum mb-1">{scenario.title}</h4>
+                    <p className="text-xs text-silver line-clamp-2">{scenario.situation}</p>
+                    <p className="text-[10px] text-mist mt-2">
+                      {scenario.persona.name} • {scenario.persona.company}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          )}
+        </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Persona Selection */}

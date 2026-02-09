@@ -3,21 +3,24 @@
 import { useState, useEffect } from "react";
 import { WelcomeSection, QuickActions } from "@/components/features/dashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import { getSessions, getSessionStats } from "@/lib/session-history";
 import {
-  ArrowRight,
-  Clock,
-  TrendingUp,
   MessageSquare,
   Phone,
-  Trophy,
   Flame,
+  Mic,
+  ArrowRight,
+  Swords,
+  TrendingUp,
+  Target,
+  PenLine,
+  History,
 } from "lucide-react";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
-// Mock data - will be replaced with real data from Supabase
 const mockStats = {
   winRate: 68,
   winRateChange: 12,
@@ -27,97 +30,29 @@ const mockStats = {
   activeDealsChange: 3,
 };
 
-const mockDeals = [
-  {
-    id: 1,
-    name: "Acme Corp Enterprise",
-    value: "$125,000",
-    stage: "Negotiation",
-    progress: 75,
-    status: "hot",
-    daysInStage: 5,
-  },
-  {
-    id: 2,
-    name: "TechStart Series A",
-    value: "$85,000",
-    stage: "Proposal",
-    progress: 50,
-    status: "warm",
-    daysInStage: 3,
-  },
-  {
-    id: 3,
-    name: "Global Industries",
-    value: "$200,000",
-    stage: "Discovery",
-    progress: 25,
-    status: "new",
-    daysInStage: 1,
-  },
-];
-
-const mockActivity = [
-  {
-    id: 1,
-    type: "call",
-    description: "Completed call with Acme Corp",
-    time: "2 hours ago",
-    icon: Phone,
-    iconColor: "text-automationgreen",
-    iconBg: "bg-automationgreen/10",
-  },
-  {
-    id: 2,
-    type: "practice",
-    description: "Completed objection handling practice",
-    time: "4 hours ago",
-    icon: MessageSquare,
-    iconColor: "text-neonblue",
-    iconBg: "bg-neonblue/10",
-  },
-  {
-    id: 3,
-    type: "deal",
-    description: "Deal moved to negotiation stage",
-    time: "Yesterday",
-    icon: TrendingUp,
-    iconColor: "text-warningamber",
-    iconBg: "bg-warningamber/10",
-  },
-];
-
-const getStatusBadge = (status: string) => {
-  switch (status) {
-    case "hot":
-      return (
-        <Badge className="bg-errorred/20 text-errorred border-none">Hot</Badge>
-      );
-    case "warm":
-      return (
-        <Badge className="bg-warningamber/20 text-warningamber border-none">
-          Warm
-        </Badge>
-      );
-    case "new":
-      return (
-        <Badge className="bg-neonblue/20 text-neonblue border-none">New</Badge>
-      );
-    default:
-      return <Badge variant="secondary">{status}</Badge>;
-  }
-};
-
 export default function DashboardPage() {
   const [userName, setUserName] = useState("there");
+  const [sessionStats, setSessionStats] = useState({
+    total: 0,
+    thisWeek: 0,
+    thisMonth: 0,
+    byType: { coach: 0, practice: 0, call: 0, tool: 0 },
+  });
+  const [recentSessions, setRecentSessions] = useState<
+    { id: string; type: string; title: string; timestamp: number }[]
+  >([]);
   const supabase = getSupabaseClient();
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) {
-        // Get first name from full name or email
-        const fullName = user.user_metadata?.full_name || user.email?.split("@")[0] || "there";
+        const fullName =
+          user.user_metadata?.full_name ||
+          user.email?.split("@")[0] ||
+          "there";
         const firstName = fullName.split(" ")[0];
         setUserName(firstName);
       }
@@ -125,10 +60,114 @@ export default function DashboardPage() {
     getUser();
   }, [supabase.auth]);
 
+  useEffect(() => {
+    setSessionStats(getSessionStats());
+    const sessions = getSessions().slice(0, 5);
+    setRecentSessions(
+      sessions.map((s) => ({
+        id: s.id,
+        type: s.type,
+        title: s.title,
+        timestamp: s.timestamp,
+      }))
+    );
+  }, []);
+
+  const TYPE_ICONS: Record<string, { icon: typeof MessageSquare; color: string; bg: string }> = {
+    coach: { icon: MessageSquare, color: "text-neonblue", bg: "bg-neonblue/10" },
+    practice: { icon: Mic, color: "text-automationgreen", bg: "bg-automationgreen/10" },
+    call: { icon: Phone, color: "text-warningamber", bg: "bg-warningamber/10" },
+    tool: { icon: Swords, color: "text-purple-400", bg: "bg-purple-400/10" },
+  };
+
+  const formatTime = (timestamp: number) => {
+    const diff = Date.now() - timestamp;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "Just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d ago`;
+    return new Date(timestamp).toLocaleDateString();
+  };
+
   return (
     <div className="space-y-6">
-      {/* Welcome Section */}
       <WelcomeSection userName={userName} stats={mockStats} />
+
+      {/* Progress Stats */}
+      <section>
+        <h2 className="text-lg font-semibold text-platinum mb-4">Your Progress</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <Card className="bg-onyx border-gunmetal">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-neonblue/10 flex items-center justify-center">
+                <Target className="h-5 w-5 text-neonblue" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-platinum">{sessionStats.total}</p>
+                <p className="text-xs text-mist">Total Sessions</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-onyx border-gunmetal">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-automationgreen/10 flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 text-automationgreen" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-platinum">{sessionStats.thisWeek}</p>
+                <p className="text-xs text-mist">This Week</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-onyx border-gunmetal">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-neonblue/10 flex items-center justify-center">
+                <MessageSquare className="h-5 w-5 text-neonblue" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-neonblue">{sessionStats.byType.coach}</p>
+                <p className="text-xs text-mist">Coaching</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-onyx border-gunmetal">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-automationgreen/10 flex items-center justify-center">
+                <Mic className="h-5 w-5 text-automationgreen" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-automationgreen">{sessionStats.byType.practice}</p>
+                <p className="text-xs text-mist">Practice</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-onyx border-gunmetal">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-warningamber/10 flex items-center justify-center">
+                <Phone className="h-5 w-5 text-warningamber" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-warningamber">{sessionStats.byType.call}</p>
+                <p className="text-xs text-mist">Calls</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-onyx border-gunmetal">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-purple-400/10 flex items-center justify-center">
+                <Swords className="h-5 w-5 text-purple-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-purple-400">{sessionStats.byType.tool}</p>
+                <p className="text-xs text-mist">Tools</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
 
       {/* Quick Actions */}
       <section>
@@ -138,55 +177,64 @@ export default function DashboardPage() {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Active Deals */}
+        {/* Get Started Guide */}
         <Card className="lg:col-span-2 bg-onyx border-gunmetal">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-semibold text-platinum">
-              Active Deals
-            </CardTitle>
-            <Button variant="ghost" size="sm" className="text-neonblue hover:text-electricblue">
-              View All <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-semibold text-platinum">Get Started</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {mockDeals.map((deal) => (
-                <div
-                  key={deal.id}
-                  className="p-4 rounded-lg bg-graphite border border-gunmetal hover:border-steel transition-colors"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h4 className="font-medium text-platinum">{deal.name}</h4>
-                      <p className="text-sm text-silver">{deal.value}</p>
+              <Link href="/dashboard/coach">
+                <div className="p-4 rounded-lg bg-graphite border border-gunmetal hover:border-neonblue transition-colors cursor-pointer">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-lg bg-neonblue/10">
+                      <MessageSquare className="h-6 w-6 text-neonblue" />
                     </div>
-                    <div className="flex items-center gap-2">
-                      {getStatusBadge(deal.status)}
-                      <Badge variant="secondary" className="bg-steel/50">
-                        {deal.stage}
-                      </Badge>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-platinum">Handle Objections</h4>
+                      <p className="text-sm text-silver mt-1">Get AI-powered responses to any sales objection instantly</p>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-xs text-silver">
-                      <span>Progress</span>
-                      <span>{deal.progress}%</span>
-                    </div>
-                    <Progress value={deal.progress} className="h-1.5" />
-                  </div>
-                  <div className="flex items-center gap-1 mt-2 text-xs text-mist">
-                    <Clock className="h-3 w-3" />
-                    <span>{deal.daysInStage} days in stage</span>
+                    <ArrowRight className="h-5 w-5 text-silver" />
                   </div>
                 </div>
-              ))}
+              </Link>
+
+              <Link href="/dashboard/text-practice">
+                <div className="p-4 rounded-lg bg-graphite border border-gunmetal hover:border-infocyan transition-colors cursor-pointer">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-lg bg-infocyan/10">
+                      <PenLine className="h-6 w-6 text-infocyan" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-platinum">Text Practice</h4>
+                      <p className="text-sm text-silver mt-1">Practice selling via chat with AI scoring at the end</p>
+                    </div>
+                    <ArrowRight className="h-5 w-5 text-silver" />
+                  </div>
+                </div>
+              </Link>
+
+              <Link href="/dashboard/tools">
+                <div className="p-4 rounded-lg bg-graphite border border-gunmetal hover:border-purple-400 transition-colors cursor-pointer">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-lg bg-purple-400/10">
+                      <Swords className="h-6 w-6 text-purple-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-platinum">Sales Tools</h4>
+                      <p className="text-sm text-silver mt-1">Email crafter, pitch scorer, battle cards, deal strategy & more</p>
+                    </div>
+                    <ArrowRight className="h-5 w-5 text-silver" />
+                  </div>
+                </div>
+              </Link>
             </div>
           </CardContent>
         </Card>
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Practice Streak */}
+          {/* Sessions This Week */}
           <Card className="bg-onyx border-gunmetal">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
@@ -194,84 +242,53 @@ export default function DashboardPage() {
                   <Flame className="h-8 w-8 text-warningamber" />
                 </div>
                 <div>
-                  <p className="text-3xl font-bold text-platinum">7</p>
-                  <p className="text-sm text-silver">Day Streak</p>
+                  <p className="text-3xl font-bold text-platinum">{sessionStats.thisWeek || 0}</p>
+                  <p className="text-sm text-silver">Sessions This Week</p>
                 </div>
               </div>
-              <p className="text-xs text-mist mt-4">
-                Keep practicing daily to maintain your streak!
-              </p>
-              <Button className="w-full mt-4 bg-neonblue hover:bg-electricblue">
-                Practice Now
-              </Button>
+              <p className="text-xs text-mist mt-4">Keep practicing to sharpen your sales skills!</p>
+              <Link href="/dashboard/practice">
+                <Button className="w-full mt-4 bg-neonblue hover:bg-electricblue">Practice Now</Button>
+              </Link>
             </CardContent>
           </Card>
 
           {/* Recent Activity */}
           <Card className="bg-onyx border-gunmetal">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold text-platinum">
+              <CardTitle className="text-lg font-semibold text-platinum flex items-center justify-between">
                 Recent Activity
+                {recentSessions.length > 0 && (
+                  <Link href="/dashboard/history" className="text-xs text-neonblue hover:underline font-normal">View All</Link>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {mockActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-start gap-3">
-                    <div className={`p-2 rounded-lg ${activity.iconBg}`}>
-                      <activity.icon className={`h-4 w-4 ${activity.iconColor}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-platinum truncate">
-                        {activity.description}
-                      </p>
-                      <p className="text-xs text-mist">{activity.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Leaderboard Preview */}
-          <Card className="bg-onyx border-gunmetal">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold text-platinum flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-warningamber" />
-                Team Leaderboard
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-2 rounded-lg bg-warningamber/10 border border-warningamber/20">
-                  <span className="text-lg font-bold text-warningamber">#1</span>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-platinum">Alex Chen</p>
-                    <p className="text-xs text-silver">142% quota</p>
-                  </div>
+              {recentSessions.length > 0 ? (
+                <div className="space-y-4">
+                  {recentSessions.map((session) => {
+                    const config = TYPE_ICONS[session.type] || TYPE_ICONS.tool;
+                    const Icon = config.icon;
+                    return (
+                      <div key={session.id} className="flex items-start gap-3">
+                        <div className={cn("p-2 rounded-lg", config.bg)}>
+                          <Icon className={cn("h-4 w-4", config.color)} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-platinum truncate">{session.title}</p>
+                          <p className="text-xs text-mist">{formatTime(session.timestamp)}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="flex items-center gap-3 p-2 rounded-lg bg-steel/30">
-                  <span className="text-lg font-bold text-silver">#2</span>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-platinum">Maria Garcia</p>
-                    <p className="text-xs text-silver">128% quota</p>
-                  </div>
+              ) : (
+                <div className="text-center py-6">
+                  <History className="h-8 w-8 text-mist mx-auto mb-2" />
+                  <p className="text-sm text-silver">No activity yet</p>
+                  <p className="text-xs text-mist">Start a coaching session to see your activity here</p>
                 </div>
-                <div className="flex items-center gap-3 p-2 rounded-lg bg-neonblue/10 border border-neonblue/20">
-                  <span className="text-lg font-bold text-neonblue">#3</span>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-platinum">You</p>
-                    <p className="text-xs text-silver">115% quota</p>
-                  </div>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full mt-4 text-neonblue hover:text-electricblue"
-              >
-                View Full Leaderboard
-              </Button>
+              )}
             </CardContent>
           </Card>
         </div>

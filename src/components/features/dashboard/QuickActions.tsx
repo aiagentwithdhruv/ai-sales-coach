@@ -7,7 +7,7 @@ import {
   MessageSquare,
   Mic,
   Phone,
-  BarChart3,
+  Swords,
   LucideIcon,
 } from "lucide-react";
 
@@ -46,12 +46,12 @@ const quickActions: QuickAction[] = [
     iconBg: "bg-warningamber/10",
   },
   {
-    icon: BarChart3,
-    title: "Review Deal",
-    description: "Get AI analysis of your pipeline deals",
-    href: "/dashboard/deals",
-    iconColor: "text-infocyan",
-    iconBg: "bg-infocyan/10",
+    icon: Swords,
+    title: "Sales Tools",
+    description: "Email crafter, pitch scorer, battle cards & more",
+    href: "/dashboard/tools",
+    iconColor: "text-purple-400",
+    iconBg: "bg-purple-400/10",
   },
 ];
 
