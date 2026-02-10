@@ -13,8 +13,12 @@ import {
   Building2,
   Sparkles,
   ArrowRight,
-  Users,
+  Crown,
   Loader2,
+  Phone,
+  Brain,
+  BarChart3,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -25,130 +29,161 @@ type BillingInterval = "monthly" | "quarterly" | "yearly";
 const BILLING_OPTIONS: { id: BillingInterval; label: string; discount: number; badge: string | null }[] = [
   { id: "monthly", label: "Monthly", discount: 0, badge: null },
   { id: "quarterly", label: "Quarterly", discount: 10, badge: "Save 10%" },
-  { id: "yearly", label: "Yearly", discount: 30, badge: "Save 30%" },
+  { id: "yearly", label: "Yearly", discount: 20, badge: "Save 20%" },
 ];
 
 const PRICING_PLANS = [
   {
-    id: "free",
-    name: "Free",
-    description: "Try every tool — no credit card needed",
+    id: "starter",
+    name: "Starter",
+    description: "For individual reps getting started with AI coaching",
     icon: Zap,
-    iconColor: "text-silver",
-    iconBg: "bg-steel/20",
-    monthlyPrice: 0,
+    iconColor: "text-neonblue",
+    iconBg: "bg-neonblue/20",
+    monthlyPrice: 79,
+    perUser: true,
     features: [
-      { text: "5 AI credits/day (enough to try everything)", included: true },
-      { text: "All 12 sales tools", included: true },
-      { text: "Text-only practice", included: true },
-      { text: "Basic objection coaching", included: true },
-      { text: "Session history (last 20)", included: true },
+      { text: "AI sales practice (text + voice)", included: true },
+      { text: "50 AI coaching sessions/month", included: true },
+      { text: "CRM with pipeline management", included: true },
+      { text: "Up to 500 contacts", included: true },
+      { text: "Deal tracking & forecasting", included: true },
+      { text: "5 AI models (GPT-5 Mini, Haiku, Gemini)", included: true },
+      { text: "Basic call analysis", included: true },
+      { text: "Email follow-up suggestions", included: true },
+      { text: "Session history & analytics", included: true },
       { text: "Community support", included: true },
-      { text: "Voice practice", included: false },
-      { text: "Unlimited call analysis", included: false },
-      { text: "PDF exports", included: false },
-      { text: "Custom personas", included: false },
+      { text: "Voice practice with GPT-4o Realtime", included: false },
+      { text: "AI outbound calling", included: false },
+      { text: "Premium AI models", included: false },
     ],
-    cta: "Get Started Free",
-    ctaLink: "/signup",
+    cta: "Start 14-Day Trial",
+    ctaLink: "/signup?plan=starter",
     popular: false,
   },
   {
-    id: "pro",
-    name: "Pro",
-    description: "For individual sales professionals",
+    id: "professional",
+    name: "Professional",
+    description: "Full-featured platform for serious sales teams",
     icon: Rocket,
     iconColor: "text-neonblue",
     iconBg: "bg-neonblue/20",
-    monthlyPrice: 19,
+    monthlyPrice: 149,
+    perUser: true,
     features: [
-      { text: "Unlimited AI credits", included: true },
-      { text: "Everything in Free", included: true },
+      { text: "Everything in Starter", included: true },
+      { text: "Unlimited AI coaching sessions", included: true },
       { text: "Voice practice with GPT-4o Realtime", included: true },
-      { text: "Unlimited call analysis", included: true },
-      { text: "PDF export reports", included: true },
+      { text: "Unlimited contacts & pipeline", included: true },
+      { text: "AI contact enrichment", included: true },
+      { text: "All 25+ AI models (GPT-5.2, Claude Opus, Sonnet)", included: true },
+      { text: "Advanced call analysis & scoring", included: true },
       { text: "Custom practice personas", included: true },
-      { text: "All AI models (GPT-4o, Claude 4.6, Gemini, Kimi K2.5)", included: true },
+      { text: "PDF export reports", included: true },
+      { text: "Webhook integrations (n8n, Zapier)", included: true },
+      { text: "Advanced analytics & forecasting", included: true },
       { text: "Priority support", included: true },
     ],
-    cta: "Start Pro Trial",
-    ctaLink: "/signup?plan=pro",
+    cta: "Start 14-Day Trial",
+    ctaLink: "/signup?plan=professional",
     popular: true,
   },
   {
-    id: "team",
-    name: "Team",
-    description: "For sales teams up to 5 members",
-    icon: Users,
+    id: "business",
+    name: "Business",
+    description: "For sales organizations that need AI calling & team tools",
+    icon: Crown,
     iconColor: "text-warningamber",
     iconBg: "bg-warningamber/20",
-    monthlyPrice: 49,
+    monthlyPrice: 249,
+    perUser: true,
     features: [
-      { text: "Everything in Pro", included: true },
-      { text: "Up to 5 team members", included: true },
-      { text: "Team progress dashboard", included: true },
+      { text: "Everything in Professional", included: true },
+      { text: "AI outbound calling (campaigns)", included: true },
+      { text: "AI Agent Builder", included: true },
+      { text: "Call recordings & transcriptions", included: true },
+      { text: "Team management & dashboards", included: true },
+      { text: "Manager analytics & leaderboards", included: true },
       { text: "Shared objection library", included: true },
-      { text: "Shared call recordings", included: true },
-      { text: "Manager analytics", included: true },
+      { text: "Automated follow-up sequences", included: true },
+      { text: "API access", included: true },
       { text: "Slack integration", included: true },
-      { text: "Priority chat support", included: true },
+      { text: "Dedicated success manager", included: true },
+      { text: "Onboarding & training", included: true },
     ],
-    cta: "Start Team Trial",
-    ctaLink: "/signup?plan=team",
+    cta: "Start 14-Day Trial",
+    ctaLink: "/signup?plan=business",
     popular: false,
   },
   {
     id: "enterprise",
     name: "Enterprise",
-    description: "For large sales organizations",
+    description: "Custom solutions for large sales organizations",
     icon: Building2,
     iconColor: "text-automationgreen",
     iconBg: "bg-automationgreen/20",
     monthlyPrice: null,
+    perUser: false,
     features: [
-      { text: "Everything in Team", included: true },
+      { text: "Everything in Business", included: true },
       { text: "Unlimited users", included: true },
       { text: "Custom AI model training", included: true },
       { text: "CRM integration (HubSpot/Salesforce)", included: true },
       { text: "SSO/SAML authentication", included: true },
-      { text: "Dedicated success manager", included: true },
-      { text: "Custom SLA", included: true },
-      { text: "On-premise option", included: true },
+      { text: "Custom SLA & uptime guarantee", included: true },
+      { text: "White-label option", included: true },
+      { text: "On-premise deployment", included: true },
+      { text: "Dedicated account team", included: true },
+      { text: "Custom reporting & BI integration", included: true },
+      { text: "Volume discounts", included: true },
+      { text: "Annual contract flexibility", included: true },
     ],
     cta: "Contact Sales",
-    ctaLink: "mailto:aiwithdhruv@gmail.com",
+    ctaLink: "mailto:aiwithdhruv@gmail.com?subject=QuotaHit Enterprise Inquiry",
     popular: false,
   },
 ];
 
+const COMPARISON_ITEMS = [
+  { label: "Gong.io", price: "$108-250/user/mo", note: "Plus $5K-50K platform fee" },
+  { label: "Salesloft", price: "$140-220/user/mo", note: "Annual contract required" },
+  { label: "Orum", price: "$250/user/mo", note: "3-seat minimum" },
+  { label: "Nooks", price: "$200-417/user/mo", note: "Annual contract required" },
+  { label: "Outreach", price: "$100-400/user/mo", note: "Plus setup fees" },
+];
+
 const FAQ_ITEMS = [
   {
-    q: "What are AI credits?",
-    a: "AI credits are used for each AI interaction — practice sessions, objection handling, call analysis, and more. One credit equals one AI message or analysis. Free users get 5 credits per day, which resets daily. Pro and above get unlimited credits.",
+    q: "How does per-user pricing work?",
+    a: "Each user (sales rep, manager, or admin) needs their own seat. Pricing is per user per month. Volume discounts are available for teams of 10+ on annual plans. Contact us for custom pricing.",
   },
   {
-    q: "How is this 10-50x cheaper than Gong or Chorus?",
-    a: "Gong starts at $1,200/user/year and Chorus at $1,000/user/year, with mandatory annual contracts and minimum seat counts. Our Pro plan is $160/year — giving you AI-powered coaching, voice practice, and call analysis at a fraction of the cost.",
-  },
-  {
-    q: "Can I switch plans or billing intervals anytime?",
-    a: "Yes! You can upgrade, downgrade, or switch between monthly, quarterly, and yearly billing at any time. Changes take effect immediately, and we prorate any billing differences. No lock-in contracts.",
+    q: "How does QuotaHit compare to Gong, Salesloft, or Outreach?",
+    a: "QuotaHit combines AI coaching, CRM, pipeline management, and AI calling in a single platform. Gong starts at $108/user/mo (plus $5K-50K platform fees), Salesloft at $140/user/mo, and Outreach at $100-400/user/mo. Our Professional plan at $149/user/mo gives you coaching + CRM + AI models — replacing 2-3 separate tools.",
   },
   {
     q: "What AI models are included?",
-    a: "Free tier uses our optimized default model. Pro and above unlock all AI models including GPT-4o, Claude 4.6, Gemini, and Kimi K2.5 — so you can pick the best model for each task.",
+    a: "Starter includes 5 efficient models (GPT-5 Mini, Claude Haiku 4.5, Gemini Flash, etc.). Professional and above unlock all 25+ models including premium options like GPT-5.2, GPT-5.1, Claude Opus 4.5, Claude Sonnet 4.5, and o3 — the most capable AI models available.",
   },
   {
-    q: "Is there a free trial for paid plans?",
-    a: "Yes! All paid plans include a 14-day free trial with full access to every feature. No credit card required to start.",
+    q: "Is there a free trial?",
+    a: "Yes, all paid plans include a 14-day free trial with full access to every feature. No credit card required to start. Cancel anytime during the trial.",
   },
   {
-    q: "How does the Team plan work?",
-    a: "The Team plan covers up to 5 users for $49/month (or less with quarterly/yearly billing). Each member gets their own account with shared resources like the objection library and call recordings. Managers get a dedicated analytics dashboard to track team progress.",
+    q: "Can I switch plans anytime?",
+    a: "Absolutely. Upgrade, downgrade, or switch billing intervals at any time. Changes take effect immediately, and we prorate any differences. No lock-in contracts.",
+  },
+  {
+    q: "What's included in AI outbound calling?",
+    a: "The Business plan includes AI-powered outbound calling campaigns. Create AI agents with custom scripts, voices, and objectives. The AI handles cold calls, qualifies leads, books meetings, and logs everything to your CRM automatically. Telephony costs (Twilio) are billed separately at ~$0.04/min.",
+  },
+  {
+    q: "Do you offer volume discounts?",
+    a: "Yes. Teams of 10+ on annual plans receive volume discounts. Enterprise customers get custom pricing based on team size and requirements. Contact sales for a quote.",
   },
   {
     q: "What payment methods do you accept?",
-    a: "We accept all major credit cards and PayPal. Enterprise customers can pay via wire transfer or invoice.",
+    a: "We accept all major credit cards. Enterprise customers can pay via wire transfer, ACH, or invoice with NET-30 terms.",
   },
 ];
 
@@ -180,7 +215,7 @@ export default function PricingPage() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   const handleCheckout = async (planId: string) => {
-    if (planId === "free" || planId === "enterprise") return;
+    if (planId === "enterprise") return;
 
     setLoadingPlan(planId);
     try {
@@ -255,20 +290,20 @@ export default function PricingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-16 sm:py-24">
+      <section className="py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Badge className="bg-neonblue/20 text-neonblue border-none mb-4">
-            Simple, transparent pricing
+            Transparent per-seat pricing
           </Badge>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-platinum mb-4">
-            Choose your plan
+            One platform. Every tool you need.
           </h1>
-          <p className="text-lg sm:text-xl font-medium text-warningamber mb-6">
-            10-50x cheaper than Gong, Dialpad, or Chorus
+          <p className="text-xl text-silver max-w-3xl mx-auto mb-4">
+            AI coaching, CRM, pipeline management, and outbound calling — all in one place.
+            Replace 3-4 tools and save thousands per rep.
           </p>
-          <p className="text-xl text-silver max-w-2xl mx-auto mb-10">
-            Start free and scale as you grow. All paid plans include a 14-day trial.
-            No credit card required.
+          <p className="text-lg text-mist max-w-2xl mx-auto mb-10">
+            All plans include a 14-day free trial. No credit card required.
           </p>
 
           {/* Billing Interval Selector */}
@@ -297,14 +332,12 @@ export default function PricingPage() {
       </section>
 
       {/* Pricing Cards */}
-      <section className="pb-24">
+      <section className="pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
             {PRICING_PLANS.map((plan) => {
               const Icon = plan.icon;
-              const isEnterprise = plan.id === "enterprise";
               const isMailto = plan.ctaLink.startsWith("mailto:");
-              const isFree = plan.monthlyPrice === 0 || plan.monthlyPrice === null;
 
               const effectivePrice = plan.monthlyPrice !== null && plan.monthlyPrice > 0
                 ? getDiscountedPrice(plan.monthlyPrice, billingInterval)
@@ -324,12 +357,12 @@ export default function PricingPage() {
                 <Card
                   key={plan.id}
                   className={cn(
-                    "relative bg-onyx border-gunmetal transition-all duration-300 hover:border-steel hover:shadow-lg hover:shadow-neonblue/5",
-                    plan.popular ? "glow-card-visible border-neonblue ring-2 ring-neonblue/20" : "glow-card"
+                    "relative bg-onyx border-gunmetal transition-all duration-300 hover:border-steel hover:shadow-lg hover:shadow-neonblue/5 flex flex-col",
+                    plan.popular ? "glow-card-visible border-neonblue ring-2 ring-neonblue/20 lg:scale-[1.03]" : "glow-card"
                   )}
                 >
                   {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
                       <Badge className="bg-neonblue text-white border-none shadow-lg shadow-neonblue/30">
                         Most Popular
                       </Badge>
@@ -348,12 +381,12 @@ export default function PricingPage() {
                     <CardTitle className="text-xl font-bold text-platinum">
                       {plan.name}
                     </CardTitle>
-                    <p className="text-sm text-mist">{plan.description}</p>
+                    <p className="text-sm text-mist min-h-[2.5rem]">{plan.description}</p>
                   </CardHeader>
 
-                  <CardContent className="space-y-6">
+                  <CardContent className="space-y-6 flex flex-col flex-1">
                     {/* Pricing */}
-                    <div>
+                    <div className="min-h-[5rem]">
                       {effectivePrice !== null ? (
                         <div>
                           <div className="flex items-baseline gap-2">
@@ -365,33 +398,31 @@ export default function PricingPage() {
                             <span className="text-4xl font-bold text-platinum">
                               ${effectivePrice % 1 === 0 ? effectivePrice : effectivePrice.toFixed(2)}
                             </span>
-                            <span className="text-silver">/mo</span>
+                            <span className="text-silver">/user/mo</span>
                           </div>
                           {billingInterval === "quarterly" && billingTotal !== null && (
                             <p className="text-sm text-neonblue mt-1 font-medium">
-                              Billed ${billingTotal.toFixed(2)} every 3 months
+                              Billed ${billingTotal.toFixed(2)}/user quarterly
                             </p>
                           )}
                           {billingInterval === "yearly" && billingTotal !== null && (
                             <p className="text-sm text-neonblue mt-1 font-medium">
-                              Billed ${billingTotal.toFixed(2)}/year
+                              Billed ${billingTotal.toFixed(2)}/user/year
                             </p>
                           )}
                           {yearlySavings > 0 && (
                             <p className="text-xs text-automationgreen mt-1 font-semibold">
-                              You save ${yearlySavings.toFixed(2)}/year
+                              Save ${yearlySavings.toFixed(0)}/user/year
                             </p>
                           )}
                         </div>
                       ) : (
-                        <div className="text-4xl font-bold text-platinum">
-                          Custom
+                        <div>
+                          <span className="text-4xl font-bold text-platinum">Custom</span>
+                          <p className="text-sm text-mist mt-1">
+                            Tailored to your organization
+                          </p>
                         </div>
-                      )}
-                      {plan.id === "team" && (
-                        <p className="text-xs text-mist mt-1">
-                          For up to 5 users
-                        </p>
                       )}
                     </div>
 
@@ -399,16 +430,13 @@ export default function PricingPage() {
                     {isMailto ? (
                       <a href={plan.ctaLink}>
                         <Button
-                          className={cn(
-                            "w-full",
-                            "bg-automationgreen hover:bg-automationgreen/90"
-                          )}
+                          className="w-full bg-automationgreen hover:bg-automationgreen/90"
                         >
                           {plan.cta}
                           <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
                       </a>
-                    ) : plan.id === "pro" || plan.id === "team" ? (
+                    ) : (
                       <Button
                         onClick={() => handleCheckout(plan.id)}
                         disabled={loadingPlan === plan.id}
@@ -431,33 +459,21 @@ export default function PricingPage() {
                           </>
                         )}
                       </Button>
-                    ) : (
-                      <Link href={plan.ctaLink}>
-                        <Button
-                          className={cn(
-                            "w-full",
-                            "bg-steel hover:bg-gunmetal"
-                          )}
-                        >
-                          {plan.cta}
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </Button>
-                      </Link>
                     )}
 
                     {/* Features List */}
-                    <ul className="space-y-3">
+                    <ul className="space-y-3 flex-1">
                       {plan.features.map((feature, idx) => (
                         <li key={idx} className="flex items-start gap-3">
                           {feature.included ? (
-                            <Check className="w-5 h-5 text-automationgreen flex-shrink-0 mt-0.5" />
+                            <Check className="w-4 h-4 text-automationgreen flex-shrink-0 mt-0.5" />
                           ) : (
-                            <X className="w-5 h-5 text-mist flex-shrink-0 mt-0.5" />
+                            <X className="w-4 h-4 text-mist/50 flex-shrink-0 mt-0.5" />
                           )}
                           <span
                             className={cn(
                               "text-sm",
-                              feature.included ? "text-silver" : "text-mist"
+                              feature.included ? "text-silver" : "text-mist/50"
                             )}
                           >
                             {feature.text}
@@ -476,35 +492,138 @@ export default function PricingPage() {
             <div className="mt-8 bg-gradient-to-r from-automationgreen/10 via-automationgreen/5 to-automationgreen/10 border border-automationgreen/20 rounded-xl p-6 text-center">
               <p className="text-lg font-semibold text-platinum">
                 {billingInterval === "quarterly"
-                  ? "Quarterly billing saves you 10% — that's $22.80/year on Pro!"
-                  : "Yearly billing saves you 30% — that's $68.40/year on Pro!"}
+                  ? "Quarterly billing saves 10% — that's $178/user/year on Professional!"
+                  : "Annual billing saves 20% — that's $358/user/year on Professional!"}
               </p>
               <p className="text-sm text-silver mt-1">
                 {billingInterval === "quarterly"
                   ? "Pay every 3 months at a lower rate. Switch to yearly anytime for even more savings."
-                  : "Best value! Lock in the lowest price for a full year. Cancel anytime."}
+                  : "Best value. Lock in the lowest price for a full year. Cancel anytime."}
               </p>
             </div>
           )}
         </div>
       </section>
 
+      {/* What's Included Section */}
+      <section className="py-20 border-t border-gunmetal">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-platinum mb-3">
+              Everything you need to close more deals
+            </h2>
+            <p className="text-lg text-silver">
+              Built-in tools that replace your entire sales tech stack
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-onyx border border-gunmetal rounded-xl p-6 text-center">
+              <div className="w-12 h-12 rounded-xl bg-neonblue/20 flex items-center justify-center mx-auto mb-4">
+                <Brain className="w-6 h-6 text-neonblue" />
+              </div>
+              <h3 className="text-lg font-semibold text-platinum mb-2">AI Sales Coaching</h3>
+              <p className="text-sm text-silver">
+                Practice with AI personas, get real-time feedback, objection handling, and voice roleplay with GPT-4o.
+              </p>
+            </div>
+            <div className="bg-onyx border border-gunmetal rounded-xl p-6 text-center">
+              <div className="w-12 h-12 rounded-xl bg-warningamber/20 flex items-center justify-center mx-auto mb-4">
+                <BarChart3 className="w-6 h-6 text-warningamber" />
+              </div>
+              <h3 className="text-lg font-semibold text-platinum mb-2">CRM & Pipeline</h3>
+              <p className="text-sm text-silver">
+                Full CRM with drag-and-drop pipeline, contact enrichment, deal forecasting, and webhook integrations.
+              </p>
+            </div>
+            <div className="bg-onyx border border-gunmetal rounded-xl p-6 text-center">
+              <div className="w-12 h-12 rounded-xl bg-automationgreen/20 flex items-center justify-center mx-auto mb-4">
+                <Phone className="w-6 h-6 text-automationgreen" />
+              </div>
+              <h3 className="text-lg font-semibold text-platinum mb-2">AI Outbound Calling</h3>
+              <p className="text-sm text-silver">
+                Build AI agents that make outbound calls, qualify leads, book meetings, and log everything to your CRM.
+              </p>
+            </div>
+            <div className="bg-onyx border border-gunmetal rounded-xl p-6 text-center">
+              <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mx-auto mb-4">
+                <Shield className="w-6 h-6 text-purple-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-platinum mb-2">25+ AI Models</h3>
+              <p className="text-sm text-silver">
+                Access GPT-5.2, Claude Opus 4.5, Gemini 3, Llama 4, and more. Pick the best model for each task.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Competitor Comparison */}
+      <section className="py-20 border-t border-gunmetal">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-platinum mb-3">
+              How we compare
+            </h2>
+            <p className="text-lg text-silver">
+              QuotaHit combines coaching, CRM, and calling — replacing multiple tools at a fraction of the cost
+            </p>
+          </div>
+
+          <div className="bg-onyx border border-gunmetal rounded-xl overflow-hidden">
+            {/* QuotaHit row (highlighted) */}
+            <div className="flex items-center justify-between p-4 bg-neonblue/10 border-b border-neonblue/30">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-neonblue to-electricblue flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-semibold text-platinum">QuotaHit Professional</span>
+              </div>
+              <div className="text-right">
+                <span className="text-lg font-bold text-neonblue">$149/user/mo</span>
+                <p className="text-xs text-silver">Coaching + CRM + AI models included</p>
+              </div>
+            </div>
+
+            {/* Competitor rows */}
+            {COMPARISON_ITEMS.map((item, idx) => (
+              <div
+                key={idx}
+                className={cn(
+                  "flex items-center justify-between p-4",
+                  idx < COMPARISON_ITEMS.length - 1 && "border-b border-gunmetal"
+                )}
+              >
+                <span className="text-silver">{item.label}</span>
+                <div className="text-right">
+                  <span className="text-sm font-medium text-mist">{item.price}</span>
+                  <p className="text-xs text-mist/60">{item.note}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-center text-xs text-mist mt-4">
+            Competitor pricing sourced from public data and industry reports (2026). Actual pricing may vary.
+          </p>
+        </div>
+      </section>
+
       {/* FAQ Section */}
-      <section className="py-24 border-t border-gunmetal">
+      <section className="py-20 border-t border-gunmetal">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-platinum text-center mb-12">
             Frequently Asked Questions
           </h2>
-          <div className="space-y-6">
+          <div className="space-y-4">
             {FAQ_ITEMS.map((faq, idx) => (
               <div
                 key={idx}
-                className="glow-card bg-onyx border border-gunmetal rounded-lg p-6"
+                className="bg-onyx border border-gunmetal rounded-lg p-6"
               >
                 <h3 className="text-lg font-semibold text-platinum mb-2">
                   {faq.q}
                 </h3>
-                <p className="text-silver">{faq.a}</p>
+                <p className="text-sm text-silver leading-relaxed">{faq.a}</p>
               </div>
             ))}
           </div>
@@ -512,16 +631,16 @@ export default function PricingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-r from-neonblue/10 via-electricblue/5 to-neonblue/10">
+      <section className="py-20 bg-gradient-to-r from-neonblue/10 via-electricblue/5 to-neonblue/10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-platinum mb-6">
-            Ready to close more deals?
+          <h2 className="text-3xl sm:text-4xl font-bold text-platinum mb-4">
+            Ready to hit quota every month?
           </h2>
-          <p className="text-xl text-silver mb-8">
-            Join thousands of sales professionals already using QuotaHit
+          <p className="text-xl text-silver mb-8 max-w-2xl mx-auto">
+            Join sales teams using QuotaHit to coach reps, manage pipeline, and close deals faster with AI.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/signup">
+            <Link href="/signup?plan=professional">
               <Button
                 size="lg"
                 className="bg-neonblue hover:bg-electricblue text-lg px-8"
@@ -530,7 +649,7 @@ export default function PricingPage() {
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
-            <a href="mailto:aiwithdhruv@gmail.com">
+            <a href="mailto:aiwithdhruv@gmail.com?subject=QuotaHit Demo Request">
               <Button
                 size="lg"
                 variant="outline"
@@ -540,6 +659,9 @@ export default function PricingPage() {
               </Button>
             </a>
           </div>
+          <p className="text-sm text-mist mt-6">
+            14-day free trial. No credit card required. Cancel anytime.
+          </p>
         </div>
       </section>
 

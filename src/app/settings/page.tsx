@@ -25,6 +25,7 @@ import {
   CreditCard,
   Loader2,
   ExternalLink,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -32,6 +33,14 @@ import Link from "next/link";
 
 // API Types for models
 type ApiType = "openrouter" | "openai" | "anthropic";
+
+// Premium model IDs - visible but locked for free users
+const PREMIUM_MODEL_IDS = new Set([
+  "claude-sonnet-4-5-20250929",
+  "claude-opus-4-5-20251101",
+  "gpt-5.2",
+  "gpt-5.1",
+]);
 
 // Available AI Models - Latest 2026 Models
 const AI_MODELS: {
@@ -43,6 +52,7 @@ const AI_MODELS: {
   speed: string;
   quality: string;
   recommended: boolean;
+  premium: boolean;
 }[] = [
   // ===========================================
   // DIRECT API MODELS (Lower latency, no middleman)
@@ -58,6 +68,7 @@ const AI_MODELS: {
     speed: "Fast",
     quality: "Exceptional",
     recommended: true,
+    premium: true,
   },
   {
     id: "claude-opus-4-5-20251101",
@@ -68,6 +79,7 @@ const AI_MODELS: {
     speed: "Medium",
     quality: "Exceptional",
     recommended: false,
+    premium: true,
   },
   {
     id: "claude-haiku-4-5-20251001",
@@ -78,6 +90,7 @@ const AI_MODELS: {
     speed: "Very Fast",
     quality: "Very Good",
     recommended: false,
+    premium: false,
   },
 
   // Direct OpenAI API - GPT-5 Series (Latest 2026)
@@ -90,6 +103,7 @@ const AI_MODELS: {
     speed: "Fast",
     quality: "Exceptional",
     recommended: false,
+    premium: true,
   },
   {
     id: "gpt-5.1",
@@ -100,6 +114,7 @@ const AI_MODELS: {
     speed: "Fast",
     quality: "Exceptional",
     recommended: false,
+    premium: true,
   },
   {
     id: "gpt-5-mini",
@@ -110,6 +125,7 @@ const AI_MODELS: {
     speed: "Very Fast",
     quality: "Excellent",
     recommended: false,
+    premium: false,
   },
 
   // OpenAI o-Series (Reasoning Models)
@@ -122,6 +138,7 @@ const AI_MODELS: {
     speed: "Medium",
     quality: "Exceptional",
     recommended: false,
+    premium: false,
   },
   {
     id: "o3-mini",
@@ -132,6 +149,7 @@ const AI_MODELS: {
     speed: "Fast",
     quality: "Excellent",
     recommended: false,
+    premium: false,
   },
 
   // OpenAI GPT-4.1 Series
@@ -144,6 +162,7 @@ const AI_MODELS: {
     speed: "Fast",
     quality: "Excellent",
     recommended: false,
+    premium: false,
   },
   {
     id: "gpt-4.1-mini",
@@ -154,6 +173,7 @@ const AI_MODELS: {
     speed: "Very Fast",
     quality: "Very Good",
     recommended: false,
+    premium: false,
   },
 
   // ===========================================
@@ -170,6 +190,7 @@ const AI_MODELS: {
     speed: "Very Fast",
     quality: "Excellent",
     recommended: false,
+    premium: false,
   },
 
   // Google Gemini
@@ -182,6 +203,7 @@ const AI_MODELS: {
     speed: "Very Fast",
     quality: "Excellent",
     recommended: false,
+    premium: false,
   },
   {
     id: "google/gemini-2.5-flash-preview",
@@ -192,6 +214,7 @@ const AI_MODELS: {
     speed: "Very Fast",
     quality: "Very Good",
     recommended: false,
+    premium: false,
   },
 
   // OpenRouter - OpenAI
@@ -204,6 +227,7 @@ const AI_MODELS: {
     speed: "Very Fast",
     quality: "Excellent",
     recommended: false,
+    premium: false,
   },
   {
     id: "openai/gpt-4.1-mini",
@@ -214,6 +238,7 @@ const AI_MODELS: {
     speed: "Very Fast",
     quality: "Very Good",
     recommended: false,
+    premium: false,
   },
   {
     id: "openai/gpt-4.1-mini",
@@ -224,6 +249,7 @@ const AI_MODELS: {
     speed: "Very Fast",
     quality: "Very Good",
     recommended: false,
+    premium: false,
   },
   {
     id: "openai/o3",
@@ -234,6 +260,7 @@ const AI_MODELS: {
     speed: "Slow",
     quality: "Exceptional",
     recommended: false,
+    premium: false,
   },
   {
     id: "openai/o3-mini",
@@ -244,6 +271,7 @@ const AI_MODELS: {
     speed: "Fast",
     quality: "Excellent",
     recommended: false,
+    premium: false,
   },
   // Google Models (via OpenRouter)
   {
@@ -255,6 +283,7 @@ const AI_MODELS: {
     speed: "Fast",
     quality: "Exceptional",
     recommended: false,
+    premium: false,
   },
   {
     id: "google/gemini-3-flash",
@@ -265,6 +294,7 @@ const AI_MODELS: {
     speed: "Very Fast",
     quality: "Excellent",
     recommended: false,
+    premium: false,
   },
   {
     id: "google/gemini-2.5-flash",
@@ -275,6 +305,7 @@ const AI_MODELS: {
     speed: "Very Fast",
     quality: "Very Good",
     recommended: false,
+    premium: false,
   },
   // Meta Models (via OpenRouter)
   {
@@ -286,6 +317,7 @@ const AI_MODELS: {
     speed: "Fast",
     quality: "Excellent",
     recommended: false,
+    premium: false,
   },
   {
     id: "meta-llama/llama-4-scout",
@@ -296,6 +328,7 @@ const AI_MODELS: {
     speed: "Very Fast",
     quality: "Very Good",
     recommended: false,
+    premium: false,
   },
 ];
 
@@ -307,8 +340,9 @@ const API_BADGES: Record<ApiType, { label: string; color: string }> = {
 };
 
 export default function SettingsPage() {
-  const [selectedModel, setSelectedModel] = useState("claude-sonnet-4-5-20250929");
+  const [selectedModel, setSelectedModel] = useState("gpt-5-mini");
   const [saved, setSaved] = useState(false);
+  const [premiumPrompt, setPremiumPrompt] = useState<string | null>(null);
 
   // Profile state
   const [profileName, setProfileName] = useState("Dhruv");
@@ -366,7 +400,13 @@ export default function SettingsPage() {
   }, []);
 
   const handleSaveModel = () => {
+    // Prevent saving a premium model on free plan
+    if (PREMIUM_MODEL_IDS.has(selectedModel) && currentPlan === "free") {
+      setPremiumPrompt(AI_MODELS.find(m => m.id === selectedModel)?.name || "This model");
+      return;
+    }
     localStorage.setItem("ai_model", selectedModel);
+    setPremiumPrompt(null);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -442,56 +482,99 @@ export default function SettingsPage() {
                 </p>
 
                 <div className="space-y-3">
-                  {AI_MODELS.map((model) => (
-                    <button
-                      key={model.id}
-                      onClick={() => setSelectedModel(model.id)}
-                      className={cn(
-                        "w-full p-4 rounded-lg text-left transition-all border",
-                        selectedModel === model.id
-                          ? "bg-neonblue/10 border-neonblue"
-                          : "bg-onyx border-gunmetal hover:border-neonblue/50"
-                      )}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-medium text-platinum">
-                              {model.name}
-                            </h4>
-                            <Badge className={cn("text-xs", API_BADGES[model.api].color)}>
-                              {API_BADGES[model.api].label}
-                            </Badge>
-                            {model.recommended && (
-                              <Badge className="bg-automationgreen/20 text-automationgreen text-xs">
-                                Recommended
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-xs text-mist mt-0.5">
-                            {model.provider}
-                          </p>
-                          <p className="text-sm text-silver mt-1">
-                            {model.description}
-                          </p>
-                          <div className="flex items-center gap-4 mt-2">
-                            <span className="text-xs text-mist flex items-center gap-1">
-                              <Zap className="h-3 w-3" />
-                              {model.speed}
-                            </span>
-                            <span className="text-xs text-mist flex items-center gap-1">
-                              <Brain className="h-3 w-3" />
-                              {model.quality}
-                            </span>
-                          </div>
-                        </div>
-                        {selectedModel === model.id && (
-                          <Check className="h-5 w-5 text-neonblue shrink-0" />
+                  {AI_MODELS.map((model) => {
+                    const isPremium = model.premium;
+                    const isLocked = isPremium && currentPlan === "free";
+
+                    return (
+                      <button
+                        key={model.id}
+                        onClick={() => {
+                          if (isLocked) {
+                            setPremiumPrompt(model.name);
+                            return;
+                          }
+                          setSelectedModel(model.id);
+                          setPremiumPrompt(null);
+                        }}
+                        className={cn(
+                          "w-full p-4 rounded-lg text-left transition-all border relative",
+                          isLocked
+                            ? "bg-onyx/60 border-gunmetal cursor-not-allowed"
+                            : selectedModel === model.id
+                              ? "bg-neonblue/10 border-neonblue"
+                              : "bg-onyx border-gunmetal hover:border-neonblue/50"
                         )}
-                      </div>
-                    </button>
-                  ))}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className={cn("flex-1", isLocked && "opacity-60")}>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-medium text-platinum">
+                                {model.name}
+                              </h4>
+                              <Badge className={cn("text-xs", API_BADGES[model.api].color)}>
+                                {API_BADGES[model.api].label}
+                              </Badge>
+                              {isPremium && (
+                                <Badge className="bg-warningamber/20 text-warningamber text-xs flex items-center gap-1">
+                                  <Crown className="h-3 w-3" />
+                                  Pro
+                                </Badge>
+                              )}
+                              {model.recommended && (
+                                <Badge className="bg-automationgreen/20 text-automationgreen text-xs">
+                                  Recommended
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-xs text-mist mt-0.5">
+                              {model.provider}
+                            </p>
+                            <p className="text-sm text-silver mt-1">
+                              {model.description}
+                            </p>
+                            <div className="flex items-center gap-4 mt-2">
+                              <span className="text-xs text-mist flex items-center gap-1">
+                                <Zap className="h-3 w-3" />
+                                {model.speed}
+                              </span>
+                              <span className="text-xs text-mist flex items-center gap-1">
+                                <Brain className="h-3 w-3" />
+                                {model.quality}
+                              </span>
+                            </div>
+                          </div>
+                          {isLocked ? (
+                            <Lock className="h-5 w-5 text-warningamber shrink-0" />
+                          ) : selectedModel === model.id ? (
+                            <Check className="h-5 w-5 text-neonblue shrink-0" />
+                          ) : null}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
+
+                {/* Premium upgrade prompt */}
+                {premiumPrompt && currentPlan === "free" && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-warningamber/10 border border-warningamber/30">
+                    <Lock className="h-5 w-5 text-warningamber shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm text-platinum font-medium">
+                        {premiumPrompt} requires a Pro plan
+                      </p>
+                      <p className="text-xs text-silver mt-0.5">
+                        Upgrade to unlock premium models with superior intelligence and speed.
+                      </p>
+                    </div>
+                    <Link href="/pricing">
+                      <Button size="sm" className="bg-warningamber hover:bg-warningamber/80 text-black shrink-0">
+                        <Crown className="h-3.5 w-3.5 mr-1" />
+                        Upgrade
+                      </Button>
+                    </Link>
+                  </div>
+                )}
 
                 <Button
                   onClick={handleSaveModel}
