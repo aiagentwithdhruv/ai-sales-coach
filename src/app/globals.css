@@ -615,7 +615,7 @@ body {
 .btn-premium {
   position: relative;
   background: linear-gradient(135deg, #1a2332 0%, #0d1117 40%, #1a2332 100%);
-  border: 1px solid rgba(0, 179, 255, 0.3);
+  border: 1px solid rgba(192, 199, 209, 0.2);
   color: white;
   overflow: hidden;
   transition: all 0.4s ease;
@@ -624,17 +624,17 @@ body {
 .btn-premium::before {
   content: "";
   position: absolute;
-  inset: -2px;
+  inset: -1px;
   background: linear-gradient(
     135deg,
-    rgba(0, 179, 255, 0.4) 0%,
-    rgba(45, 255, 142, 0.1) 30%,
-    rgba(0, 179, 255, 0.4) 60%,
-    rgba(45, 255, 142, 0.1) 100%
+    rgba(192, 199, 209, 0.25) 0%,
+    rgba(192, 199, 209, 0.08) 30%,
+    rgba(192, 199, 209, 0.25) 60%,
+    rgba(192, 199, 209, 0.08) 100%
   );
   border-radius: inherit;
   z-index: -1;
-  opacity: 0.6;
+  opacity: 0.5;
   transition: opacity 0.4s ease;
 }
 
@@ -644,9 +644,9 @@ body {
   inset: 0;
   background: linear-gradient(
     135deg,
-    rgba(0, 179, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.03) 0%,
     transparent 40%,
-    rgba(0, 179, 255, 0.08) 70%,
+    rgba(255, 255, 255, 0.04) 70%,
     transparent 100%
   );
   z-index: 1;
@@ -655,11 +655,11 @@ body {
 }
 
 .btn-premium:hover {
-  border-color: rgba(0, 179, 255, 0.6);
+  border-color: rgba(192, 199, 209, 0.45);
   box-shadow:
-    0 0 30px rgba(0, 179, 255, 0.3),
-    0 0 60px rgba(0, 179, 255, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 0 20px rgba(192, 199, 209, 0.15),
+    0 0 40px rgba(192, 199, 209, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   transform: translateY(-2px);
 }
 
@@ -670,9 +670,9 @@ body {
 .btn-premium:hover::after {
   background: linear-gradient(
     135deg,
-    rgba(0, 179, 255, 0.15) 0%,
-    rgba(45, 255, 142, 0.05) 40%,
-    rgba(0, 179, 255, 0.15) 70%,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(192, 199, 209, 0.03) 40%,
+    rgba(255, 255, 255, 0.06) 70%,
     transparent 100%
   );
 }
@@ -704,9 +704,9 @@ body {
 .btn-premium:hover .btn-premium-text {
   background: linear-gradient(
     90deg,
-    #ffffff 0%,
-    #00B3FF 40%,
-    #2DFF8E 60%,
+    #C7CCD1 0%,
+    #ffffff 40%,
+    #C7CCD1 60%,
     #ffffff 100%
   );
   background-size: 200% auto;

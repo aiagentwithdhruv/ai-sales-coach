@@ -416,11 +416,14 @@ export default function LandingPage() {
               href="https://calendly.com/aiwithdhruv/makeaiworkforyou"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-8 py-5 rounded-xl text-lg font-semibold border border-neonblue/30 text-neonblue hover:bg-neonblue/10 hover:border-neonblue/50 transition-all"
             >
-              <Calendar className="h-5 w-5" />
-              Book a Demo
-              <ExternalLink className="h-4 w-4 opacity-60" />
+              <button className="btn-premium relative px-8 py-5 rounded-xl text-lg font-semibold cursor-pointer">
+                <span className="btn-premium-text relative z-10 flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Book a Demo
+                  <ExternalLink className="h-4 w-4 opacity-50" />
+                </span>
+              </button>
             </a>
           </div>
 
