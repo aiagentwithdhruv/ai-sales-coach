@@ -428,6 +428,25 @@ body {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
+/* Subtle pulse glow for Quick Action cards */
+@keyframes pulse-glow-subtle {
+  0%, 100% {
+    box-shadow: 0 0 8px var(--glow-color, rgba(0, 179, 255, 0.15));
+  }
+  50% {
+    box-shadow: 0 0 20px var(--glow-color, rgba(0, 179, 255, 0.3)), 0 0 40px var(--glow-color, rgba(0, 179, 255, 0.1));
+  }
+}
+
+.animate-pulse-glow-subtle {
+  animation: pulse-glow-subtle 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow-subtle:hover {
+  animation: none;
+  box-shadow: 0 0 25px var(--glow-color, rgba(0, 179, 255, 0.4)), 0 0 50px var(--glow-color, rgba(0, 179, 255, 0.15));
+}
+
 /* Glassmorphism */
 .glassmorphism {
   background: rgba(18, 24, 33, 0.85);

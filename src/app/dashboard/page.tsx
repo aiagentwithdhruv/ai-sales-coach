@@ -17,6 +17,9 @@ import {
   Target,
   PenLine,
   History,
+  Calendar,
+  ExternalLink,
+  Rocket,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -175,85 +178,90 @@ export default function DashboardPage() {
         <QuickActions />
       </section>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Get Started Guide */}
-        <Card className="lg:col-span-2 bg-onyx border-gunmetal">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold text-platinum">Get Started</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <Link href="/dashboard/coach">
-                <div className="p-4 rounded-lg bg-graphite border border-gunmetal hover:border-neonblue transition-colors cursor-pointer">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-lg bg-neonblue/10">
-                      <MessageSquare className="h-6 w-6 text-neonblue" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-platinum">Handle Objections</h4>
-                      <p className="text-sm text-silver mt-1">Get AI-powered responses to any sales objection instantly</p>
-                    </div>
-                    <ArrowRight className="h-5 w-5 text-silver" />
-                  </div>
+      {/* Start Here - Onboarding Guide */}
+      <Card className="bg-onyx border-gunmetal">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-semibold text-platinum flex items-center gap-2">
+            <Rocket className="h-5 w-5 text-neonblue" />
+            Start Here — Try It in 30 Seconds
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Link href="/dashboard/coach" className="block">
+              <div className="glow-card p-4 rounded-xl bg-graphite border border-gunmetal hover:border-neonblue transition-all cursor-pointer group" style={{ "--glow-color": "rgba(0, 179, 255, 0.4)" } as React.CSSProperties}>
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="flex items-center justify-center h-7 w-7 rounded-full bg-neonblue/20 text-neonblue text-xs font-bold">1</span>
+                  <h4 className="font-medium text-platinum group-hover:text-neonblue transition-colors">Handle an Objection</h4>
                 </div>
-              </Link>
-
-              <Link href="/dashboard/text-practice">
-                <div className="p-4 rounded-lg bg-graphite border border-gunmetal hover:border-infocyan transition-colors cursor-pointer">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-lg bg-infocyan/10">
-                      <PenLine className="h-6 w-6 text-infocyan" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-platinum">Text Practice</h4>
-                      <p className="text-sm text-silver mt-1">Practice selling via chat with AI scoring at the end</p>
-                    </div>
-                    <ArrowRight className="h-5 w-5 text-silver" />
-                  </div>
-                </div>
-              </Link>
-
-              <Link href="/dashboard/tools">
-                <div className="p-4 rounded-lg bg-graphite border border-gunmetal hover:border-purple-400 transition-colors cursor-pointer">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-lg bg-purple-400/10">
-                      <Swords className="h-6 w-6 text-purple-400" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-platinum">Sales Tools</h4>
-                      <p className="text-sm text-silver mt-1">Email crafter, pitch scorer, battle cards, deal strategy & more</p>
-                    </div>
-                    <ArrowRight className="h-5 w-5 text-silver" />
-                  </div>
-                </div>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Sessions This Week */}
-          <Card className="bg-onyx border-gunmetal">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-warningamber/10">
-                  <Flame className="h-8 w-8 text-warningamber" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold text-platinum">{sessionStats.thisWeek || 0}</p>
-                  <p className="text-sm text-silver">Sessions This Week</p>
+                <p className="text-sm text-silver mb-3">Type any objection like &quot;Your price is too high&quot; and get an instant AI coaching response.</p>
+                <div className="flex items-center gap-1.5 text-xs text-neonblue font-medium">
+                  Try it now <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
-              <p className="text-xs text-mist mt-4">Keep practicing to sharpen your sales skills!</p>
-              <Link href="/dashboard/practice">
-                <Button className="w-full mt-4 bg-neonblue hover:bg-electricblue">Practice Now</Button>
-              </Link>
-            </CardContent>
-          </Card>
+            </Link>
 
-          {/* Recent Activity */}
+            <Link href="/dashboard/practice" className="block">
+              <div className="glow-card p-4 rounded-xl bg-graphite border border-gunmetal hover:border-automationgreen transition-all cursor-pointer group" style={{ "--glow-color": "rgba(0, 255, 136, 0.4)" } as React.CSSProperties}>
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="flex items-center justify-center h-7 w-7 rounded-full bg-automationgreen/20 text-automationgreen text-xs font-bold">2</span>
+                  <h4 className="font-medium text-platinum group-hover:text-automationgreen transition-colors">Practice a Live Call</h4>
+                </div>
+                <p className="text-sm text-silver mb-3">Click &quot;Start Live Call&quot; to role-play with an AI prospect using real-time voice.</p>
+                <div className="flex items-center gap-1.5 text-xs text-automationgreen font-medium">
+                  Start practicing <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </Link>
+
+            <Link href="/dashboard/calls" className="block">
+              <div className="glow-card p-4 rounded-xl bg-graphite border border-gunmetal hover:border-warningamber transition-all cursor-pointer group" style={{ "--glow-color": "rgba(255, 179, 0, 0.4)" } as React.CSSProperties}>
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="flex items-center justify-center h-7 w-7 rounded-full bg-warningamber/20 text-warningamber text-xs font-bold">3</span>
+                  <h4 className="font-medium text-platinum group-hover:text-warningamber transition-colors">Analyze a Call</h4>
+                </div>
+                <p className="text-sm text-silver mb-3">Upload any sales call recording and get a full AI scorecard with actionable feedback.</p>
+                <div className="flex items-center gap-1.5 text-xs text-warningamber font-medium">
+                  Upload a call <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Book Demo + Sessions */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Book a Demo CTA */}
+          <div className="glow-card relative overflow-hidden rounded-xl bg-gradient-to-r from-graphite via-onyx to-graphite border border-neonblue/30 p-6 animate-pulse-glow-subtle" style={{ "--glow-color": "rgba(0, 179, 255, 0.3)" } as React.CSSProperties}>
+            <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-neonblue/10 border border-neonblue/20">
+                  <Calendar className="h-8 w-8 text-neonblue" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-platinum">Want AI to Work for Your Sales Team?</h3>
+                  <p className="text-sm text-silver mt-1">Book a free consultation — we&apos;ll show you how QuotaHit can 10x your team&apos;s performance.</p>
+                </div>
+              </div>
+              <a
+                href="https://calendly.com/aiwithdhruv/makeaiworkforyou"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-premium px-6 py-3 rounded-xl font-semibold cursor-pointer shrink-0"
+              >
+                <span className="btn-premium-text relative z-10 flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Book Free Demo
+                  <ExternalLink className="h-3 w-3" />
+                </span>
+              </a>
+            </div>
+          </div>
+
+          {/* Recent Activity - moved to main area */}
           <Card className="bg-onyx border-gunmetal">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-semibold text-platinum flex items-center justify-between">
@@ -289,6 +297,53 @@ export default function DashboardPage() {
                   <p className="text-xs text-mist">Start a coaching session to see your activity here</p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Sessions This Week */}
+          <Card className="bg-onyx border-gunmetal">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-lg bg-warningamber/10">
+                  <Flame className="h-8 w-8 text-warningamber" />
+                </div>
+                <div>
+                  <p className="text-3xl font-bold text-platinum">{sessionStats.thisWeek || 0}</p>
+                  <p className="text-sm text-silver">Sessions This Week</p>
+                </div>
+              </div>
+              <p className="text-xs text-mist mt-4">Keep practicing to sharpen your sales skills!</p>
+              <Link href="/dashboard/practice">
+                <Button className="w-full mt-4 bg-neonblue hover:bg-electricblue">Practice Now</Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* Get a Consultation - Sidebar CTA */}
+          <Card className="bg-onyx border-gunmetal border-l-2 border-l-neonblue">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <Calendar className="h-5 w-5 text-neonblue" />
+                <h4 className="font-semibold text-platinum text-sm">Get a Free Consultation</h4>
+              </div>
+              <p className="text-xs text-silver mb-4">
+                See how AI can transform your sales process. 15-min call, zero commitment.
+              </p>
+              <a
+                href="https://calendly.com/aiwithdhruv/makeaiworkforyou"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block"
+              >
+                <Button className="w-full bg-neonblue hover:bg-electricblue text-sm gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Book Demo
+                  <ExternalLink className="h-3 w-3" />
+                </Button>
+              </a>
             </CardContent>
           </Card>
         </div>
