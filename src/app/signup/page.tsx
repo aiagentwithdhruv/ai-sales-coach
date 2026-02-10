@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Sparkles, Mail, Lock, User, ArrowRight, Loader2, AlertCircle, CheckCircle, ChevronDown } from "lucide-react";
+import { Sparkles, Mail, Lock, User, ArrowRight, Loader2, AlertCircle, CheckCircle, ChevronDown, Mic, MessageSquare, Phone, Zap } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 export default function SignUpPage() {
@@ -116,10 +116,14 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen bg-obsidian flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-obsidian flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background glow accents */}
+      <div className="absolute top-1/4 -left-32 w-64 h-64 bg-neonblue/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-1/4 -right-32 w-64 h-64 bg-automationgreen/5 rounded-full blur-3xl" />
+
+      <div className="w-full max-w-md relative z-10">
         {/* Logo */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <Link href="/" className="inline-flex items-center gap-2">
             <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-neonblue to-electricblue flex items-center justify-center">
               <Sparkles className="w-6 h-6 text-white" />
@@ -130,11 +134,37 @@ export default function SignUpPage() {
           </Link>
         </div>
 
+        {/* Motivational headline */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-platinum mb-2">
+            One step away from <span className="text-neonblue">closing more deals</span>
+          </h1>
+          <p className="text-sm text-silver">
+            Join sales reps who practice smarter with AI
+          </p>
+        </div>
+
+        {/* What you get - mini feature pills */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neonblue/10 border border-neonblue/20">
+            <Mic className="h-3 w-3 text-neonblue" />
+            <span className="text-xs text-neonblue font-medium">Voice Practice</span>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-automationgreen/10 border border-automationgreen/20">
+            <MessageSquare className="h-3 w-3 text-automationgreen" />
+            <span className="text-xs text-automationgreen font-medium">AI Coach</span>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-warningamber/10 border border-warningamber/20">
+            <Phone className="h-3 w-3 text-warningamber" />
+            <span className="text-xs text-warningamber font-medium">Call Analysis</span>
+          </div>
+        </div>
+
         <Card className="glow-card bg-graphite border-gunmetal">
-          <CardHeader className="text-center">
+          <CardHeader className="text-center pb-4">
             <CardTitle className="text-xl text-platinum">Create your account</CardTitle>
             <p className="text-sm text-silver mt-1">
-              Start your AI-powered sales coaching journey
+              Free forever. No credit card needed.
             </p>
           </CardHeader>
           <CardContent>
@@ -261,6 +291,24 @@ export default function SignUpPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Trust signals */}
+        <div className="mt-6 flex items-center justify-center gap-6 text-mist">
+          <div className="flex items-center gap-1.5">
+            <Zap className="h-3.5 w-3.5 text-neonblue" />
+            <span className="text-xs">Setup in 30s</span>
+          </div>
+          <div className="w-px h-3 bg-gunmetal" />
+          <div className="flex items-center gap-1.5">
+            <Lock className="h-3.5 w-3.5 text-automationgreen" />
+            <span className="text-xs">Encrypted</span>
+          </div>
+          <div className="w-px h-3 bg-gunmetal" />
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-warningamber" />
+            <span className="text-xs">5 Free Credits</span>
+          </div>
+        </div>
       </div>
     </div>
   );
