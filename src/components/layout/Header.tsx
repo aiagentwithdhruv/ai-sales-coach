@@ -147,9 +147,11 @@ export function Header({ user }: HeaderProps) {
         <div className="flex items-center space-x-4">
           {/* Credits Badge */}
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${
-            hasCredits
-              ? "bg-successgreen/10 text-successgreen"
-              : "bg-errorred/10 text-errorred"
+            creditsLoading
+              ? "bg-neonblue/10 text-neonblue"
+              : hasCredits
+                ? "bg-successgreen/10 text-successgreen"
+                : "bg-errorred/10 text-errorred"
           }`}>
             <Coins className="h-4 w-4" />
             <span className="text-sm font-medium">

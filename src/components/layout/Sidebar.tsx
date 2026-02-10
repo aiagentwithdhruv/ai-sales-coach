@@ -140,7 +140,7 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
                     <Link
                       href={item.href}
                       className={cn(
-                        "flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200 my-0.5",
+                        "sidebar-glow flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200 my-0.5",
                         isActive(item.href)
                           ? "bg-neonblue/10 text-neonblue border-l-2 border-neonblue"
                           : "text-silver hover:text-white hover:bg-white/10"
@@ -167,7 +167,7 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
                     <Link
                       href={item.href}
                       className={cn(
-                        "flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200 my-0.5",
+                        "sidebar-glow flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200 my-0.5",
                         isActive(item.href)
                           ? "bg-neonblue/10 text-neonblue border-l-2 border-neonblue"
                           : "text-silver hover:text-white hover:bg-white/10"
@@ -191,7 +191,7 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
             <TooltipTrigger asChild>
               <Link
                 href="/settings"
-                className="flex h-10 w-10 items-center justify-center rounded-lg text-silver hover:text-white hover:bg-white/10 transition-all duration-200"
+                className="sidebar-glow flex h-10 w-10 items-center justify-center rounded-lg text-silver hover:text-white hover:bg-white/10 transition-all duration-200"
               >
                 <Settings className="h-4.5 w-4.5" />
               </Link>
@@ -203,7 +203,7 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <button className="flex h-10 w-10 items-center justify-center rounded-lg text-silver hover:text-white hover:bg-white/10 transition-all duration-200">
+              <button className="sidebar-glow flex h-10 w-10 items-center justify-center rounded-lg text-silver hover:text-white hover:bg-white/10 transition-all duration-200">
                 <HelpCircle className="h-4.5 w-4.5" />
               </button>
             </TooltipTrigger>

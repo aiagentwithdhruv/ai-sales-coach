@@ -654,6 +654,25 @@ body {
   animation: glow-ring-pulse 2s ease-in-out infinite;
 }
 
+/* Sidebar icon click glow pulse */
+@keyframes sidebar-click-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 179, 255, 0.5);
+    background-color: rgba(0, 179, 255, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 14px 4px rgba(0, 179, 255, 0.25);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 179, 255, 0);
+    background-color: transparent;
+  }
+}
+
+.sidebar-glow:active {
+  animation: sidebar-click-glow 0.4s ease-out;
+}
+
 /* Nav Product Dropdown */
 @keyframes nav-dropdown-in {
   from {
