@@ -104,23 +104,9 @@ export default function DashboardRootLayout({
           return;
         }
 
-        // No cached session — try server check
-        const { data: { user: authUser }, error } = await supabase.auth.getUser();
-        if (!mounted) return;
-
-        if (error || !authUser) {
-          router.push("/login");
-          return;
-        }
-
-        setUser({
-          name: authUser.user_metadata?.full_name || authUser.email?.split("@")[0] || "User",
-          email: authUser.email || "",
-          avatar: authUser.user_metadata?.avatar_url,
-          role: "sales_rep",
-        });
-        authCheckedRef.current = true;
-        setAuthChecked(true);
+        // No cached session — user is not logged in, redirect immediately
+        // Don't wait for a slow server roundtrip via getUser()
+        router.push("/login");
       } catch {
         if (mounted) {
           router.push("/login");

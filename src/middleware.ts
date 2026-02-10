@@ -29,10 +29,11 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh session if expired
+  // Use getSession (reads cookies locally — instant, no server roundtrip)
+  // This prevents Vercel cold start hangs that getUser() causes
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
 
   // Define protected routes
   const protectedRoutes = ["/dashboard", "/settings"];
@@ -46,14 +47,14 @@ export async function middleware(request: NextRequest) {
   );
 
   // Redirect unauthenticated users from protected routes to login
-  if (isProtectedRoute && !user) {
+  if (isProtectedRoute && !session) {
     const redirectUrl = new URL("/login", request.url);
     redirectUrl.searchParams.set("redirect", request.nextUrl.pathname);
     return NextResponse.redirect(redirectUrl);
   }
 
   // Redirect authenticated users from auth routes to dashboard
-  if (isAuthRoute && user) {
+  if (isAuthRoute && session) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
