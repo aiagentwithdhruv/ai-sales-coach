@@ -24,6 +24,7 @@ import {
   Shield,
   Calendar,
   ExternalLink,
+  PhoneCall,
 } from "lucide-react";
 
 const features = [
@@ -301,6 +302,18 @@ export default function LandingPage() {
                 </Button>
               </Link>
               <a
+                href="https://n8n.aiwithdhruv.cloud/form/10f459a3-ca15-466e-b718-8b11f312c3f8"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden md:flex"
+              >
+                <Button className="bg-automationgreen hover:bg-automationgreen/80 text-white text-sm px-4 gap-1.5 animate-pulse-glow-subtle" style={{ "--glow-color": "rgba(0, 255, 136, 0.4)" } as React.CSSProperties}>
+                  <PhoneCall className="h-3.5 w-3.5" />
+                  Test AI Call
+                  <ExternalLink className="h-3 w-3 opacity-70" />
+                </Button>
+              </a>
+              <a
                 href="https://calendly.com/aiwithdhruv/makeaiworkforyou"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -321,6 +334,7 @@ export default function LandingPage() {
                   { href: "/features", label: "AI Product" },
                   { href: "/#how-it-works", label: "How It Works" },
                   { href: "/pricing", label: "Pricing" },
+                  { href: "https://n8n.aiwithdhruv.cloud/form/10f459a3-ca15-466e-b718-8b11f312c3f8", label: "Test AI Call" },
                   { href: "https://calendly.com/aiwithdhruv/makeaiworkforyou", label: "Book Demo" },
                   { href: "/login", label: "Login" },
                   { href: "/signup", label: "Sign Up" },
@@ -384,6 +398,17 @@ export default function LandingPage() {
                 </span>
               </button>
             </Link>
+            <a
+              href="https://n8n.aiwithdhruv.cloud/form/10f459a3-ca15-466e-b718-8b11f312c3f8"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="glow-card flex items-center gap-2 px-8 py-5 rounded-xl text-lg font-semibold border border-automationgreen/40 text-automationgreen hover:bg-automationgreen/10 hover:border-automationgreen/60 transition-all animate-pulse-glow-subtle"
+              style={{ "--glow-color": "rgba(0, 255, 136, 0.3)" } as React.CSSProperties}
+            >
+              <PhoneCall className="h-5 w-5" />
+              Test AI Call — Free
+              <ExternalLink className="h-4 w-4 opacity-60" />
+            </a>
             <a
               href="https://calendly.com/aiwithdhruv/makeaiworkforyou"
               target="_blank"
@@ -734,6 +759,14 @@ export default function LandingPage() {
               >
                 Pricing
               </Link>
+              <a
+                href="https://n8n.aiwithdhruv.cloud/form/10f459a3-ca15-466e-b718-8b11f312c3f8"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-automationgreen hover:text-automationgreen/80 transition-colors flex items-center gap-1"
+              >
+                Test AI Call <ExternalLink className="h-3 w-3" />
+              </a>
               <a
                 href="https://calendly.com/aiwithdhruv/makeaiworkforyou"
                 target="_blank"
