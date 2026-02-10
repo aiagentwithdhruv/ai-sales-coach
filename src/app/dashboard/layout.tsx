@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { DashboardLayout } from "@/components/layout";
 import { getSupabaseClient } from "@/lib/supabase/client";
-import { Loader2, AlertCircle, RefreshCw, WifiOff } from "lucide-react";
+import { AlertCircle, RefreshCw } from "lucide-react";
 
 // Error boundary to catch client-side crashes
 class DashboardErrorBoundary extends React.Component<
@@ -55,60 +55,59 @@ export default function DashboardRootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Show dashboard immediately — never block on auth
   const [user, setUser] = useState<{
     name: string;
     email: string;
     avatar?: string;
     role: "sales_rep" | "manager" | "admin";
-  } | undefined>(undefined);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [timedOut, setTimedOut] = useState(false);
+  }>({
+    name: "User",
+    email: "",
+    role: "sales_rep",
+  });
 
   const supabase = getSupabaseClient();
   const router = useRouter();
-  const authCheckedRef = useRef(false);
+  const redirectingRef = useRef(false);
 
   useEffect(() => {
     let mounted = true;
 
-    // Timeout: if auth check takes > 8s, show retry UI instead of infinite spinner
-    const timeout = setTimeout(() => {
-      if (mounted && !authCheckedRef.current) {
-        setTimedOut(true);
-      }
-    }, 8000);
-
     const checkAuth = async () => {
       try {
-        // Step 1: Try getSession first (reads local storage — instant)
-        const { data: { session } } = await supabase.auth.getSession();
+        // Race getSession against a 3s timeout
+        // getSession can hang when refreshing expired tokens
+        const result = await Promise.race([
+          supabase.auth.getSession(),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
+        ]);
 
         if (!mounted) return;
 
+        // Type-safe extraction
+        const session = result && typeof result === "object" && "data" in result
+          ? (result as { data: { session: { user: { user_metadata?: Record<string, string>; email?: string } } | null } }).data.session
+          : null;
+
         if (session?.user) {
-          // We have a cached session — show dashboard immediately
           setUser({
             name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "User",
             email: session.user.email || "",
             avatar: session.user.user_metadata?.avatar_url,
             role: "sales_rep",
           });
-          authCheckedRef.current = true;
-          setAuthChecked(true);
-
-          // Step 2: Verify with server in background (refresh token if needed)
-          supabase.auth.getUser().catch(() => {
-            // If server validation fails, session expired — redirect to login
-            if (mounted) router.push("/login");
-          });
           return;
         }
 
-        // No cached session — user is not logged in, redirect immediately
-        // Don't wait for a slow server roundtrip via getUser()
-        router.push("/login");
+        // No session or timed out — redirect to login
+        if (!redirectingRef.current) {
+          redirectingRef.current = true;
+          router.push("/login");
+        }
       } catch {
-        if (mounted) {
+        if (mounted && !redirectingRef.current) {
+          redirectingRef.current = true;
           router.push("/login");
         }
       }
@@ -117,76 +116,30 @@ export default function DashboardRootLayout({
     checkAuth();
 
     // Listen for auth changes (sign-in from another tab, token refresh, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: string, session: { user: { user_metadata?: Record<string, string>; email?: string } } | null) => {
-      if (!mounted) return;
-      if (session?.user) {
-        setUser({
-          name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "User",
-          email: session.user.email || "",
-          avatar: session.user.user_metadata?.avatar_url,
-          role: "sales_rep",
-        });
-        if (!authCheckedRef.current) {
-          authCheckedRef.current = true;
-          setAuthChecked(true);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event: string, session: { user: { user_metadata?: Record<string, string>; email?: string } } | null) => {
+        if (!mounted) return;
+        if (session?.user) {
+          setUser({
+            name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "User",
+            email: session.user.email || "",
+            avatar: session.user.user_metadata?.avatar_url,
+            role: "sales_rep",
+          });
+        } else if (!redirectingRef.current) {
+          redirectingRef.current = true;
+          router.push("/login");
         }
-      } else if (authCheckedRef.current) {
-        // Signed out
-        router.push("/login");
       }
-    });
+    );
 
     return () => {
       mounted = false;
-      clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, [supabase.auth, router]);
 
-  // Timed out — show retry UI
-  if (timedOut && !authChecked) {
-    return (
-      <div className="min-h-screen bg-obsidian flex items-center justify-center p-4">
-        <div className="max-w-md text-center space-y-4">
-          <div className="h-12 w-12 rounded-full bg-warningamber/10 flex items-center justify-center mx-auto">
-            <WifiOff className="h-6 w-6 text-warningamber" />
-          </div>
-          <h2 className="text-lg font-semibold text-platinum">Taking longer than expected</h2>
-          <p className="text-sm text-silver">
-            Could not connect to the server. Check your internet connection and try again.
-          </p>
-          <div className="flex gap-3 justify-center">
-            <button
-              onClick={() => window.location.reload()}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-neonblue hover:bg-electricblue text-white text-sm font-medium transition-colors"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Retry
-            </button>
-            <button
-              onClick={() => router.push("/login")}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-steel hover:bg-gunmetal text-silver text-sm font-medium transition-colors"
-            >
-              Go to Login
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show loading while checking auth (max 8 seconds)
-  if (!authChecked) {
-    return (
-      <div className="min-h-screen bg-obsidian flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-neonblue" />
-          <p className="text-sm text-silver">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // Always render dashboard immediately — no loading screen, no timeout screen
   return (
     <DashboardErrorBoundary>
       <DashboardLayout user={user}>{children}</DashboardLayout>
