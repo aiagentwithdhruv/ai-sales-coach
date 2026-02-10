@@ -25,8 +25,8 @@ export function WelcomeSection({ userName, stats }: WelcomeSectionProps) {
   };
 
   return (
-    <Card className="bg-gradient-to-br from-onyx to-graphite border-gunmetal overflow-hidden">
-      <CardContent className="p-8">
+    <div className="welcome-premium rounded-xl">
+      <CardContent className="p-8 relative z-10">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           {/* Greeting */}
           <div className="space-y-2">
@@ -115,6 +115,6 @@ export function WelcomeSection({ userName, stats }: WelcomeSectionProps) {
           </div>
         </div>
       </CardContent>
-    </Card>
+    </div>
   );
 }

@@ -848,6 +848,173 @@ body {
 }
 
 
+/* ═══════════════════════════════════════════ */
+/* Premium Metallic Card System               */
+/* ═══════════════════════════════════════════ */
+
+.card-metallic {
+  position: relative;
+  background: linear-gradient(
+    145deg,
+    rgba(23, 30, 39, 0.95) 0%,
+    rgba(18, 24, 33, 0.9) 50%,
+    rgba(23, 30, 39, 0.95) 100%
+  );
+  border: 1px solid rgba(74, 82, 92, 0.4);
+  overflow: hidden;
+}
+
+.card-metallic::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    transparent 30%,
+    rgba(255, 255, 255, 0.02) 60%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.card-metallic::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(199, 204, 209, 0.15) 20%,
+    rgba(199, 204, 209, 0.25) 50%,
+    rgba(199, 204, 209, 0.15) 80%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Brushed metal stat card */
+.stat-card-premium {
+  position: relative;
+  background: linear-gradient(
+    160deg,
+    rgba(23, 30, 39, 1) 0%,
+    rgba(18, 24, 33, 0.95) 40%,
+    rgba(26, 35, 50, 0.9) 100%
+  );
+  border: 1px solid rgba(74, 82, 92, 0.35);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.stat-card-premium::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      rgba(255, 255, 255, 0.003) 1px,
+      transparent 2px,
+      transparent 4px
+    );
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.stat-card-premium::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(199, 204, 209, 0.12) 30%,
+    rgba(199, 204, 209, 0.2) 50%,
+    rgba(199, 204, 209, 0.12) 70%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.stat-card-premium:hover {
+  border-color: rgba(74, 82, 92, 0.6);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Premium welcome section */
+.welcome-premium {
+  position: relative;
+  background: linear-gradient(
+    135deg,
+    rgba(23, 30, 39, 1) 0%,
+    rgba(18, 24, 33, 0.95) 30%,
+    rgba(0, 25, 50, 0.3) 70%,
+    rgba(18, 24, 33, 0.95) 100%
+  );
+  border: 1px solid rgba(74, 82, 92, 0.3);
+  overflow: hidden;
+}
+
+.welcome-premium::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 179, 255, 0.03) 0%,
+    transparent 40%,
+    rgba(0, 179, 255, 0.02) 100%
+  );
+  pointer-events: none;
+}
+
+.welcome-premium::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 179, 255, 0.15) 20%,
+    rgba(199, 204, 209, 0.2) 50%,
+    rgba(0, 179, 255, 0.15) 80%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Scrollbar hide utility */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Top nav active indicator */
+@keyframes tab-glow {
+  0%, 100% {
+    box-shadow: 0 0 4px rgba(0, 179, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 8px rgba(0, 179, 255, 0.35);
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Bell, Sparkles, ChevronDown, LogOut, Settings, User, Keyboard, Coins, Menu } from "lucide-react";
+import { Search, Bell, Sparkles, ChevronDown, LogOut, Settings, User, Keyboard, Coins, Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,9 +28,11 @@ interface HeaderProps {
     role: "sales_rep" | "manager" | "admin";
   };
   onMobileMenuToggle?: () => void;
+  sidebarCollapsed?: boolean;
+  onSidebarToggle?: () => void;
 }
 
-export function Header({ user, onMobileMenuToggle }: HeaderProps) {
+export function Header({ user, onMobileMenuToggle, sidebarCollapsed = false, onSidebarToggle }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [profileName, setProfileName] = useState("Demo User");
   const [profileEmail, setProfileEmail] = useState("demo@example.com");
@@ -128,9 +130,9 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
   };
 
   return (
-    <header className="fixed top-0 left-0 md:left-[72px] right-0 z-30 h-16 bg-graphite border-b border-gunmetal">
+    <header className={`fixed top-0 left-0 ${sidebarCollapsed ? "md:left-0" : "md:left-[72px]"} right-0 z-30 h-16 bg-graphite/90 backdrop-blur-md border-b border-gunmetal/60 transition-[left] duration-200`}>
       <div className="flex h-full items-center justify-between px-3 md:px-6">
-        {/* Mobile hamburger + Search Bar */}
+        {/* Sidebar toggle + Mobile hamburger + Search Bar */}
         <div className="flex items-center gap-2 flex-1 max-w-md">
           {/* Mobile hamburger */}
           <button
@@ -139,6 +141,14 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
             aria-label="Toggle sidebar"
           >
             <Menu className="h-5 w-5" />
+          </button>
+          {/* Desktop sidebar toggle */}
+          <button
+            onClick={onSidebarToggle}
+            className="hidden md:flex h-9 w-9 items-center justify-center rounded-lg text-mist hover:text-platinum hover:bg-white/[0.06] transition-colors shrink-0"
+            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {sidebarCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           </button>
           <div className="relative hidden sm:block flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-mist" />

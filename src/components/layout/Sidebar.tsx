@@ -109,9 +109,10 @@ interface SidebarProps {
   isAdmin?: boolean;
   mobileOpen?: boolean;
   onMobileClose?: () => void;
+  collapsed?: boolean;
 }
 
-export function Sidebar({ isAdmin = false, mobileOpen = false, onMobileClose }: SidebarProps) {
+export function Sidebar({ isAdmin = false, mobileOpen = false, onMobileClose, collapsed = false }: SidebarProps) {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
@@ -141,8 +142,11 @@ export function Sidebar({ isAdmin = false, mobileOpen = false, onMobileClose }: 
       <aside
         className={cn(
           "fixed left-0 top-0 z-40 h-screen w-[72px] flex flex-col bg-graphite border-r border-gunmetal transition-transform duration-200",
-          // Hidden on mobile by default, shown when mobileOpen
-          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          mobileOpen
+            ? "translate-x-0"
+            : collapsed
+              ? "-translate-x-full"
+              : "-translate-x-full md:translate-x-0"
         )}
       >
         {/* Logo */}

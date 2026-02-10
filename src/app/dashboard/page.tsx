@@ -103,7 +103,7 @@ export default function DashboardPage() {
       <section>
         <h2 className="text-lg font-semibold text-platinum mb-4">Your Progress</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <Card className="bg-onyx border-gunmetal">
+          <div className="stat-card-premium rounded-xl">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-neonblue/10 flex items-center justify-center">
                 <Target className="h-5 w-5 text-neonblue" />
@@ -113,8 +113,8 @@ export default function DashboardPage() {
                 <p className="text-xs text-mist">Total Sessions</p>
               </div>
             </CardContent>
-          </Card>
-          <Card className="bg-onyx border-gunmetal">
+          </div>
+          <div className="stat-card-premium rounded-xl">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-automationgreen/10 flex items-center justify-center">
                 <TrendingUp className="h-5 w-5 text-automationgreen" />
@@ -124,8 +124,8 @@ export default function DashboardPage() {
                 <p className="text-xs text-mist">This Week</p>
               </div>
             </CardContent>
-          </Card>
-          <Card className="bg-onyx border-gunmetal">
+          </div>
+          <div className="stat-card-premium rounded-xl">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-neonblue/10 flex items-center justify-center">
                 <MessageSquare className="h-5 w-5 text-neonblue" />
@@ -135,8 +135,8 @@ export default function DashboardPage() {
                 <p className="text-xs text-mist">Coaching</p>
               </div>
             </CardContent>
-          </Card>
-          <Card className="bg-onyx border-gunmetal">
+          </div>
+          <div className="stat-card-premium rounded-xl">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-automationgreen/10 flex items-center justify-center">
                 <Mic className="h-5 w-5 text-automationgreen" />
@@ -146,8 +146,8 @@ export default function DashboardPage() {
                 <p className="text-xs text-mist">Practice</p>
               </div>
             </CardContent>
-          </Card>
-          <Card className="bg-onyx border-gunmetal">
+          </div>
+          <div className="stat-card-premium rounded-xl">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-warningamber/10 flex items-center justify-center">
                 <Phone className="h-5 w-5 text-warningamber" />
@@ -157,8 +157,8 @@ export default function DashboardPage() {
                 <p className="text-xs text-mist">Calls</p>
               </div>
             </CardContent>
-          </Card>
-          <Card className="bg-onyx border-gunmetal">
+          </div>
+          <div className="stat-card-premium rounded-xl">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-purple-400/10 flex items-center justify-center">
                 <Swords className="h-5 w-5 text-purple-400" />
@@ -168,7 +168,7 @@ export default function DashboardPage() {
                 <p className="text-xs text-mist">Tools</p>
               </div>
             </CardContent>
-          </Card>
+          </div>
         </div>
       </section>
 
@@ -179,7 +179,7 @@ export default function DashboardPage() {
       </section>
 
       {/* Start Here - Onboarding Guide */}
-      <Card className="bg-onyx border-gunmetal">
+      <div className="card-metallic rounded-xl">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-semibold text-platinum flex items-center gap-2">
             <Rocket className="h-5 w-5 text-neonblue" />
@@ -228,7 +228,7 @@ export default function DashboardPage() {
             </Link>
           </div>
         </CardContent>
-      </Card>
+      </div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -262,7 +262,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Recent Activity - moved to main area */}
-          <Card className="bg-onyx border-gunmetal">
+          <div className="card-metallic rounded-xl">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-semibold text-platinum flex items-center justify-between">
                 Recent Activity
@@ -298,13 +298,13 @@ export default function DashboardPage() {
                 </div>
               )}
             </CardContent>
-          </Card>
+          </div>
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Sessions This Week */}
-          <Card className="bg-onyx border-gunmetal">
+          <div className="stat-card-premium rounded-xl">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-lg bg-warningamber/10">
@@ -320,10 +320,10 @@ export default function DashboardPage() {
                 <Button className="w-full mt-4 bg-neonblue hover:bg-electricblue">Practice Now</Button>
               </Link>
             </CardContent>
-          </Card>
+          </div>
 
           {/* Get a Consultation - Sidebar CTA */}
-          <Card className="bg-onyx border-gunmetal border-l-2 border-l-neonblue">
+          <div className="card-metallic rounded-xl border-l-2 border-l-neonblue">
             <CardContent className="p-5">
               <div className="flex items-center gap-3 mb-3">
                 <Calendar className="h-5 w-5 text-neonblue" />
@@ -345,7 +345,7 @@ export default function DashboardPage() {
                 </Button>
               </a>
             </CardContent>
-          </Card>
+          </div>
         </div>
       </div>
     </div>
