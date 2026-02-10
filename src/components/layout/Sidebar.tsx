@@ -35,6 +35,9 @@ import {
   Contact,
   ChevronsLeft,
   ChevronsRight,
+  PhoneOutgoing,
+  Link2,
+  Bot,
 } from "lucide-react";
 import {
   Tooltip,
@@ -64,12 +67,15 @@ const navSections: NavSection[] = [
       { icon: Mic, label: "Practice", href: "/dashboard/practice" },
       { icon: PenLine, label: "Text Practice", href: "/dashboard/text-practice" },
       { icon: Phone, label: "Calls", href: "/dashboard/calls" },
+      { icon: PhoneOutgoing, label: "AI Calling", href: "/dashboard/ai-calling" },
+      { icon: Bot, label: "AI Agents", href: "/dashboard/agents" },
     ],
   },
   {
     label: "Tools",
     items: [
       { icon: Contact, label: "CRM", href: "/dashboard/crm" },
+      { icon: Link2, label: "Integrations", href: "/dashboard/integrations" },
       { icon: Swords, label: "Tools", href: "/dashboard/tools" },
       { icon: Mail, label: "Follow-ups", href: "/dashboard/follow-ups" },
       { icon: Presentation, label: "Presentations", href: "/dashboard/presentations" },
@@ -83,7 +89,7 @@ const navSections: NavSection[] = [
     items: [
       { icon: BookOpen, label: "Objections", href: "/dashboard/objections" },
       { icon: Brain, label: "Company Brain", href: "/dashboard/company-brain" },
-      { icon: AlertTriangle, label: "Deal Risk", href: "/dashboard/deal-risk" },
+      { icon: AlertTriangle, label: "Deal Risk", href: "/dashboard/crm/analytics" },
       { icon: ShieldCheck, label: "Compliance", href: "/dashboard/compliance" },
       { icon: Store, label: "Marketplace", href: "/dashboard/marketplace" },
     ],
@@ -92,7 +98,7 @@ const navSections: NavSection[] = [
     label: "Track",
     items: [
       { icon: BarChart3, label: "Analytics", href: "/dashboard/analytics" },
-      { icon: Trophy, label: "Progress", href: "/dashboard/progress" },
+      { icon: Trophy, label: "Performance", href: "/dashboard/performance" },
       { icon: Medal, label: "Leaderboard", href: "/dashboard/leaderboard" },
       { icon: Database, label: "Transcripts", href: "/dashboard/transcripts" },
       { icon: UserSearch, label: "Personas", href: "/dashboard/personas" },

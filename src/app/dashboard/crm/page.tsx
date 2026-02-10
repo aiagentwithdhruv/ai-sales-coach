@@ -36,8 +36,19 @@ import {
   LayoutGrid,
   List,
   Loader2,
+  BarChart3,
+  Trash2,
+  Tag,
+  ArrowRightLeft,
+  Webhook,
+  Copy,
+  Check,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { getAuthToken } from "@/hooks/useCredits";
 
 function formatCurrency(value: number): string {
   if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
@@ -54,6 +65,12 @@ export default function CRMPage() {
   const [showDetail, setShowDetail] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [stageFilter, setStageFilter] = useState<DealStage | "all">("all");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [showWebhook, setShowWebhook] = useState(false);
+  const [webhookInfo, setWebhookInfo] = useState<{ webhook_url: string; webhook_key: string; n8n_setup: Record<string, string> } | null>(null);
+  const [webhookLoading, setWebhookLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Fetch pipeline view on mount
   useEffect(() => {
@@ -92,6 +109,69 @@ export default function CRMPage() {
     crm.fetchPipeline();
   };
 
+  const handleBulkStageChange = async (stage: DealStage) => {
+    if (selectedIds.size === 0) return;
+    setBulkLoading(true);
+    await crm.bulkAction({
+      type: "stage_change",
+      contactIds: Array.from(selectedIds),
+      payload: { stage },
+    });
+    setSelectedIds(new Set());
+    crm.fetchPipeline();
+    setBulkLoading(false);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    setBulkLoading(true);
+    await crm.bulkAction({
+      type: "delete",
+      contactIds: Array.from(selectedIds),
+    });
+    setSelectedIds(new Set());
+    crm.fetchPipeline();
+    setBulkLoading(false);
+  };
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === crm.contacts.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(crm.contacts.map((c) => c.id)));
+    }
+  };
+
+  const fetchWebhookInfo = async () => {
+    setWebhookLoading(true);
+    try {
+      const token = await getAuthToken();
+      const res = await fetch("/api/contacts/webhook", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setWebhookInfo(data);
+      }
+    } catch { /* silent */ }
+    setWebhookLoading(false);
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const stats = crm.stats;
 
   return (
@@ -105,6 +185,25 @@ export default function CRMPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Link href="/dashboard/crm/analytics">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-gunmetal text-silver hover:text-platinum gap-2"
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Analytics</span>
+            </Button>
+          </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { setShowWebhook((v) => !v); if (!webhookInfo) fetchWebhookInfo(); }}
+            className={cn("border-gunmetal text-silver hover:text-platinum gap-2", showWebhook && "border-neonblue text-neonblue")}
+          >
+            <Webhook className="h-4 w-4" />
+            <span className="hidden sm:inline">Webhook</span>
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -183,6 +282,81 @@ export default function CRMPage() {
         </div>
       )}
 
+      {/* Webhook Info Card */}
+      {showWebhook && (
+        <Card className="bg-onyx border-neonblue/20">
+          <CardContent className="p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Webhook className="h-5 w-5 text-neonblue" />
+                <h3 className="text-sm font-semibold text-platinum">Lead Capture Webhook</h3>
+              </div>
+              <Button size="sm" variant="ghost" onClick={() => setShowWebhook(false)} className="h-7 w-7 p-0 text-silver">
+                <ChevronUp className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-silver">
+              Send leads from any form, n8n workflow, or Zapier to this URL. They&apos;ll appear in your CRM instantly.
+            </p>
+            {webhookLoading ? (
+              <div className="flex items-center gap-2 text-mist text-xs">
+                <Loader2 className="h-3 w-3 animate-spin" /> Loading webhook URL...
+              </div>
+            ) : webhookInfo ? (
+              <div className="space-y-3">
+                {/* Webhook URL */}
+                <div>
+                  <label className="text-[10px] text-mist uppercase tracking-wider block mb-1">Webhook URL (copy this)</label>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 text-xs bg-graphite border border-gunmetal rounded px-3 py-2 text-neonblue font-mono break-all select-all">
+                      {webhookInfo.webhook_url}
+                    </code>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => copyToClipboard(webhookInfo.webhook_url)}
+                      className="border-gunmetal text-silver hover:text-platinum shrink-0"
+                    >
+                      {copied ? <Check className="h-3.5 w-3.5 text-automationgreen" /> : <Copy className="h-3.5 w-3.5" />}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* n8n Setup */}
+                <div className="bg-graphite/50 rounded-lg p-3 border border-gunmetal/30">
+                  <p className="text-xs text-platinum font-medium mb-2">n8n Setup (5 steps)</p>
+                  <ol className="text-[11px] text-silver space-y-1 list-decimal list-inside">
+                    <li>Add an <strong className="text-platinum">HTTP Request</strong> node</li>
+                    <li>Method: <strong className="text-platinum">POST</strong></li>
+                    <li>Paste the webhook URL above</li>
+                    <li>Body Type: <strong className="text-platinum">JSON</strong></li>
+                    <li>Map fields: <code className="text-neonblue">name, email, phone, company, source</code></li>
+                  </ol>
+                </div>
+
+                {/* Supported Fields */}
+                <div>
+                  <p className="text-[10px] text-mist uppercase tracking-wider mb-1">Supported Fields</p>
+                  <div className="flex flex-wrap gap-1">
+                    {["name", "email", "phone", "company", "title", "source", "notes", "tags", "deal_value"].map((f) => (
+                      <span key={f} className="text-[10px] bg-graphite border border-gunmetal/50 rounded px-1.5 py-0.5 text-silver font-mono">{f}</span>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-mist mt-1">Also accepts: first_name, last_name, full_name, mobile, organization, message, utm_source, utm_campaign</p>
+                </div>
+
+                {/* Batch */}
+                <p className="text-[10px] text-mist">
+                  Batch import: Send <code className="text-neonblue">{"{ \"leads\": [...] }"}</code> for multiple leads at once.
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-errorred">Failed to load webhook info. Try again.</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Controls bar */}
       <div className="flex items-center gap-3 flex-wrap">
         {/* Search */}
@@ -251,6 +425,55 @@ export default function CRMPage() {
         </div>
       </div>
 
+      {/* Bulk Actions Bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 p-3 rounded-lg bg-neonblue/5 border border-neonblue/20">
+          <span className="text-sm text-platinum font-medium">
+            {selectedIds.size} selected
+          </span>
+          <div className="h-4 w-px bg-gunmetal" />
+          <Select onValueChange={(v) => handleBulkStageChange(v as DealStage)}>
+            <SelectTrigger className="w-[150px] h-8 text-xs bg-graphite border-gunmetal">
+              <div className="flex items-center gap-1.5">
+                <ArrowRightLeft className="h-3 w-3" />
+                Move to Stage
+              </div>
+            </SelectTrigger>
+            <SelectContent className="bg-graphite border-gunmetal">
+              {ACTIVE_STAGES.map((stage) => (
+                <SelectItem key={stage} value={stage}>
+                  <span className={STAGE_CONFIG[stage].color}>
+                    {STAGE_CONFIG[stage].label}
+                  </span>
+                </SelectItem>
+              ))}
+              <SelectItem value="won">
+                <span className="text-automationgreen">Won</span>
+              </SelectItem>
+              <SelectItem value="lost">
+                <span className="text-errorred">Lost</span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleBulkDelete}
+            disabled={bulkLoading}
+            className="h-8 text-xs border-errorred/30 text-errorred hover:bg-errorred/10 gap-1"
+          >
+            <Trash2 className="h-3 w-3" />
+            Delete
+          </Button>
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="text-xs text-mist hover:text-silver ml-auto"
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
       {/* Loading */}
       {crm.isLoading && (
         <div className="flex items-center justify-center py-12">
@@ -274,6 +497,9 @@ export default function CRMPage() {
           filters={crm.filters}
           onSort={handleSort}
           onContactClick={handleContactClick}
+          selectedIds={selectedIds}
+          onToggleSelection={toggleSelection}
+          onToggleSelectAll={toggleSelectAll}
         />
       )}
 
@@ -309,6 +535,7 @@ export default function CRMPage() {
         onSuggestFollowUp={crm.suggestFollowUp}
         onLogActivity={crm.logActivity}
         getContactDetails={crm.getContact}
+        allContacts={crm.contacts}
       />
     </div>
   );

@@ -8,8 +8,12 @@ import type {
   ContactUpdateInput,
   ContactFilters,
   PipelineStats,
+  PipelineAnalytics,
+  DealForecast,
+  CRMNotification,
   DealStage,
   Activity,
+  BulkAction,
 } from "@/types/crm";
 
 interface CRMState {
@@ -328,6 +332,144 @@ export function useCRM(initialFilters?: ContactFilters) {
     []
   );
 
+  // Bulk action
+  const bulkAction = useCallback(
+    async (action: BulkAction): Promise<{ success: boolean; affected: number }> => {
+      try {
+        const res = await authFetch(`${API_BASE}/bulk`, {
+          method: "POST",
+          body: JSON.stringify(action),
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || "Bulk action failed");
+        }
+        const result = await res.json();
+        fetchContacts();
+        return result;
+      } catch (error) {
+        setState((prev) => ({
+          ...prev,
+          error: error instanceof Error ? error.message : "Unknown error",
+        }));
+        return { success: false, affected: 0 };
+      }
+    },
+    [fetchContacts]
+  );
+
+  // Fetch analytics
+  const fetchAnalytics = useCallback(
+    async (): Promise<PipelineAnalytics | null> => {
+      try {
+        const res = await authFetch(`${API_BASE}/analytics`);
+        if (!res.ok) throw new Error("Failed to fetch analytics");
+        return await res.json();
+      } catch {
+        return null;
+      }
+    },
+    []
+  );
+
+  // Fetch forecast
+  const fetchForecast = useCallback(
+    async (): Promise<DealForecast | null> => {
+      try {
+        const res = await authFetch(`${API_BASE}/forecast`);
+        if (!res.ok) throw new Error("Failed to fetch forecast");
+        return await res.json();
+      } catch {
+        return null;
+      }
+    },
+    []
+  );
+
+  // Fetch notifications
+  const fetchNotifications = useCallback(
+    async (
+      unreadOnly = false
+    ): Promise<{ notifications: CRMNotification[]; unreadCount: number }> => {
+      try {
+        const params = new URLSearchParams();
+        if (unreadOnly) params.set("unreadOnly", "true");
+        const res = await authFetch(`${API_BASE}/notifications?${params}`);
+        if (!res.ok) throw new Error("Failed to fetch notifications");
+        return await res.json();
+      } catch {
+        return { notifications: [], unreadCount: 0 };
+      }
+    },
+    []
+  );
+
+  // Generate smart notifications
+  const generateNotifications = useCallback(async (): Promise<number> => {
+    try {
+      const res = await authFetch(`${API_BASE}/notifications`, {
+        method: "POST",
+        body: JSON.stringify({ action: "generate" }),
+      });
+      if (!res.ok) return 0;
+      const data = await res.json();
+      return data.generated || 0;
+    } catch {
+      return 0;
+    }
+  }, []);
+
+  // Mark all notifications read
+  const markAllNotificationsRead = useCallback(async (): Promise<boolean> => {
+    try {
+      const res = await authFetch(`${API_BASE}/notifications`, {
+        method: "POST",
+        body: JSON.stringify({ action: "mark_all_read" }),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  // Mark single notification read
+  const markNotificationRead = useCallback(
+    async (notificationId: string): Promise<boolean> => {
+      try {
+        const res = await authFetch(
+          `${API_BASE}/notifications/${notificationId}`,
+          {
+            method: "PUT",
+            body: JSON.stringify({ action: "read" }),
+          }
+        );
+        return res.ok;
+      } catch {
+        return false;
+      }
+    },
+    []
+  );
+
+  // Dismiss notification
+  const dismissNotification = useCallback(
+    async (notificationId: string): Promise<boolean> => {
+      try {
+        const res = await authFetch(
+          `${API_BASE}/notifications/${notificationId}`,
+          {
+            method: "PUT",
+            body: JSON.stringify({ action: "dismiss" }),
+          }
+        );
+        return res.ok;
+      } catch {
+        return false;
+      }
+    },
+    []
+  );
+
   // Update filters and refetch
   const updateFilters = useCallback(
     (newFilters: Partial<ContactFilters>) => {
@@ -358,5 +500,13 @@ export function useCRM(initialFilters?: ContactFilters) {
     importContacts,
     logActivity,
     getContact,
+    bulkAction,
+    fetchAnalytics,
+    fetchForecast,
+    fetchNotifications,
+    generateNotifications,
+    markAllNotificationsRead,
+    markNotificationRead,
+    dismissNotification,
   };
 }

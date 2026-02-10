@@ -39,6 +39,7 @@ import {
   PenLine,
   Calendar,
   Zap,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -65,6 +66,7 @@ interface ContactDetailSheetProps {
   getContactDetails: (
     id: string
   ) => Promise<{ contact: Contact; activities: Activity[] } | null>;
+  allContacts?: Contact[];
 }
 
 const ACTIVITY_ICONS: Record<string, typeof Mail> = {
@@ -106,6 +108,7 @@ export function ContactDetailSheet({
   onSuggestFollowUp,
   onLogActivity,
   getContactDetails,
+  allContacts,
 }: ContactDetailSheetProps) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [enriching, setEnriching] = useState(false);
@@ -577,6 +580,52 @@ export function ContactDetailSheet({
               </div>
             )}
           </div>
+
+          {/* Related Contacts (same company) */}
+          {c.company && allContacts && (() => {
+            const related = allContacts.filter(
+              (rc) => rc.id !== c.id && rc.company && rc.company.toLowerCase() === c.company!.toLowerCase()
+            );
+            if (related.length === 0) return null;
+            return (
+              <div>
+                <h4 className="text-xs font-medium text-mist uppercase tracking-wider mb-2 flex items-center gap-1">
+                  <Users className="h-3 w-3" />
+                  Same Company ({related.length})
+                </h4>
+                <div className="space-y-2">
+                  {related.slice(0, 5).map((rc) => {
+                    const rcStage = STAGE_CONFIG[rc.deal_stage];
+                    return (
+                      <div
+                        key={rc.id}
+                        className="flex items-center justify-between p-2 rounded-lg bg-graphite/50 border border-gunmetal/30"
+                      >
+                        <div>
+                          <p className="text-sm text-platinum">
+                            {rc.first_name} {rc.last_name || ""}
+                          </p>
+                          {rc.title && (
+                            <p className="text-xs text-mist">{rc.title}</p>
+                          )}
+                        </div>
+                        <Badge
+                          className={cn(
+                            "text-[10px]",
+                            rcStage.bgColor,
+                            rcStage.color,
+                            "border-transparent"
+                          )}
+                        >
+                          {rcStage.label}
+                        </Badge>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Tags */}
           {c.tags && c.tags.length > 0 && (

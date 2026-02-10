@@ -22,6 +22,9 @@ interface ContactsTableProps {
   filters: ContactFilters;
   onSort: (sortBy: ContactFilters["sortBy"]) => void;
   onContactClick: (contact: Contact) => void;
+  selectedIds?: Set<string>;
+  onToggleSelection?: (id: string) => void;
+  onToggleSelectAll?: () => void;
 }
 
 function formatDate(dateStr: string | null): string {
@@ -84,12 +87,27 @@ export function ContactsTable({
   filters,
   onSort,
   onContactClick,
+  selectedIds,
+  onToggleSelection,
+  onToggleSelectAll,
 }: ContactsTableProps) {
+  const hasSelection = selectedIds !== undefined;
+
   return (
     <div className="rounded-xl border border-gunmetal bg-onyx overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="border-gunmetal hover:bg-transparent">
+            {hasSelection && (
+              <TableHead className="w-10">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.size === contacts.length && contacts.length > 0}
+                  onChange={onToggleSelectAll}
+                  className="rounded border-gunmetal"
+                />
+              </TableHead>
+            )}
             <SortableHead
               label="Name"
               field="name"
@@ -139,7 +157,7 @@ export function ContactsTable({
           {contacts.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={7}
+                colSpan={hasSelection ? 8 : 7}
                 className="text-center py-12 text-silver"
               >
                 No contacts found. Add your first contact to get started.
@@ -163,9 +181,22 @@ export function ContactsTable({
               return (
                 <TableRow
                   key={contact.id}
-                  className="border-gunmetal cursor-pointer hover:bg-graphite/50 transition-colors"
+                  className={cn(
+                    "border-gunmetal cursor-pointer hover:bg-graphite/50 transition-colors",
+                    hasSelection && selectedIds.has(contact.id) && "bg-neonblue/5"
+                  )}
                   onClick={() => onContactClick(contact)}
                 >
+                  {hasSelection && (
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(contact.id)}
+                        onChange={() => onToggleSelection?.(contact.id)}
+                        className="rounded border-gunmetal"
+                      />
+                    </TableCell>
+                  )}
                   <TableCell>
                     <div>
                       <p className="text-sm font-medium text-platinum">

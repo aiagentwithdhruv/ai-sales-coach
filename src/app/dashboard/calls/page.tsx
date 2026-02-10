@@ -22,8 +22,11 @@ import {
   User,
   Building2,
   Loader2,
+  Contact,
+  Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getAuthToken } from "@/hooks/useCredits";
 
 // Mock call data
 const RECENT_CALLS = [
@@ -197,6 +200,10 @@ export default function CallsPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [authToken, setAuthToken] = useState<string>("");
+  const [savingToCRM, setSavingToCRM] = useState(false);
+  const [savedToCRM, setSavedToCRM] = useState<string | null>(null);
+  const [crmContacts, setCrmContacts] = useState<Array<{ id: string; first_name: string; last_name: string | null; company: string | null }>>([]);
+  const [showCRMPicker, setShowCRMPicker] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = getSupabaseClient();
 
@@ -207,6 +214,59 @@ export default function CallsPage() {
     };
     getToken();
   }, [supabase.auth]);
+
+  // Load CRM contacts for linking
+  const loadCRMContacts = async () => {
+    try {
+      const token = await getAuthToken();
+      if (!token) return;
+      const res = await fetch("/api/contacts?limit=100", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCrmContacts(data.contacts || []);
+      }
+    } catch {
+      // silent
+    }
+  };
+
+  const handleSaveToCRM = async (contactId: string, callTitle: string, score: number, insights: Record<string, number>) => {
+    setSavingToCRM(true);
+    try {
+      const token = await getAuthToken();
+      if (!token) return;
+      await fetch(`/api/contacts/${contactId}/activities`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          type: "call",
+          title: `Call analyzed: ${callTitle}`,
+          description: `Overall score: ${score}%. Discovery: ${insights.discovery}%, Rapport: ${insights.rapport}%, Objection Handling: ${insights.objectionHandling}%, Next Steps: ${insights.nextSteps}%`,
+          metadata: { score, insights, source: "call_analyzer" },
+        }),
+      });
+      // Update last_contacted_at
+      await fetch(`/api/contacts/${contactId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ last_contacted_at: new Date().toISOString() }),
+      });
+      setSavedToCRM(contactId);
+      setShowCRMPicker(false);
+    } catch {
+      // silent
+    } finally {
+      setSavingToCRM(false);
+    }
+  };
 
   const selectedCallData = RECENT_CALLS.find((c) => c.id === selectedCall);
   const selectedAnalysis = selectedCall === "latest" ? analysis : null;
@@ -522,9 +582,49 @@ export default function CallsPage() {
                         <p className="text-xs text-mist">Overall Score</p>
                       </div>
                     </div>
-                    <div className="text-sm text-silver">
+                    <div className="text-sm text-silver mb-3">
                       {selectedAnalysis.summary}
                     </div>
+                    {savedToCRM ? (
+                      <Button variant="outline" className="border-automationgreen/30 text-automationgreen gap-2" disabled>
+                        <Check className="h-4 w-4" />
+                        Saved to CRM
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        className="border-gunmetal text-silver hover:text-platinum gap-2"
+                        onClick={() => {
+                          loadCRMContacts();
+                          setShowCRMPicker(true);
+                        }}
+                      >
+                        <Contact className="h-4 w-4" />
+                        Save to CRM
+                      </Button>
+                    )}
+                    {showCRMPicker && (
+                      <div className="mt-3 p-3 rounded-lg bg-onyx border border-gunmetal">
+                        <p className="text-xs text-mist mb-2">Link this call to a CRM contact:</p>
+                        {crmContacts.length > 0 ? (
+                          <div className="space-y-1 max-h-40 overflow-y-auto">
+                            {crmContacts.map((ct) => (
+                              <button
+                                key={ct.id}
+                                onClick={() => handleSaveToCRM(ct.id, selectedAnalysis?.title || "Call", selectedAnalysis?.score || 0, selectedAnalysis?.insights || {})}
+                                disabled={savingToCRM}
+                                className="w-full text-left p-2 rounded hover:bg-graphite/50 text-sm text-silver hover:text-platinum transition-colors flex items-center justify-between"
+                              >
+                                <span>{ct.first_name} {ct.last_name || ""} {ct.company ? `(${ct.company})` : ""}</span>
+                                {savingToCRM && <Loader2 className="h-3 w-3 animate-spin" />}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-mist">No CRM contacts found. Add contacts in CRM first.</p>
+                        )}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -708,10 +808,52 @@ export default function CallsPage() {
                         <p className="text-xs text-mist">Overall Score</p>
                       </div>
                     </div>
-                    <Button className="bg-neonblue hover:bg-electricblue text-white">
-                      <Play className="h-4 w-4 mr-2" />
-                      Play Recording
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button className="bg-neonblue hover:bg-electricblue text-white">
+                        <Play className="h-4 w-4 mr-2" />
+                        Play Recording
+                      </Button>
+                      {savedToCRM ? (
+                        <Button variant="outline" className="border-automationgreen/30 text-automationgreen gap-2" disabled>
+                          <Check className="h-4 w-4" />
+                          Saved to CRM
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          className="border-gunmetal text-silver hover:text-platinum gap-2"
+                          onClick={() => {
+                            loadCRMContacts();
+                            setShowCRMPicker(true);
+                          }}
+                        >
+                          <Contact className="h-4 w-4" />
+                          Save to CRM
+                        </Button>
+                      )}
+                    </div>
+                    {showCRMPicker && (
+                      <div className="mt-3 p-3 rounded-lg bg-onyx border border-gunmetal">
+                        <p className="text-xs text-mist mb-2">Link this call to a CRM contact:</p>
+                        {crmContacts.length > 0 ? (
+                          <div className="space-y-1 max-h-40 overflow-y-auto">
+                            {crmContacts.map((ct) => (
+                              <button
+                                key={ct.id}
+                                onClick={() => handleSaveToCRM(ct.id, selectedCallData?.title || "Call", selectedCallData?.score || 0, selectedCallData?.insights || {})}
+                                disabled={savingToCRM}
+                                className="w-full text-left p-2 rounded hover:bg-graphite/50 text-sm text-silver hover:text-platinum transition-colors flex items-center justify-between"
+                              >
+                                <span>{ct.first_name} {ct.last_name || ""} {ct.company ? `(${ct.company})` : ""}</span>
+                                {savingToCRM && <Loader2 className="h-3 w-3 animate-spin" />}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-mist">No CRM contacts found. Add contacts in CRM first.</p>
+                        )}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 

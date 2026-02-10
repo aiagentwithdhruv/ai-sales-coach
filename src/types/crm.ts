@@ -194,6 +194,132 @@ export interface ContactFilters {
   limit?: number;
 }
 
+// ============================================
+// Notification Types
+// ============================================
+
+export type NotificationType =
+  | "stalled_deal"
+  | "follow_up_due"
+  | "follow_up_overdue"
+  | "deal_at_risk"
+  | "stage_suggestion"
+  | "win_congratulation"
+  | "lost_review"
+  | "inactivity_warning"
+  | "score_drop"
+  | "system";
+
+export type NotificationSeverity = "info" | "warning" | "critical" | "success";
+
+export interface CRMNotification {
+  id: string;
+  user_id: string;
+  contact_id: string | null;
+  type: NotificationType;
+  title: string;
+  description: string | null;
+  severity: NotificationSeverity;
+  is_read: boolean;
+  is_dismissed: boolean;
+  action_url: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+// ============================================
+// Deal Stage History (for analytics)
+// ============================================
+
+export interface DealStageHistory {
+  id: string;
+  user_id: string;
+  contact_id: string;
+  from_stage: string | null;
+  to_stage: string;
+  deal_value: number;
+  changed_at: string;
+}
+
+// ============================================
+// Analytics Types
+// ============================================
+
+export interface ConversionFunnel {
+  stage: DealStage;
+  label: string;
+  count: number;
+  value: number;
+  conversionRate: number;
+}
+
+export interface DealVelocity {
+  stage: DealStage;
+  label: string;
+  avgDaysInStage: number;
+  dealsCount: number;
+}
+
+export interface WinLossAnalysis {
+  totalWon: number;
+  totalLost: number;
+  winRate: number;
+  avgWonDealValue: number;
+  avgLostDealValue: number;
+  avgDaysToWin: number;
+  avgDaysToLose: number;
+}
+
+export interface PipelineAnalytics {
+  funnel: ConversionFunnel[];
+  velocity: DealVelocity[];
+  winLoss: WinLossAnalysis;
+  monthlyTrend: {
+    month: string;
+    won: number;
+    lost: number;
+    wonValue: number;
+    lostValue: number;
+    newDeals: number;
+  }[];
+  stalledDeals: (Contact & { daysSinceActivity: number })[];
+}
+
+// ============================================
+// Forecasting Types
+// ============================================
+
+export interface DealForecast {
+  expectedRevenue: number;
+  bestCase: number;
+  worstCase: number;
+  byMonth: {
+    month: string;
+    expected: number;
+    bestCase: number;
+    worstCase: number;
+    deals: number;
+  }[];
+  atRisk: {
+    contact: Contact;
+    riskScore: number;
+    reason: string;
+  }[];
+}
+
+// ============================================
+// Bulk Action Types
+// ============================================
+
+export interface BulkAction {
+  type: "stage_change" | "tag_add" | "tag_remove" | "delete";
+  contactIds: string[];
+  payload?: {
+    stage?: DealStage;
+    tag?: string;
+  };
+}
+
 // Lead score calculation helpers
 export function calculateLeadScore(contact: Partial<Contact>, activityCount = 0): number {
   let score = 0;
@@ -202,9 +328,7 @@ export function calculateLeadScore(contact: Partial<Contact>, activityCount = 0)
   if (contact.company) score += 10;
   if (contact.enrichment_status === "enriched") score += 15;
   if (contact.deal_value && contact.deal_value > 0) score += 10;
-  // Activity bonus: +5 per interaction, cap at 20
   score += Math.min(activityCount * 5, 20);
-  // Stage bonus
   const stageBonus: Record<string, number> = {
     contacted: 5,
     qualified: 10,

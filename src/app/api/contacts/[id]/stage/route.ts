@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { authenticateUser, updateDealStage } from "@/lib/crm/contacts";
 import { logStageChange } from "@/lib/crm/activities";
+import { logStageHistory } from "@/lib/crm/notifications";
 import { DEAL_STAGES, type DealStage } from "@/types/crm";
 
 const jsonHeaders = { "Content-Type": "application/json" };
@@ -44,9 +45,10 @@ export async function PUT(
     );
   }
 
-  // Log stage change activity
+  // Log stage change activity + history for analytics
   if (previousStage && previousStage !== newStage) {
     await logStageChange(auth.userId, id, previousStage, newStage);
+    await logStageHistory(auth.userId, id, previousStage, newStage, Number(contact.deal_value) || 0);
   }
 
   return new Response(JSON.stringify(contact), { headers: jsonHeaders });
