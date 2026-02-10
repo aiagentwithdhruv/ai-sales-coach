@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { DashboardLayout } from "@/components/layout";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import { Loader2 } from "lucide-react";
 
 export default function DashboardRootLayout({
   children,
@@ -15,8 +17,10 @@ export default function DashboardRootLayout({
     avatar?: string;
     role: "sales_rep" | "manager" | "admin";
   } | undefined>(undefined);
+  const [authChecked, setAuthChecked] = useState(false);
 
   const supabase = getSupabaseClient();
+  const router = useRouter();
 
   useEffect(() => {
     const getUser = async () => {
@@ -26,8 +30,12 @@ export default function DashboardRootLayout({
           name: authUser.user_metadata?.full_name || authUser.email?.split("@")[0] || "User",
           email: authUser.email || "",
           avatar: authUser.user_metadata?.avatar_url,
-          role: "sales_rep", // Default role, can be fetched from DB if needed
+          role: "sales_rep",
         });
+        setAuthChecked(true);
+      } else {
+        // No authenticated user — redirect to login
+        router.push("/login");
       }
     };
     getUser();
@@ -41,11 +49,26 @@ export default function DashboardRootLayout({
           avatar: session.user.user_metadata?.avatar_url,
           role: "sales_rep",
         });
+      } else {
+        // User signed out — redirect to login
+        router.push("/login");
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase.auth]);
+  }, [supabase.auth, router]);
+
+  // Show loading while checking auth
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen bg-obsidian flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-neonblue" />
+          <p className="text-sm text-silver">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return <DashboardLayout user={user}>{children}</DashboardLayout>;
 }

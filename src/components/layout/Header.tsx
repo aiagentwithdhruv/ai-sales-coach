@@ -34,31 +34,24 @@ interface HeaderProps {
 
 export function Header({ user, onMobileMenuToggle, sidebarExpanded = true, onSidebarToggle }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [profileName, setProfileName] = useState("Demo User");
-  const [profileEmail, setProfileEmail] = useState("demo@example.com");
+  const [profileName, setProfileName] = useState("");
+  const [profileEmail, setProfileEmail] = useState("");
   const [profileAvatar, setProfileAvatar] = useState<string | undefined>();
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
   const router = useRouter();
   const supabase = getSupabaseClient();
   const { credits, isLoading: creditsLoading, hasCredits } = useCredits();
 
-  // Get user from Supabase and localStorage
+  // Get user from Supabase auth only
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setSupabaseUser(user);
 
       if (user) {
-        // Use Supabase user data
         setProfileName(user.user_metadata?.full_name || user.email?.split("@")[0] || "User");
         setProfileEmail(user.email || "");
         setProfileAvatar(user.user_metadata?.avatar_url);
-      } else {
-        // Fall back to localStorage for demo mode
-        const savedName = localStorage.getItem("profile_name");
-        const savedEmail = localStorage.getItem("profile_email");
-        if (savedName) setProfileName(savedName);
-        if (savedEmail) setProfileEmail(savedEmail);
       }
     };
 
@@ -75,21 +68,8 @@ export function Header({ user, onMobileMenuToggle, sidebarExpanded = true, onSid
       }
     });
 
-    // Listen for localStorage changes (for demo mode)
-    const handleStorageChange = () => {
-      if (!supabaseUser) {
-        const name = localStorage.getItem("profile_name");
-        const email = localStorage.getItem("profile_email");
-        if (name) setProfileName(name);
-        if (email) setProfileEmail(email);
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-
     return () => {
       subscription.unsubscribe();
-      window.removeEventListener("storage", handleStorageChange);
     };
   }, [supabase.auth, supabaseUser]);
 
