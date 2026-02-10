@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,7 +54,8 @@ const RESEARCH_TEMPLATES = [
   },
 ];
 
-export default function ResearchPage() {
+function ResearchPageInner() {
+  const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
   const [response, setResponse] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -71,6 +73,14 @@ export default function ResearchPage() {
       }
     };
   }, []);
+
+  // Pre-fill from CRM query params
+  useEffect(() => {
+    const company = searchParams.get("company");
+    if (company) {
+      setQuery(`Research ${company} for an upcoming sales call. I need to know their recent funding, key executives, tech stack, and any pain points I can address.`);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (responseRef.current) {
@@ -306,5 +316,13 @@ export default function ResearchPage() {
         )}
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function ResearchPage() {
+  return (
+    <Suspense>
+      <ResearchPageInner />
+    </Suspense>
   );
 }

@@ -32,6 +32,7 @@ import {
   Medal,
   Database,
   Sparkles,
+  Contact,
 } from "lucide-react";
 import {
   Tooltip,
@@ -66,6 +67,7 @@ const navSections: NavSection[] = [
   {
     label: "Tools",
     items: [
+      { icon: Contact, label: "CRM", href: "/dashboard/crm" },
       { icon: Swords, label: "Tools", href: "/dashboard/tools" },
       { icon: Mail, label: "Follow-ups", href: "/dashboard/follow-ups" },
       { icon: Presentation, label: "Presentations", href: "/dashboard/presentations" },

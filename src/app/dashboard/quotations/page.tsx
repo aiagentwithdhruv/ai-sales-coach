@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,7 +97,9 @@ function getDefaultValidDate(): string {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export default function QuotationsPage() {
+function QuotationsPageInner() {
+  const searchParams = useSearchParams();
+
   // Form state
   const [referenceNumber] = useState(generateRefNumber);
   const [clientName, setClientName] = useState("");
@@ -132,6 +135,16 @@ export default function QuotationsPage() {
       // ignore parse errors
     }
   }, []);
+
+  // Pre-fill from CRM query params
+  useEffect(() => {
+    const name = searchParams.get("name");
+    const comp = searchParams.get("company");
+    const em = searchParams.get("email");
+    if (name) setClientName(name);
+    if (comp) setCompany(comp);
+    if (em) setEmail(em);
+  }, [searchParams]);
 
   // ─── Calculations ──────────────────────────────────────────────────────────
 
@@ -1092,5 +1105,13 @@ Format with markdown headings and bullet points. Keep it concise but impressive.
         </div>
       </div>
     </div>
+  );
+}
+
+export default function QuotationsPage() {
+  return (
+    <Suspense>
+      <QuotationsPageInner />
+    </Suspense>
   );
 }

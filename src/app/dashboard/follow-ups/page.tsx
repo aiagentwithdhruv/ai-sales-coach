@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -189,7 +190,9 @@ Make each variation feel unique — not just a trimmed or padded version of the 
 
 // ===== COMPONENT =====
 
-export default function FollowUpsPage() {
+function FollowUpsPageInner() {
+  const searchParams = useSearchParams();
+
   // Form state
   const [callNotes, setCallNotes] = useState("");
   const [contactName, setContactName] = useState("");
@@ -246,6 +249,14 @@ export default function FollowUpsPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Pre-fill from CRM query params
+  useEffect(() => {
+    const name = searchParams.get("name");
+    const comp = searchParams.get("company");
+    if (name) setContactName(name);
+    if (comp) setCompany(comp);
+  }, [searchParams]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -1235,5 +1246,13 @@ function StatusBadge({ status }: { status: QueueStatus }) {
     <Badge className={cn(c.bg, c.text, "text-[10px] px-1.5 py-0.5")}>
       {c.label}
     </Badge>
+  );
+}
+
+export default function FollowUpsPage() {
+  return (
+    <Suspense>
+      <FollowUpsPageInner />
+    </Suspense>
   );
 }
