@@ -32,8 +32,29 @@ function LoginForm() {
     });
 
     if (error) {
-      setError(error.message);
-      setIsLoading(false);
+      // If email not confirmed, auto-confirm and retry
+      if (error.message.toLowerCase().includes("email not confirmed")) {
+        await fetch("/api/auth/confirm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        // Retry login after confirmation
+        const { error: retryError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (retryError) {
+          setError(retryError.message);
+          setIsLoading(false);
+        } else {
+          router.push(redirectTo);
+          router.refresh();
+        }
+      } else {
+        setError(error.message);
+        setIsLoading(false);
+      }
     } else {
       router.push(redirectTo);
       router.refresh();

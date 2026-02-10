@@ -59,7 +59,15 @@ export default function SignUpPage() {
       setError(error.message);
       setIsLoading(false);
     } else {
-      // Email confirmation is disabled — go straight to dashboard
+      // Auto-confirm the email so user can login immediately (no email verification)
+      await fetch("/api/auth/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      // Sign in immediately after confirmation
+      await supabase.auth.signInWithPassword({ email, password });
       router.push("/dashboard");
       router.refresh();
     }

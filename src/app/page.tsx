@@ -268,12 +268,12 @@ export default function LandingPage() {
               </span>
             </div>
             <div className="hidden md:flex items-center gap-8">
-              <a
-                href="#features"
+              <Link
+                href="/features"
                 className="text-silver hover:text-platinum transition-colors"
               >
                 Features
-              </a>
+              </Link>
               <a
                 href="#how-it-works"
                 className="text-silver hover:text-platinum transition-colors"
@@ -698,12 +698,12 @@ export default function LandingPage() {
               </span>
             </div>
             <div className="flex items-center gap-6">
-              <a
-                href="#features"
+              <Link
+                href="/features"
                 className="text-sm text-mist hover:text-silver transition-colors"
               >
                 Features
-              </a>
+              </Link>
               <Link
                 href="/pricing"
                 className="text-sm text-mist hover:text-silver transition-colors"
