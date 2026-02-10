@@ -6,6 +6,7 @@
  */
 
 import OpenAI from "openai";
+import { checkCredits, deductCredits } from "@/lib/credits";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -66,6 +67,16 @@ function coerceAnalysis(jsonText: string): AnalysisResponse {
 }
 
 export async function POST(req: Request) {
+  // Credit check - call analysis is expensive (transcription + GPT-4.1), costs 3 credits
+  const authHeader = req.headers.get("authorization");
+  const creditCheck = await checkCredits(authHeader, 3);
+  if (!creditCheck.hasCredits) {
+    return new Response(
+      JSON.stringify({ error: "Insufficient credits. Call analysis costs 3 credits.", credits: creditCheck.credits }),
+      { status: 402, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
   try {
     const formData = await req.formData();
     const fileBlob = formData.get("file");
@@ -131,6 +142,14 @@ export async function POST(req: Request) {
 
     const raw = completion.choices[0]?.message?.content || "{}";
     const analysis = coerceAnalysis(raw);
+
+    // Deduct 3 credits after successful analysis
+    if (creditCheck.userId) {
+      const deductResult = await deductCredits(creditCheck.userId, 3);
+      if (!deductResult.success) {
+        console.warn("[Call Analyze] Credit deduction failed:", deductResult.error);
+      }
+    }
 
     return new Response(
       JSON.stringify({

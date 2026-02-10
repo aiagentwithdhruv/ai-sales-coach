@@ -15,6 +15,7 @@ interface UseRealtimeVoiceOptions {
     url?: string;
   }[];
   trainingFocus?: string;
+  authToken?: string;
 }
 
 interface UseRealtimeVoiceReturn {
@@ -38,7 +39,8 @@ export function useRealtimeVoice(options: UseRealtimeVoiceOptions = {}): UseReal
     systemPrompt = "You are a helpful sales prospect for practice. Respond naturally and conversationally.",
     voice = "alloy",
     attachments = [],
-    trainingFocus
+    trainingFocus,
+    authToken
   } = options;
 
   const [isConnected, setIsConnected] = useState(false);
@@ -265,10 +267,14 @@ export function useRealtimeVoice(options: UseRealtimeVoiceOptions = {}): UseReal
       setError(null);
 
       // Get ephemeral token from our API with session config
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (authToken) {
+        headers["Authorization"] = `Bearer ${authToken}`;
+      }
       const tokenResponse = await fetch("/api/ai/realtime-token", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        headers,
+        body: JSON.stringify({
           voice,
           instructions: systemPrompt,
           trainingFocus,
@@ -324,7 +330,7 @@ export function useRealtimeVoice(options: UseRealtimeVoiceOptions = {}): UseReal
       setError(message);
       onError?.(message);
     }
-  }, [systemPrompt, voice, attachments, handleMessage, onError]);
+  }, [systemPrompt, voice, attachments, handleMessage, onError, authToken]);
 
   // Disconnect
   const disconnect = useCallback(() => {

@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { getSupabaseClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -195,7 +196,17 @@ export default function CallsPage() {
   const [analysis, setAnalysis] = useState<CallAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+  const [authToken, setAuthToken] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const supabase = getSupabaseClient();
+
+  useEffect(() => {
+    const getToken = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) setAuthToken(session.access_token);
+    };
+    getToken();
+  }, [supabase.auth]);
 
   const selectedCallData = RECENT_CALLS.find((c) => c.id === selectedCall);
   const selectedAnalysis = selectedCall === "latest" ? analysis : null;
@@ -227,8 +238,11 @@ export default function CallsPage() {
       const formData = new FormData();
       formData.append("file", file);
 
+      const headers: Record<string, string> = {};
+      if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
       const res = await fetch("/api/ai/analyze-call", {
         method: "POST",
+        headers,
         body: formData,
       });
 

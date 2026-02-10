@@ -7,6 +7,7 @@
 
 import { NextResponse } from "next/server";
 import { processAttachmentsForContext, type Attachment } from "@/lib/ai/attachments";
+import { checkCredits, deductCredits } from "@/lib/credits";
 
 // GA model for Realtime API
 const REALTIME_MODEL = "gpt-4o-realtime-preview-2024-12-17";
@@ -30,6 +31,22 @@ export async function POST(request: Request) {
       },
       { status: 401 }
     );
+  }
+
+  // Credit check - require at least 1 credit to start voice session
+  const authHeader = request.headers.get("authorization");
+  if (authHeader) {
+    const creditCheck = await checkCredits(authHeader, 1);
+    if (!creditCheck.hasCredits) {
+      return NextResponse.json(
+        { error: "Insufficient credits. Voice practice costs 1 credit per minute.", credits: creditCheck.credits },
+        { status: 402 }
+      );
+    }
+    // Deduct 1 credit upfront for the first minute
+    if (creditCheck.userId) {
+      await deductCredits(creditCheck.userId, 1);
+    }
   }
 
   try {
