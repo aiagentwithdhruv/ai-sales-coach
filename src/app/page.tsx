@@ -307,11 +307,11 @@ export default function LandingPage() {
                 rel="noopener noreferrer"
                 className="hidden md:flex"
               >
-                <Button className="bg-automationgreen hover:bg-automationgreen/80 text-white text-sm px-4 gap-1.5 animate-pulse-glow-subtle" style={{ "--glow-color": "rgba(0, 255, 136, 0.4)" } as React.CSSProperties}>
+                <button className="btn-premium-sm text-sm px-4 py-2 rounded-lg font-medium cursor-pointer flex items-center gap-1.5">
                   <PhoneCall className="h-3.5 w-3.5" />
                   Test AI Call
-                  <ExternalLink className="h-3 w-3 opacity-70" />
-                </Button>
+                  <ExternalLink className="h-3 w-3 opacity-50" />
+                </button>
               </a>
               <a
                 href="https://calendly.com/aiwithdhruv/makeaiworkforyou"
@@ -404,12 +404,14 @@ export default function LandingPage() {
               href="https://n8n.aiwithdhruv.cloud/form/10f459a3-ca15-466e-b718-8b11f312c3f8"
               target="_blank"
               rel="noopener noreferrer"
-              className="glow-card flex items-center gap-2 px-8 py-5 rounded-xl text-lg font-semibold border border-automationgreen/40 text-automationgreen hover:bg-automationgreen/10 hover:border-automationgreen/60 transition-all animate-pulse-glow-subtle"
-              style={{ "--glow-color": "rgba(0, 255, 136, 0.3)" } as React.CSSProperties}
             >
-              <PhoneCall className="h-5 w-5" />
-              Test AI Call — Free
-              <ExternalLink className="h-4 w-4 opacity-60" />
+              <button className="btn-premium relative px-8 py-5 rounded-xl text-lg font-semibold cursor-pointer">
+                <span className="btn-premium-text relative z-10 flex items-center gap-2">
+                  <PhoneCall className="h-5 w-5" />
+                  Test AI Call — Free
+                  <ExternalLink className="h-4 w-4 opacity-50" />
+                </span>
+              </button>
             </a>
             <a
               href="https://calendly.com/aiwithdhruv/makeaiworkforyou"
