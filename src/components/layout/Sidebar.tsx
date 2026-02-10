@@ -33,6 +33,8 @@ import {
   Database,
   Sparkles,
   Contact,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 import {
   Tooltip,
@@ -109,25 +111,29 @@ interface SidebarProps {
   isAdmin?: boolean;
   mobileOpen?: boolean;
   onMobileClose?: () => void;
-  collapsed?: boolean;
+  expanded?: boolean;
+  onToggle?: () => void;
 }
 
-export function Sidebar({ isAdmin = false, mobileOpen = false, onMobileClose, collapsed = false }: SidebarProps) {
+export function Sidebar({
+  isAdmin = false,
+  mobileOpen = false,
+  onMobileClose,
+  expanded = true,
+  onToggle,
+}: SidebarProps) {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
-    if (href === "/dashboard") {
-      return pathname === "/dashboard";
-    }
+    if (href === "/dashboard") return pathname === "/dashboard";
     return pathname.startsWith(href);
   };
 
   const handleLinkClick = () => {
-    // Close sidebar on mobile when a link is clicked
-    if (onMobileClose) {
-      onMobileClose();
-    }
+    if (onMobileClose) onMobileClose();
   };
+
+  const sidebarWidth = expanded ? "w-[220px]" : "w-[72px]";
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -141,108 +147,195 @@ export function Sidebar({ isAdmin = false, mobileOpen = false, onMobileClose, co
 
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 h-screen w-[72px] flex flex-col bg-graphite border-r border-gunmetal transition-transform duration-200",
-          mobileOpen
-            ? "translate-x-0"
-            : collapsed
-              ? "-translate-x-full"
-              : "-translate-x-full md:translate-x-0"
+          "fixed left-0 top-0 z-40 h-screen flex flex-col bg-graphite border-r border-gunmetal transition-all duration-200",
+          sidebarWidth,
+          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
       >
-        {/* Logo */}
-        <div className="flex h-16 items-center justify-center border-b border-gunmetal">
-          <Link href="/dashboard" className="flex items-center justify-center" onClick={handleLinkClick}>
-            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-neonblue to-electricblue flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
+        {/* Logo + Toggle */}
+        <div className={cn("flex h-16 items-center border-b border-gunmetal", expanded ? "px-4 justify-between" : "justify-center")}>
+          <Link href="/dashboard" className="flex items-center gap-3" onClick={handleLinkClick}>
+            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-neonblue to-electricblue flex items-center justify-center shrink-0">
+              <Sparkles className="w-4.5 h-4.5 text-white" />
             </div>
+            {expanded && (
+              <span className="text-sm font-bold text-platinum tracking-tight">QuotaHit</span>
+            )}
           </Link>
+          {expanded && (
+            <button
+              onClick={onToggle}
+              className="flex h-7 w-7 items-center justify-center rounded-md text-mist hover:text-platinum hover:bg-white/[0.06] transition-colors"
+              aria-label="Collapse sidebar"
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
-        {/* Main Navigation - Scrollable */}
-        <nav className="flex-1 flex flex-col items-center py-2 space-y-1 overflow-y-auto scrollbar-none">
+        {/* Collapse button when collapsed */}
+        {!expanded && (
+          <div className="flex justify-center py-2">
+            <button
+              onClick={onToggle}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-mist hover:text-platinum hover:bg-white/[0.06] transition-colors"
+              aria-label="Expand sidebar"
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Main Navigation */}
+        <nav className="flex-1 flex flex-col py-2 overflow-y-auto scrollbar-none">
           {navSections.map((section, sIdx) => (
-            <div key={section.label} className="w-full flex flex-col items-center">
-              {sIdx > 0 && <div className="w-8 h-px bg-gunmetal my-1.5" />}
-              {section.items.map((item) => (
-                <Tooltip key={item.href}>
-                  <TooltipTrigger asChild>
-                    <Link
-                      href={item.href}
-                      onClick={handleLinkClick}
-                      className={cn(
-                        "sidebar-glow flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200 my-0.5",
-                        isActive(item.href)
-                          ? "bg-neonblue/10 text-neonblue border-l-2 border-neonblue"
-                          : "text-silver hover:text-white hover:bg-white/10"
-                      )}
-                    >
-                      <item.icon className="h-4.5 w-4.5" />
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" className="bg-graphite border-gunmetal text-white">
-                    <p>{item.label}</p>
-                  </TooltipContent>
-                </Tooltip>
-              ))}
+            <div key={section.label} className="w-full">
+              {sIdx > 0 && (
+                <div className={cn("bg-gunmetal/50 my-2", expanded ? "h-px mx-4" : "h-px mx-4")} />
+              )}
+              {expanded && (
+                <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-mist/70">
+                  {section.label}
+                </p>
+              )}
+              {section.items.map((item) => {
+                const active = isActive(item.href);
+                const linkContent = (
+                  <Link
+                    href={item.href}
+                    onClick={handleLinkClick}
+                    className={cn(
+                      "sidebar-glow flex items-center gap-3 rounded-lg transition-all duration-200 my-0.5",
+                      expanded ? "h-9 px-3 mx-2" : "h-10 w-10 justify-center mx-auto",
+                      active
+                        ? "bg-neonblue/10 text-neonblue"
+                        : "text-silver hover:text-white hover:bg-white/[0.06]"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    {expanded && (
+                      <span className="text-[13px] font-medium truncate">{item.label}</span>
+                    )}
+                    {active && expanded && (
+                      <div className="ml-auto w-1.5 h-1.5 rounded-full bg-neonblue" />
+                    )}
+                  </Link>
+                );
+
+                if (expanded) return <div key={item.href}>{linkContent}</div>;
+
+                return (
+                  <Tooltip key={item.href}>
+                    <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
+                    <TooltipContent side="right" className="bg-graphite border-gunmetal text-white">
+                      <p>{item.label}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
             </div>
           ))}
 
           {/* Admin Navigation */}
           {isAdmin && (
             <>
-              <div className="w-8 h-px bg-gunmetal my-1.5" />
-              {adminNavItems.map((item) => (
-                <Tooltip key={item.href}>
-                  <TooltipTrigger asChild>
-                    <Link
-                      href={item.href}
-                      onClick={handleLinkClick}
-                      className={cn(
-                        "sidebar-glow flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200 my-0.5",
-                        isActive(item.href)
-                          ? "bg-neonblue/10 text-neonblue border-l-2 border-neonblue"
-                          : "text-silver hover:text-white hover:bg-white/10"
-                      )}
-                    >
-                      <item.icon className="h-4.5 w-4.5" />
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" className="bg-graphite border-gunmetal text-white">
-                    <p>{item.label}</p>
-                  </TooltipContent>
-                </Tooltip>
-              ))}
+              <div className={cn("bg-gunmetal/50 my-2", expanded ? "h-px mx-4" : "h-px mx-4")} />
+              {expanded && (
+                <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-mist/70">
+                  Admin
+                </p>
+              )}
+              {adminNavItems.map((item) => {
+                const active = isActive(item.href);
+                const linkContent = (
+                  <Link
+                    href={item.href}
+                    onClick={handleLinkClick}
+                    className={cn(
+                      "sidebar-glow flex items-center gap-3 rounded-lg transition-all duration-200 my-0.5",
+                      expanded ? "h-9 px-3 mx-2" : "h-10 w-10 justify-center mx-auto",
+                      active
+                        ? "bg-neonblue/10 text-neonblue"
+                        : "text-silver hover:text-white hover:bg-white/[0.06]"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    {expanded && (
+                      <span className="text-[13px] font-medium truncate">{item.label}</span>
+                    )}
+                  </Link>
+                );
+
+                if (expanded) return <div key={item.href}>{linkContent}</div>;
+
+                return (
+                  <Tooltip key={item.href}>
+                    <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
+                    <TooltipContent side="right" className="bg-graphite border-gunmetal text-white">
+                      <p>{item.label}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
             </>
           )}
         </nav>
 
         {/* Bottom Actions */}
-        <div className="flex flex-col items-center py-3 space-y-1 border-t border-gunmetal">
-          <Tooltip>
-            <TooltipTrigger asChild>
+        <div className={cn("flex flex-col py-3 space-y-1 border-t border-gunmetal", expanded ? "px-2" : "items-center")}>
+          {(() => {
+            const settingsLink = (
               <Link
                 href="/settings"
                 onClick={handleLinkClick}
-                className="sidebar-glow flex h-10 w-10 items-center justify-center rounded-lg text-silver hover:text-white hover:bg-white/10 transition-all duration-200"
+                className={cn(
+                  "sidebar-glow flex items-center gap-3 rounded-lg text-silver hover:text-white hover:bg-white/[0.06] transition-all duration-200",
+                  expanded ? "h-9 px-3" : "h-10 w-10 justify-center"
+                )}
               >
-                <Settings className="h-4.5 w-4.5" />
+                <Settings className="h-4 w-4 shrink-0" />
+                {expanded && <span className="text-[13px] font-medium">Settings</span>}
               </Link>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="bg-graphite border-gunmetal text-white">
-              <p>Settings</p>
-            </TooltipContent>
-          </Tooltip>
+            );
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button className="sidebar-glow flex h-10 w-10 items-center justify-center rounded-lg text-silver hover:text-white hover:bg-white/10 transition-all duration-200">
-                <HelpCircle className="h-4.5 w-4.5" />
+            const helpButton = (
+              <button
+                className={cn(
+                  "sidebar-glow flex items-center gap-3 rounded-lg text-silver hover:text-white hover:bg-white/[0.06] transition-all duration-200",
+                  expanded ? "h-9 px-3" : "h-10 w-10 justify-center"
+                )}
+              >
+                <HelpCircle className="h-4 w-4 shrink-0" />
+                {expanded && <span className="text-[13px] font-medium">Help & Support</span>}
               </button>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="bg-graphite border-gunmetal text-white">
-              <p>Help & Support</p>
-            </TooltipContent>
-          </Tooltip>
+            );
+
+            if (expanded) {
+              return (
+                <>
+                  {settingsLink}
+                  {helpButton}
+                </>
+              );
+            }
+
+            return (
+              <>
+                <Tooltip>
+                  <TooltipTrigger asChild>{settingsLink}</TooltipTrigger>
+                  <TooltipContent side="right" className="bg-graphite border-gunmetal text-white">
+                    <p>Settings</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>{helpButton}</TooltipTrigger>
+                  <TooltipContent side="right" className="bg-graphite border-gunmetal text-white">
+                    <p>Help & Support</p>
+                  </TooltipContent>
+                </Tooltip>
+              </>
+            );
+          })()}
         </div>
       </aside>
     </TooltipProvider>
