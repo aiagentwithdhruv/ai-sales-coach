@@ -165,7 +165,7 @@ const comparisonRows = [
     dialpad: false,
   },
   {
-    feature: "Multi-AI Provider (GPT, Claude, etc)",
+    feature: "Multi-AI Provider (GPT-4o, Claude 4.6, Kimi K2.5)",
     us: true,
     gong: false,
     yoodli: false,
@@ -260,11 +260,11 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg gradient-ai flex items-center justify-center text-white font-bold">
-                A
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-neonblue to-electricblue flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-white" />
               </div>
               <span className="text-xl font-bold text-platinum">
-                AI<span className="text-neonblue">withDhruv</span>
+                Quota<span className="text-neonblue">Hit</span>
               </span>
             </div>
             <div className="hidden md:flex items-center gap-8">
@@ -334,7 +334,7 @@ export default function LandingPage() {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neonblue/10 border border-neonblue/20 mb-8 animate-fade-in-up">
             <Sparkles className="h-4 w-4 text-neonblue" />
             <span className="text-sm text-neonblue font-medium">
-              Powered by GPT-4.1, Claude 4.5 & More
+              Powered by GPT-4o, Claude 4.6, Kimi K2.5 & More
             </span>
           </div>
 
@@ -690,11 +690,11 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg gradient-ai flex items-center justify-center text-white font-bold">
-                A
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-neonblue to-electricblue flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-white" />
               </div>
               <span className="text-lg font-bold text-platinum">
-                AI<span className="text-neonblue">withDhruv</span>
+                Quota<span className="text-neonblue">Hit</span>
               </span>
             </div>
             <div className="flex items-center gap-6">
@@ -718,7 +718,7 @@ export default function LandingPage() {
               </Link>
             </div>
             <p className="text-sm text-mist">
-              &copy; 2026 AIwithDhruv. All rights reserved.
+              &copy; 2026 QuotaHit. All rights reserved.
             </p>
           </div>
         </div>

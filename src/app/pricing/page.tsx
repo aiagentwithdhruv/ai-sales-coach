@@ -67,7 +67,7 @@ const PRICING_PLANS = [
       { text: "Unlimited call analysis", included: true },
       { text: "PDF export reports", included: true },
       { text: "Custom practice personas", included: true },
-      { text: "All AI models (GPT-4.1, Claude 4.5, Gemini, Kimi K2.5)", included: true },
+      { text: "All AI models (GPT-4o, Claude 4.6, Gemini, Kimi K2.5)", included: true },
       { text: "Priority support", included: true },
     ],
     cta: "Start Pro Trial",
@@ -135,7 +135,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "What AI models are included?",
-    a: "Free tier uses our optimized default model. Pro and above unlock all AI models including GPT-4.1, Claude 4.5, Gemini, and Kimi K2.5 — so you can pick the best model for each task.",
+    a: "Free tier uses our optimized default model. Pro and above unlock all AI models including GPT-4o, Claude 4.6, Gemini, and Kimi K2.5 — so you can pick the best model for each task.",
   },
   {
     q: "Is there a free trial for paid plans?",
