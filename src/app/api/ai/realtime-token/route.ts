@@ -82,7 +82,8 @@ export async function POST(request: Request) {
               rate: 24000
             },
             transcription: {
-              model: "gpt-4o-transcribe"
+              model: "gpt-4o-transcribe",
+              language: "en"
             },
             noise_reduction: {
               type: "near_field"

@@ -107,6 +107,7 @@ export async function POST(req: Request) {
       const transcription = await openai.audio.transcriptions.create({
         file,
         model: "gpt-4o-transcribe",
+        language: "en",
         response_format: "json",
       });
       transcriptText = transcription.text || "";
@@ -115,6 +116,7 @@ export async function POST(req: Request) {
       const transcription = await openai.audio.transcriptions.create({
         file,
         model: "whisper-1",
+        language: "en",
         response_format: "json",
       });
       transcriptText = transcription.text || "";
