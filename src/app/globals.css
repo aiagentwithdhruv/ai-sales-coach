@@ -485,10 +485,11 @@ body {
 
 .hero-word-box {
   display: inline-block;
-  padding: 0 0.15em;
+  padding: 0.15em 0.5em;
   border: 1px solid rgba(192, 199, 209, 0.12);
-  border-radius: 6px;
+  border-radius: 8px;
   animation: lightning-border 4s ease-in-out infinite;
+  letter-spacing: 0.04em;
 }
 
 .animate-pulse-glow {

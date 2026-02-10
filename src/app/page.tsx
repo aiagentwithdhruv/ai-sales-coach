@@ -371,15 +371,14 @@ export default function LandingPage() {
             </span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-platinum mb-6 animate-fade-in-up leading-tight">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-platinum mb-4 animate-fade-in-up leading-tight">
             Your AI Sales Coach.
-            <br />
-            <span className="inline-flex items-center gap-3 sm:gap-4 mt-2">
-              <span className="text-neonblue hero-word-glow hero-word-box" style={{ "--glow-word-color": "rgba(0, 179, 255, 0.4)" } as React.CSSProperties}>Practice.</span>
-              <span className="text-automationgreen hero-word-glow hero-word-box" style={{ "--glow-word-color": "rgba(45, 255, 142, 0.4)" } as React.CSSProperties}>Coach.</span>
-              <span className="hero-word-glow hero-word-box" style={{ "--glow-word-color": "rgba(192, 199, 209, 0.5)", color: "#C7CCD1" } as React.CSSProperties}>Close.</span>
-            </span>
           </h1>
+          <div className="inline-flex items-center gap-3 sm:gap-5 mb-6 animate-fade-in-up">
+            <span className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-wide text-neonblue hero-word-glow hero-word-box" style={{ "--glow-word-color": "rgba(0, 179, 255, 0.4)" } as React.CSSProperties}>Practice</span>
+            <span className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-wide text-automationgreen hero-word-glow hero-word-box" style={{ "--glow-word-color": "rgba(45, 255, 142, 0.4)" } as React.CSSProperties}>Coach</span>
+            <span className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-wide hero-word-glow hero-word-box" style={{ "--glow-word-color": "rgba(192, 199, 209, 0.5)", color: "#C7CCD1" } as React.CSSProperties}>Close</span>
+          </div>
 
           <p className="text-lg sm:text-xl text-silver max-w-3xl mx-auto mb-10 animate-fade-in-up">
             The only AI sales tool that combines real-time voice practice,
