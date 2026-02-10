@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { NavProductDropdown } from "@/components/ui/nav-product-dropdown";
 import {
   Sparkles,
   ArrowRight,
@@ -267,12 +268,7 @@ export default function LandingPage() {
               </span>
             </div>
             <div className="hidden md:flex items-center gap-8">
-              <Link
-                href="/features"
-                className="text-silver hover:text-platinum transition-colors"
-              >
-                Features
-              </Link>
+              <NavProductDropdown />
               <a
                 href="#how-it-works"
                 className="text-silver hover:text-platinum transition-colors"
@@ -694,7 +690,7 @@ export default function LandingPage() {
                 href="/features"
                 className="text-sm text-mist hover:text-silver transition-colors"
               >
-                Features
+                AI Product
               </Link>
               <Link
                 href="/pricing"
