@@ -1,6 +1,6 @@
 # How QuotaHit Was Built — Full Stack AI SaaS in 1 Week
 
-> **1 person + AI tools + ~$10-18/month = production SaaS that competes with $100-250/user tools**
+> **1 person + AI tools + ~$28-38/month = production SaaS that competes with $100-250/user tools**
 
 ---
 
@@ -41,15 +41,18 @@
 
 | Service | Plan | Cost |
 |---------|------|------|
+| **Claude Code** (AI development) | Pro ($20) / Max ($100) | $20/mo (Pro enough for 1 project) |
 | **Vercel** (hosting + serverless) | Free | $0/mo |
 | **Supabase** (auth + database) | Free | $0/mo |
 | **OpenRouter** (AI chat — Kimi K2.5) | Pay-as-you-go | ~$3-8/mo |
 | **OpenAI** (voice + transcription) | Pay-as-you-go | ~$5-10/mo |
 | **Domain** (quotahit.com) | Annual | $10/year |
 | **n8n** (self-hosted) | Free | $0/mo |
-| | **Total** | **~$8-18/mo + $10/yr domain** |
+| | **Total** | **~$28-38/mo + $10/yr domain** |
 
-> **Note:** If you need to scale beyond free tier limits, Vercel Pro is $20/mo and Supabase Pro is $25/mo. But for early stage with <1000 users, free tiers work fine.
+> **Note on Claude Code:** Pro ($20/mo) is enough for a single project. Max ($100/mo) or Pro+ only needed if you're running multiple projects simultaneously. The $20 Pro plan handles this entire build.
+
+> **Note on scaling:** If you need to scale beyond free tier limits, Vercel Pro is $20/mo and Supabase Pro is $25/mo. But for early stage with <1000 users, free tiers work fine.
 
 ### AI API Cost Breakdown (per 100 users, ~500 sessions/month)
 - **Kimi K2.5** (text chat via OpenRouter): ~$0.50-2/mo — extremely cheap
@@ -156,7 +159,7 @@ Supabase (Free)
 
 ## The Bottom Line
 
-> You don't need a team of 10 or $50K to build a real SaaS product. **1 person + AI tools + $10-18/month** can ship what used to take months and tens of thousands of dollars. The barrier isn't technical skill anymore — it's having the idea and executing fast.
+> You don't need a team of 10 or $50K to build a real SaaS product. **1 person + AI tools + ~$30/month** can ship what used to take months and tens of thousands of dollars. The barrier isn't technical skill anymore — it's having the idea and executing fast.
 
 ---
 
