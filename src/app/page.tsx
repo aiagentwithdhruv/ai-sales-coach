@@ -22,6 +22,8 @@ import {
   Zap,
   Users,
   Shield,
+  Calendar,
+  ExternalLink,
 } from "lucide-react";
 
 const features = [
@@ -298,6 +300,17 @@ export default function LandingPage() {
                   Sign In
                 </Button>
               </Link>
+              <a
+                href="https://calendly.com/aiwithdhruv/makeaiworkforyou"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden md:flex"
+              >
+                <Button variant="outline" className="border-neonblue/40 text-neonblue hover:bg-neonblue/10 text-sm px-4 gap-1.5">
+                  <Calendar className="h-3.5 w-3.5" />
+                  Book Demo
+                </Button>
+              </a>
               <Link href="/dashboard">
                 <Button className="bg-neonblue hover:bg-electricblue text-white text-sm px-4">
                   Start Free
@@ -308,6 +321,7 @@ export default function LandingPage() {
                   { href: "/features", label: "AI Product" },
                   { href: "/#how-it-works", label: "How It Works" },
                   { href: "/pricing", label: "Pricing" },
+                  { href: "https://calendly.com/aiwithdhruv/makeaiworkforyou", label: "Book Demo" },
                   { href: "/login", label: "Login" },
                   { href: "/signup", label: "Sign Up" },
                 ]}
@@ -359,7 +373,7 @@ export default function LandingPage() {
             </span>
           </p>
 
-          <div className="flex items-center justify-center mb-14 animate-fade-in-up">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14 animate-fade-in-up">
             <Link href="/signup">
               <button
                 className="btn-premium relative px-10 py-5 rounded-xl text-lg font-semibold cursor-pointer"
@@ -370,6 +384,16 @@ export default function LandingPage() {
                 </span>
               </button>
             </Link>
+            <a
+              href="https://calendly.com/aiwithdhruv/makeaiworkforyou"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-8 py-5 rounded-xl text-lg font-semibold border border-neonblue/30 text-neonblue hover:bg-neonblue/10 hover:border-neonblue/50 transition-all"
+            >
+              <Calendar className="h-5 w-5" />
+              Book a Demo
+              <ExternalLink className="h-4 w-4 opacity-60" />
+            </a>
           </div>
 
           {/* Social Proof */}
@@ -710,6 +734,14 @@ export default function LandingPage() {
               >
                 Pricing
               </Link>
+              <a
+                href="https://calendly.com/aiwithdhruv/makeaiworkforyou"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-neonblue hover:text-electricblue transition-colors flex items-center gap-1"
+              >
+                Book Demo <ExternalLink className="h-3 w-3" />
+              </a>
               <Link
                 href="/login"
                 className="text-sm text-mist hover:text-silver transition-colors"
