@@ -143,13 +143,13 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
                         "flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200 my-0.5",
                         isActive(item.href)
                           ? "bg-neonblue/10 text-neonblue border-l-2 border-neonblue"
-                          : "text-platinum/70 hover:text-white hover:bg-white/10"
+                          : "text-silver hover:text-white hover:bg-white/10"
                       )}
                     >
                       <item.icon className="h-4.5 w-4.5" />
                     </Link>
                   </TooltipTrigger>
-                  <TooltipContent side="right" className="bg-graphite border-gunmetal">
+                  <TooltipContent side="right" className="bg-graphite border-gunmetal text-white">
                     <p>{item.label}</p>
                   </TooltipContent>
                 </Tooltip>
@@ -170,13 +170,13 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
                         "flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200 my-0.5",
                         isActive(item.href)
                           ? "bg-neonblue/10 text-neonblue border-l-2 border-neonblue"
-                          : "text-platinum/70 hover:text-white hover:bg-white/10"
+                          : "text-silver hover:text-white hover:bg-white/10"
                       )}
                     >
                       <item.icon className="h-4.5 w-4.5" />
                     </Link>
                   </TooltipTrigger>
-                  <TooltipContent side="right" className="bg-graphite border-gunmetal">
+                  <TooltipContent side="right" className="bg-graphite border-gunmetal text-white">
                     <p>{item.label}</p>
                   </TooltipContent>
                 </Tooltip>
@@ -191,23 +191,23 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
             <TooltipTrigger asChild>
               <Link
                 href="/settings"
-                className="flex h-10 w-10 items-center justify-center rounded-lg text-platinum/70 hover:text-white hover:bg-white/10 transition-all duration-200"
+                className="flex h-10 w-10 items-center justify-center rounded-lg text-silver hover:text-white hover:bg-white/10 transition-all duration-200"
               >
                 <Settings className="h-4.5 w-4.5" />
               </Link>
             </TooltipTrigger>
-            <TooltipContent side="right" className="bg-graphite border-gunmetal">
+            <TooltipContent side="right" className="bg-graphite border-gunmetal text-white">
               <p>Settings</p>
             </TooltipContent>
           </Tooltip>
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <button className="flex h-10 w-10 items-center justify-center rounded-lg text-platinum/70 hover:text-white hover:bg-white/10 transition-all duration-200">
+              <button className="flex h-10 w-10 items-center justify-center rounded-lg text-silver hover:text-white hover:bg-white/10 transition-all duration-200">
                 <HelpCircle className="h-4.5 w-4.5" />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="right" className="bg-graphite border-gunmetal">
+            <TooltipContent side="right" className="bg-graphite border-gunmetal text-white">
               <p>Help & Support</p>
             </TooltipContent>
           </Tooltip>
