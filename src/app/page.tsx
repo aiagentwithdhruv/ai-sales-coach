@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { NavProductDropdown } from "@/components/ui/nav-product-dropdown";
+import { MobileNav } from "@/components/ui/mobile-nav";
 import {
   Sparkles,
   ArrowRight,
@@ -288,7 +289,7 @@ export default function LandingPage() {
                 Login
               </Link>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <Link href="/login" className="hidden md:block">
                 <Button
                   variant="ghost"
@@ -298,10 +299,19 @@ export default function LandingPage() {
                 </Button>
               </Link>
               <Link href="/dashboard">
-                <Button className="bg-neonblue hover:bg-electricblue text-white">
+                <Button className="bg-neonblue hover:bg-electricblue text-white text-sm px-4">
                   Start Free
                 </Button>
               </Link>
+              <MobileNav
+                links={[
+                  { href: "/features", label: "AI Product" },
+                  { href: "/#how-it-works", label: "How It Works" },
+                  { href: "/pricing", label: "Pricing" },
+                  { href: "/login", label: "Login" },
+                  { href: "/signup", label: "Sign Up" },
+                ]}
+              />
             </div>
           </div>
         </div>
@@ -482,7 +492,8 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-gunmetal overflow-hidden">
+          <div className="rounded-2xl border border-gunmetal overflow-x-auto">
+            <div className="min-w-[640px]">
             {/* Table header */}
             <div className="grid grid-cols-5 bg-onyx border-b border-gunmetal">
               <div className="p-4 text-sm font-medium text-mist">Feature</div>
@@ -559,6 +570,7 @@ export default function LandingPage() {
                   $39-170/mo
                 </span>
               </div>
+            </div>
             </div>
           </div>
         </div>

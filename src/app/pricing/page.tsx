@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MobileNav } from "@/components/ui/mobile-nav";
 import {
   Check,
   X,
@@ -228,17 +229,26 @@ export default function PricingPage() {
                 Quota<span className="text-neonblue">Hit</span>
               </span>
             </Link>
-            <div className="flex items-center gap-4">
-              <Link href="/login">
+            <div className="flex items-center gap-3">
+              <Link href="/login" className="hidden sm:block">
                 <Button variant="ghost" className="text-silver hover:text-platinum">
                   Sign In
                 </Button>
               </Link>
               <Link href="/signup">
-                <Button className="bg-neonblue hover:bg-electricblue">
+                <Button className="bg-neonblue hover:bg-electricblue text-sm px-4">
                   Get Started
                 </Button>
               </Link>
+              <MobileNav
+                links={[
+                  { href: "/", label: "Home" },
+                  { href: "/features", label: "Features" },
+                  { href: "/pricing", label: "Pricing" },
+                  { href: "/login", label: "Login" },
+                  { href: "/signup", label: "Sign Up" },
+                ]}
+              />
             </div>
           </div>
         </div>

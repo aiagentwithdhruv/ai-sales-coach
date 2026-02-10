@@ -105,9 +105,11 @@ const adminNavItems: NavItem[] = [
 
 interface SidebarProps {
   isAdmin?: boolean;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
-export function Sidebar({ isAdmin = false }: SidebarProps) {
+export function Sidebar({ isAdmin = false, mobileOpen = false, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
@@ -117,12 +119,33 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
     return pathname.startsWith(href);
   };
 
+  const handleLinkClick = () => {
+    // Close sidebar on mobile when a link is clicked
+    if (onMobileClose) {
+      onMobileClose();
+    }
+  };
+
   return (
     <TooltipProvider delayDuration={0}>
-      <aside className="fixed left-0 top-0 z-40 h-screen w-[72px] flex flex-col bg-graphite border-r border-gunmetal">
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-30 md:hidden"
+          onClick={onMobileClose}
+        />
+      )}
+
+      <aside
+        className={cn(
+          "fixed left-0 top-0 z-40 h-screen w-[72px] flex flex-col bg-graphite border-r border-gunmetal transition-transform duration-200",
+          // Hidden on mobile by default, shown when mobileOpen
+          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        )}
+      >
         {/* Logo */}
         <div className="flex h-16 items-center justify-center border-b border-gunmetal">
-          <Link href="/dashboard" className="flex items-center justify-center">
+          <Link href="/dashboard" className="flex items-center justify-center" onClick={handleLinkClick}>
             <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-neonblue to-electricblue flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
@@ -139,6 +162,7 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
                   <TooltipTrigger asChild>
                     <Link
                       href={item.href}
+                      onClick={handleLinkClick}
                       className={cn(
                         "sidebar-glow flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200 my-0.5",
                         isActive(item.href)
@@ -166,6 +190,7 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
                   <TooltipTrigger asChild>
                     <Link
                       href={item.href}
+                      onClick={handleLinkClick}
                       className={cn(
                         "sidebar-glow flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200 my-0.5",
                         isActive(item.href)
@@ -191,6 +216,7 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
             <TooltipTrigger asChild>
               <Link
                 href="/settings"
+                onClick={handleLinkClick}
                 className="sidebar-glow flex h-10 w-10 items-center justify-center rounded-lg text-silver hover:text-white hover:bg-white/10 transition-all duration-200"
               >
                 <Settings className="h-4.5 w-4.5" />

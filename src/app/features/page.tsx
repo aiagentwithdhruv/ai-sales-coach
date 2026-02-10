@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { MobileNav } from "@/components/ui/mobile-nav";
 import {
   Sparkles,
   ArrowRight,
@@ -152,17 +153,26 @@ export default function FeaturesPage() {
                 Login
               </Link>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <Link href="/login" className="hidden md:block">
                 <Button variant="ghost" className="text-silver hover:text-platinum">
                   Sign In
                 </Button>
               </Link>
               <Link href="/signup">
-                <Button className="bg-neonblue hover:bg-electricblue text-white">
+                <Button className="bg-neonblue hover:bg-electricblue text-white text-sm px-4">
                   Start Free
                 </Button>
               </Link>
+              <MobileNav
+                links={[
+                  { href: "/", label: "Home" },
+                  { href: "/features", label: "Features" },
+                  { href: "/pricing", label: "Pricing" },
+                  { href: "/login", label: "Login" },
+                  { href: "/signup", label: "Sign Up" },
+                ]}
+              />
             </div>
           </div>
         </div>
