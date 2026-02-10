@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CursorGlow } from "@/components/ui/cursor-glow";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -16,9 +17,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI Sales Coach | AIwithDhruv",
-  description: "Your AI Sales Coach. Always On. Improve your sales skills with AI-powered coaching, practice sessions, and real-time feedback.",
-  keywords: ["AI", "Sales Coach", "Sales Training", "AI Coaching", "Sales Practice"],
+  title: "QuotaHit — AI Sales Coach | Practice. Coach. Close.",
+  description: "Your AI Sales Coach. Practice pitches with real-time voice, get instant objection coaching, and analyze calls — all powered by GPT-4o, Claude 4.6 & Kimi K2.5. 10-50x cheaper than Gong.",
+  keywords: ["AI Sales Coach", "Sales Training", "Sales Practice", "Objection Handling", "Call Analysis", "QuotaHit"],
 };
 
 export default function RootLayout({
@@ -33,6 +34,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <AuthProvider>
+          <CursorGlow />
           {children}
         </AuthProvider>
       </body>

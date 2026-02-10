@@ -70,7 +70,7 @@ function LoginForm() {
           </Link>
         </div>
 
-        <Card className="bg-graphite border-gunmetal">
+        <Card className="glow-card bg-graphite border-gunmetal">
           <CardHeader className="text-center">
             <CardTitle className="text-xl text-platinum">Welcome Back</CardTitle>
             <p className="text-sm text-silver mt-1">

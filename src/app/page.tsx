@@ -358,7 +358,7 @@ export default function LandingPage() {
             <Link href="/dashboard">
               <Button
                 size="lg"
-                className="bg-neonblue hover:bg-electricblue text-white px-8 py-6 text-lg glow-blue animate-pulse-glow cursor-pointer"
+                className="bg-neonblue hover:bg-electricblue text-white px-8 py-6 text-lg glow-blue animate-pulse-glow glow-ring-pulse cursor-pointer"
               >
                 Start Free — No Credit Card
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -417,7 +417,7 @@ export default function LandingPage() {
             {features.map((feature, index) => (
               <div
                 key={feature.title}
-                className="p-6 rounded-xl bg-onyx border border-gunmetal hover:border-neonblue/50 transition-all duration-300 group hover-lift"
+                className="glow-card p-6 rounded-xl bg-onyx border border-gunmetal hover:border-neonblue/50 transition-all duration-300 group hover-lift"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <div className="w-11 h-11 rounded-lg bg-neonblue/10 flex items-center justify-center mb-4 group-hover:bg-neonblue/20 transition-colors">
@@ -452,7 +452,7 @@ export default function LandingPage() {
             {steps.map((step) => (
               <div
                 key={step.number}
-                className={`relative p-8 rounded-2xl bg-graphite border ${step.borderColor} hover-lift transition-all duration-300`}
+                className={`glow-card relative p-8 rounded-2xl bg-graphite border ${step.borderColor} hover-lift transition-all duration-300`}
               >
                 <div
                   className={`text-6xl font-black ${step.color} opacity-15 absolute top-4 right-6`}
@@ -593,7 +593,7 @@ export default function LandingPage() {
             {pricingPlans.map((plan) => (
               <div
                 key={plan.name}
-                className={`relative p-6 rounded-2xl border transition-all duration-300 hover-lift ${
+                className={`glow-card relative p-6 rounded-2xl border transition-all duration-300 hover-lift ${
                   plan.highlighted
                     ? "bg-onyx border-neonblue/50 glow-blue"
                     : "bg-graphite border-gunmetal hover:border-gunmetal"

@@ -84,7 +84,7 @@ export default function SignUpPage() {
     return (
       <div className="min-h-screen bg-obsidian flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <Card className="bg-graphite border-gunmetal">
+          <Card className="glow-card bg-graphite border-gunmetal">
             <CardContent className="pt-6 text-center">
               <div className="h-16 w-16 rounded-full bg-automationgreen/20 flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="h-8 w-8 text-automationgreen" />
@@ -122,7 +122,7 @@ export default function SignUpPage() {
           </Link>
         </div>
 
-        <Card className="bg-graphite border-gunmetal">
+        <Card className="glow-card bg-graphite border-gunmetal">
           <CardHeader className="text-center">
             <CardTitle className="text-xl text-platinum">Create your account</CardTitle>
             <p className="text-sm text-silver mt-1">

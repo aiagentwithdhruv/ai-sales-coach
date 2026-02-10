@@ -314,7 +314,7 @@ export default function PricingPage() {
                 <Card
                   key={plan.id}
                   className={cn(
-                    "relative bg-onyx border-gunmetal transition-all duration-300 hover:border-steel hover:shadow-lg hover:shadow-neonblue/5",
+                    "glow-card relative bg-onyx border-gunmetal transition-all duration-300 hover:border-steel hover:shadow-lg hover:shadow-neonblue/5",
                     plan.popular && "border-neonblue ring-2 ring-neonblue/20"
                   )}
                 >
@@ -489,7 +489,7 @@ export default function PricingPage() {
             {FAQ_ITEMS.map((faq, idx) => (
               <div
                 key={idx}
-                className="bg-onyx border border-gunmetal rounded-lg p-6"
+                className="glow-card bg-onyx border border-gunmetal rounded-lg p-6"
               >
                 <h3 className="text-lg font-semibold text-platinum mb-2">
                   {faq.q}
