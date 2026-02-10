@@ -159,7 +159,6 @@ export default function PracticePage() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [showUrlInput, setShowUrlInput] = useState(false);
-  const [allowNoContext, setAllowNoContext] = useState(false);
   const [scriptText, setScriptText] = useState("");
   const [showScenarios, setShowScenarios] = useState(false);
   const [scenarioFilter, setScenarioFilter] = useState<string>("all");
@@ -193,7 +192,6 @@ export default function PracticePage() {
     );
 
     setShowScenarios(false);
-    setAllowNoContext(true);
   };
 
   const handleStartSession = () => {
@@ -279,8 +277,8 @@ export default function PracticePage() {
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6">
-        {/* Page Header */}
-        <div className="flex items-center justify-between">
+        {/* Page Header + Start Call CTA */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-platinum flex items-center gap-2">
               <Sparkles className="h-6 w-6 text-neonblue" />
@@ -290,6 +288,15 @@ export default function PracticePage() {
               Role-play with AI prospects to sharpen your sales skills
             </p>
           </div>
+          <button
+            onClick={handleStartSession}
+            className="btn-premium px-8 py-3.5 rounded-xl font-semibold cursor-pointer animate-pulse-glow shrink-0"
+          >
+            <span className="btn-premium-text relative z-10 flex items-center gap-2 text-lg">
+              <Phone className="h-5 w-5" />
+              Start Live Call
+            </span>
+          </button>
         </div>
 
         {/* Stats Row */}
@@ -613,21 +620,6 @@ export default function PracticePage() {
                   </span>
                 </div>
 
-                {attachments.length === 0 && (
-                  <div className="mt-2 p-3 bg-warningamber/10 border border-warningamber/30 rounded-lg text-xs text-warningamber">
-                    No context added yet. Upload a company profile or add a URL for best training results.
-                    <button
-                      type="button"
-                      onClick={() => setAllowNoContext(!allowNoContext)}
-                      className={cn(
-                        "ml-2 underline",
-                        allowNoContext ? "text-platinum" : "text-warningamber"
-                      )}
-                    >
-                      {allowNoContext ? "Proceed without context" : "Proceed anyway"}
-                    </button>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </div>
@@ -698,14 +690,15 @@ export default function PracticePage() {
                   </p>
                 </div>
 
-                <Button
+                <button
                   onClick={handleStartSession}
-                  disabled={attachments.length === 0 && !allowNoContext}
-                  className="w-full text-white mt-4 bg-automationgreen hover:bg-automationgreen/80"
+                  className="btn-premium w-full mt-4 py-3 rounded-xl font-semibold cursor-pointer"
                 >
-                  <Phone className="h-4 w-4 mr-2" />
-                  Start Live Call
-                </Button>
+                  <span className="btn-premium-text relative z-10 flex items-center justify-center gap-2">
+                    <Phone className="h-5 w-5" />
+                    Start Live Call
+                  </span>
+                </button>
               </CardContent>
             </Card>
 
