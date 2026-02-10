@@ -4,12 +4,10 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import {
   Check,
   X,
   Zap,
-  Crown,
   Rocket,
   Building2,
   Sparkles,
@@ -21,6 +19,14 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
+type BillingInterval = "monthly" | "quarterly" | "yearly";
+
+const BILLING_OPTIONS: { id: BillingInterval; label: string; discount: number; badge: string | null }[] = [
+  { id: "monthly", label: "Monthly", discount: 0, badge: null },
+  { id: "quarterly", label: "Quarterly", discount: 10, badge: "Save 10%" },
+  { id: "yearly", label: "Yearly", discount: 30, badge: "Save 30%" },
+];
+
 const PRICING_PLANS = [
   {
     id: "free",
@@ -30,7 +36,6 @@ const PRICING_PLANS = [
     iconColor: "text-silver",
     iconBg: "bg-steel/20",
     monthlyPrice: 0,
-    yearlyPrice: 0,
     features: [
       { text: "5 AI credits/day (enough to try everything)", included: true },
       { text: "All 12 sales tools", included: true },
@@ -55,7 +60,6 @@ const PRICING_PLANS = [
     iconColor: "text-neonblue",
     iconBg: "bg-neonblue/20",
     monthlyPrice: 19,
-    yearlyPrice: 15,
     features: [
       { text: "Unlimited AI credits", included: true },
       { text: "Everything in Free", included: true },
@@ -78,7 +82,6 @@ const PRICING_PLANS = [
     iconColor: "text-warningamber",
     iconBg: "bg-warningamber/20",
     monthlyPrice: 49,
-    yearlyPrice: 39,
     features: [
       { text: "Everything in Pro", included: true },
       { text: "Up to 5 team members", included: true },
@@ -101,7 +104,6 @@ const PRICING_PLANS = [
     iconColor: "text-automationgreen",
     iconBg: "bg-automationgreen/20",
     monthlyPrice: null,
-    yearlyPrice: null,
     features: [
       { text: "Everything in Team", included: true },
       { text: "Unlimited users", included: true },
@@ -121,19 +123,19 @@ const PRICING_PLANS = [
 const FAQ_ITEMS = [
   {
     q: "What are AI credits?",
-    a: "AI credits are used for each AI interaction -- practice sessions, objection handling, call analysis, and more. One credit equals one AI message or analysis. Free users get 5 credits per day, which resets daily. Pro and above get unlimited credits.",
+    a: "AI credits are used for each AI interaction — practice sessions, objection handling, call analysis, and more. One credit equals one AI message or analysis. Free users get 5 credits per day, which resets daily. Pro and above get unlimited credits.",
   },
   {
     q: "How is this 10-50x cheaper than Gong or Chorus?",
-    a: "Gong starts at $1,200/user/year and Chorus at $1,000/user/year, with mandatory annual contracts and minimum seat counts. Our Pro plan is $180/year -- giving you AI-powered coaching, voice practice, and call analysis at a fraction of the cost.",
+    a: "Gong starts at $1,200/user/year and Chorus at $1,000/user/year, with mandatory annual contracts and minimum seat counts. Our Pro plan is $160/year — giving you AI-powered coaching, voice practice, and call analysis at a fraction of the cost.",
   },
   {
-    q: "Can I switch plans anytime?",
-    a: "Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we prorate any billing differences. No lock-in contracts.",
+    q: "Can I switch plans or billing intervals anytime?",
+    a: "Yes! You can upgrade, downgrade, or switch between monthly, quarterly, and yearly billing at any time. Changes take effect immediately, and we prorate any billing differences. No lock-in contracts.",
   },
   {
     q: "What AI models are included?",
-    a: "Free tier uses our optimized default model. Pro and above unlock all AI models including GPT-4.1, Claude 4.5, Gemini, and Kimi K2.5 -- so you can pick the best model for each task.",
+    a: "Free tier uses our optimized default model. Pro and above unlock all AI models including GPT-4.1, Claude 4.5, Gemini, and Kimi K2.5 — so you can pick the best model for each task.",
   },
   {
     q: "Is there a free trial for paid plans?",
@@ -141,7 +143,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "How does the Team plan work?",
-    a: "The Team plan covers up to 5 users for $49/month. Each member gets their own account with shared resources like the objection library and call recordings. Managers get a dedicated analytics dashboard to track team progress.",
+    a: "The Team plan covers up to 5 users for $49/month (or less with quarterly/yearly billing). Each member gets their own account with shared resources like the objection library and call recordings. Managers get a dedicated analytics dashboard to track team progress.",
   },
   {
     q: "What payment methods do you accept?",
@@ -149,11 +151,34 @@ const FAQ_ITEMS = [
   },
 ];
 
+function getDiscountedPrice(monthlyPrice: number, interval: BillingInterval): number {
+  const option = BILLING_OPTIONS.find((o) => o.id === interval)!;
+  return Math.round((monthlyPrice * (100 - option.discount)) / 100 * 100) / 100;
+}
+
+function getBillingTotal(monthlyPrice: number, interval: BillingInterval): number {
+  const perMonth = getDiscountedPrice(monthlyPrice, interval);
+  switch (interval) {
+    case "monthly":
+      return perMonth;
+    case "quarterly":
+      return Math.round(perMonth * 3 * 100) / 100;
+    case "yearly":
+      return Math.round(perMonth * 12 * 100) / 100;
+  }
+}
+
+function getSavingsPerYear(monthlyPrice: number, interval: BillingInterval): number {
+  const fullYear = monthlyPrice * 12;
+  const discountedYear = getDiscountedPrice(monthlyPrice, interval) * 12;
+  return Math.round((fullYear - discountedYear) * 100) / 100;
+}
+
 export default function PricingPage() {
-  const [isYearly, setIsYearly] = useState(true);
+  const [billingInterval, setBillingInterval] = useState<BillingInterval>("yearly");
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
-  const handleCheckout = async (planId: string, yearly: boolean) => {
+  const handleCheckout = async (planId: string) => {
     if (planId === "free" || planId === "enterprise") return;
 
     setLoadingPlan(planId);
@@ -172,7 +197,7 @@ export default function PricingPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ planId, yearly }),
+        body: JSON.stringify({ planId, interval: billingInterval }),
       });
 
       const data = await res.json();
@@ -199,7 +224,9 @@ export default function PricingPage() {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-neonblue to-electricblue flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-platinum">AIwithDhruv</span>
+              <span className="text-xl font-bold text-platinum">
+                Quota<span className="text-neonblue">Hit</span>
+              </span>
             </Link>
             <div className="flex items-center gap-4">
               <Link href="/login">
@@ -234,34 +261,27 @@ export default function PricingPage() {
             No credit card required.
           </p>
 
-          {/* Billing Toggle */}
-          <div className="flex items-center justify-center gap-4 mb-12">
-            <span
-              className={cn(
-                "text-lg",
-                !isYearly ? "text-platinum font-medium" : "text-silver"
-              )}
-            >
-              Monthly
-            </span>
-            <Switch
-              checked={isYearly}
-              onCheckedChange={setIsYearly}
-              className="data-[state=checked]:bg-neonblue"
-            />
-            <span
-              className={cn(
-                "text-lg",
-                isYearly ? "text-platinum font-medium" : "text-silver"
-              )}
-            >
-              Yearly
-            </span>
-            {isYearly && (
-              <Badge className="bg-automationgreen/20 text-automationgreen border-none animate-pulse">
-                Save 20%
-              </Badge>
-            )}
+          {/* Billing Interval Selector */}
+          <div className="inline-flex items-center bg-onyx border border-gunmetal rounded-xl p-1.5 mb-12">
+            {BILLING_OPTIONS.map((option) => (
+              <button
+                key={option.id}
+                onClick={() => setBillingInterval(option.id)}
+                className={cn(
+                  "relative px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                  billingInterval === option.id
+                    ? "bg-neonblue text-white shadow-lg shadow-neonblue/30"
+                    : "text-silver hover:text-platinum"
+                )}
+              >
+                {option.label}
+                {option.badge && billingInterval === option.id && (
+                  <span className="absolute -top-2.5 -right-2 bg-automationgreen text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                    {option.badge}
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
         </div>
       </section>
@@ -272,9 +292,23 @@ export default function PricingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {PRICING_PLANS.map((plan) => {
               const Icon = plan.icon;
-              const price = isYearly ? plan.yearlyPrice : plan.monthlyPrice;
               const isEnterprise = plan.id === "enterprise";
               const isMailto = plan.ctaLink.startsWith("mailto:");
+              const isFree = plan.monthlyPrice === 0 || plan.monthlyPrice === null;
+
+              const effectivePrice = plan.monthlyPrice !== null && plan.monthlyPrice > 0
+                ? getDiscountedPrice(plan.monthlyPrice, billingInterval)
+                : plan.monthlyPrice;
+
+              const billingTotal = plan.monthlyPrice !== null && plan.monthlyPrice > 0
+                ? getBillingTotal(plan.monthlyPrice, billingInterval)
+                : null;
+
+              const yearlySavings = plan.monthlyPrice !== null && plan.monthlyPrice > 0
+                ? getSavingsPerYear(plan.monthlyPrice, billingInterval)
+                : 0;
+
+              const showStrikethrough = billingInterval !== "monthly" && plan.monthlyPrice !== null && plan.monthlyPrice > 0;
 
               return (
                 <Card
@@ -310,22 +344,39 @@ export default function PricingPage() {
                   <CardContent className="space-y-6">
                     {/* Pricing */}
                     <div>
-                      {price !== null ? (
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-bold text-platinum">
-                            ${price}
-                          </span>
-                          <span className="text-silver">/month</span>
+                      {effectivePrice !== null ? (
+                        <div>
+                          <div className="flex items-baseline gap-2">
+                            {showStrikethrough && (
+                              <span className="text-xl text-mist line-through font-medium">
+                                ${plan.monthlyPrice}
+                              </span>
+                            )}
+                            <span className="text-4xl font-bold text-platinum">
+                              ${effectivePrice % 1 === 0 ? effectivePrice : effectivePrice.toFixed(2)}
+                            </span>
+                            <span className="text-silver">/mo</span>
+                          </div>
+                          {billingInterval === "quarterly" && billingTotal !== null && (
+                            <p className="text-sm text-neonblue mt-1 font-medium">
+                              Billed ${billingTotal.toFixed(2)} every 3 months
+                            </p>
+                          )}
+                          {billingInterval === "yearly" && billingTotal !== null && (
+                            <p className="text-sm text-neonblue mt-1 font-medium">
+                              Billed ${billingTotal.toFixed(2)}/year
+                            </p>
+                          )}
+                          {yearlySavings > 0 && (
+                            <p className="text-xs text-automationgreen mt-1 font-semibold">
+                              You save ${yearlySavings.toFixed(2)}/year
+                            </p>
+                          )}
                         </div>
                       ) : (
                         <div className="text-4xl font-bold text-platinum">
                           Custom
                         </div>
-                      )}
-                      {isYearly && price !== null && price > 0 && (
-                        <p className="text-sm text-automationgreen mt-1">
-                          Billed ${price * 12}/year
-                        </p>
                       )}
                       {plan.id === "team" && (
                         <p className="text-xs text-mist mt-1">
@@ -349,7 +400,7 @@ export default function PricingPage() {
                       </a>
                     ) : plan.id === "pro" || plan.id === "team" ? (
                       <Button
-                        onClick={() => handleCheckout(plan.id, isYearly)}
+                        onClick={() => handleCheckout(plan.id)}
                         disabled={loadingPlan === plan.id}
                         className={cn(
                           "w-full",
@@ -409,6 +460,22 @@ export default function PricingPage() {
               );
             })}
           </div>
+
+          {/* Savings comparison banner */}
+          {billingInterval !== "monthly" && (
+            <div className="mt-8 bg-gradient-to-r from-automationgreen/10 via-automationgreen/5 to-automationgreen/10 border border-automationgreen/20 rounded-xl p-6 text-center">
+              <p className="text-lg font-semibold text-platinum">
+                {billingInterval === "quarterly"
+                  ? "Quarterly billing saves you 10% — that's $22.80/year on Pro!"
+                  : "Yearly billing saves you 30% — that's $68.40/year on Pro!"}
+              </p>
+              <p className="text-sm text-silver mt-1">
+                {billingInterval === "quarterly"
+                  ? "Pay every 3 months at a lower rate. Switch to yearly anytime for even more savings."
+                  : "Best value! Lock in the lowest price for a full year. Cancel anytime."}
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -441,7 +508,7 @@ export default function PricingPage() {
             Ready to close more deals?
           </h2>
           <p className="text-xl text-silver mb-8">
-            Join thousands of sales professionals already using AI Sales Coach
+            Join thousands of sales professionals already using QuotaHit
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/signup">
@@ -474,10 +541,10 @@ export default function PricingPage() {
               <div className="w-6 h-6 rounded bg-gradient-to-br from-neonblue to-electricblue flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
-              <span className="text-silver">AIwithDhruv</span>
+              <span className="text-silver">QuotaHit</span>
             </div>
             <p className="text-mist text-sm">
-              &copy; 2026 AIwithDhruv. All rights reserved.
+              &copy; 2026 QuotaHit. All rights reserved.
             </p>
           </div>
         </div>
