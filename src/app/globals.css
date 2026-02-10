@@ -466,7 +466,14 @@ body {
   overflow: hidden;
 }
 
-.glow-card::before {
+/* Allow overflow for cards that have badges sticking out */
+.glow-card-visible {
+  position: relative;
+  overflow: visible;
+}
+
+.glow-card::before,
+.glow-card-visible::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -481,12 +488,14 @@ body {
   z-index: 1;
 }
 
-.glow-card:hover::before {
+.glow-card:hover::before,
+.glow-card-visible:hover::before {
   opacity: 1;
 }
 
 /* Glow border effect on cards */
-.glow-card::after {
+.glow-card::after,
+.glow-card-visible::after {
   content: "";
   position: absolute;
   inset: -1px;
@@ -507,8 +516,98 @@ body {
   padding: 1px;
 }
 
-.glow-card:hover::after {
+.glow-card:hover::after,
+.glow-card-visible:hover::after {
   opacity: 1;
+}
+
+/* ═══════════════════════════════════════════ */
+/* Premium Metallic CTA Button                */
+/* ═══════════════════════════════════════════ */
+
+.btn-premium {
+  position: relative;
+  background: linear-gradient(135deg, #1a2332 0%, #0d1117 40%, #1a2332 100%);
+  border: 1px solid rgba(0, 179, 255, 0.3);
+  color: white;
+  overflow: hidden;
+  transition: all 0.4s ease;
+}
+
+.btn-premium::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 179, 255, 0.4) 0%,
+    rgba(45, 255, 142, 0.1) 30%,
+    rgba(0, 179, 255, 0.4) 60%,
+    rgba(45, 255, 142, 0.1) 100%
+  );
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0.6;
+  transition: opacity 0.4s ease;
+}
+
+.btn-premium::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 179, 255, 0.05) 0%,
+    transparent 40%,
+    rgba(0, 179, 255, 0.08) 70%,
+    transparent 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+  transition: all 0.4s ease;
+}
+
+.btn-premium:hover {
+  border-color: rgba(0, 179, 255, 0.6);
+  box-shadow:
+    0 0 30px rgba(0, 179, 255, 0.3),
+    0 0 60px rgba(0, 179, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.btn-premium:hover::before {
+  opacity: 1;
+}
+
+.btn-premium:hover::after {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 179, 255, 0.15) 0%,
+    rgba(45, 255, 142, 0.05) 40%,
+    rgba(0, 179, 255, 0.15) 70%,
+    transparent 100%
+  );
+}
+
+@keyframes metallic-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.btn-premium:hover .btn-premium-text {
+  background: linear-gradient(
+    90deg,
+    #ffffff 0%,
+    #00B3FF 40%,
+    #2DFF8E 60%,
+    #ffffff 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: metallic-shimmer 2s linear infinite;
 }
 
 /* Interactive elements get a subtle glow on hover */

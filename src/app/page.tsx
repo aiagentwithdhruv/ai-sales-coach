@@ -17,7 +17,6 @@ import {
   Trophy,
   History,
   FileDown,
-  Play,
   Zap,
   Users,
   Shield,
@@ -354,24 +353,17 @@ export default function LandingPage() {
             </span>
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14 animate-fade-in-up">
-            <Link href="/dashboard">
-              <Button
-                size="lg"
-                className="bg-neonblue hover:bg-electricblue text-white px-8 py-6 text-lg glow-blue animate-pulse-glow glow-ring-pulse cursor-pointer"
+          <div className="flex items-center justify-center mb-14 animate-fade-in-up">
+            <Link href="/signup">
+              <button
+                className="btn-premium relative px-10 py-5 rounded-xl text-lg font-semibold cursor-pointer"
               >
-                Start Free — No Credit Card
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
+                <span className="btn-premium-text relative z-10 flex items-center gap-2">
+                  Start Free — No Credit Card
+                  <ArrowRight className="h-5 w-5" />
+                </span>
+              </button>
             </Link>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-gunmetal text-silver hover:text-platinum hover:bg-onyx px-8 py-6 text-lg cursor-pointer"
-            >
-              <Play className="mr-2 h-5 w-5" />
-              Watch 2-Min Demo
-            </Button>
           </div>
 
           {/* Social Proof */}
@@ -593,7 +585,7 @@ export default function LandingPage() {
             {pricingPlans.map((plan) => (
               <div
                 key={plan.name}
-                className={`glow-card relative p-6 rounded-2xl border transition-all duration-300 hover-lift ${
+                className={`${plan.highlighted ? "glow-card-visible" : "glow-card"} relative p-6 rounded-2xl border transition-all duration-300 hover-lift ${
                   plan.highlighted
                     ? "bg-onyx border-neonblue/50 glow-blue"
                     : "bg-graphite border-gunmetal hover:border-gunmetal"

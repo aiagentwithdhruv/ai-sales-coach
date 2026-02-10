@@ -314,8 +314,8 @@ export default function PricingPage() {
                 <Card
                   key={plan.id}
                   className={cn(
-                    "glow-card relative bg-onyx border-gunmetal transition-all duration-300 hover:border-steel hover:shadow-lg hover:shadow-neonblue/5",
-                    plan.popular && "border-neonblue ring-2 ring-neonblue/20"
+                    "relative bg-onyx border-gunmetal transition-all duration-300 hover:border-steel hover:shadow-lg hover:shadow-neonblue/5",
+                    plan.popular ? "glow-card-visible border-neonblue ring-2 ring-neonblue/20" : "glow-card"
                   )}
                 >
                   {plan.popular && (

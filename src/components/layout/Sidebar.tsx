@@ -31,6 +31,7 @@ import {
   Store,
   Medal,
   Database,
+  Sparkles,
 } from "lucide-react";
 import {
   Tooltip,
@@ -122,8 +123,8 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
         {/* Logo */}
         <div className="flex h-16 items-center justify-center border-b border-gunmetal">
           <Link href="/dashboard" className="flex items-center justify-center">
-            <div className="h-10 w-10 rounded-lg gradient-ai flex items-center justify-center text-white font-bold text-lg">
-              A
+            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-neonblue to-electricblue flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-white" />
             </div>
           </Link>
         </div>
@@ -142,7 +143,7 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
                         "flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200 my-0.5",
                         isActive(item.href)
                           ? "bg-neonblue/10 text-neonblue border-l-2 border-neonblue"
-                          : "text-silver hover:text-platinum hover:bg-white/5"
+                          : "text-platinum/70 hover:text-white hover:bg-white/10"
                       )}
                     >
                       <item.icon className="h-4.5 w-4.5" />
@@ -169,7 +170,7 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
                         "flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200 my-0.5",
                         isActive(item.href)
                           ? "bg-neonblue/10 text-neonblue border-l-2 border-neonblue"
-                          : "text-silver hover:text-platinum hover:bg-white/5"
+                          : "text-platinum/70 hover:text-white hover:bg-white/10"
                       )}
                     >
                       <item.icon className="h-4.5 w-4.5" />
@@ -190,7 +191,7 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
             <TooltipTrigger asChild>
               <Link
                 href="/settings"
-                className="flex h-10 w-10 items-center justify-center rounded-lg text-silver hover:text-platinum hover:bg-white/5 transition-all duration-200"
+                className="flex h-10 w-10 items-center justify-center rounded-lg text-platinum/70 hover:text-white hover:bg-white/10 transition-all duration-200"
               >
                 <Settings className="h-4.5 w-4.5" />
               </Link>
@@ -202,7 +203,7 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <button className="flex h-10 w-10 items-center justify-center rounded-lg text-silver hover:text-platinum hover:bg-white/5 transition-all duration-200">
+              <button className="flex h-10 w-10 items-center justify-center rounded-lg text-platinum/70 hover:text-white hover:bg-white/10 transition-all duration-200">
                 <HelpCircle className="h-4.5 w-4.5" />
               </button>
             </TooltipTrigger>

@@ -11,8 +11,8 @@ export function CursorGlow() {
     const handleMouseMove = (e: MouseEvent) => {
       mouseRef.current = { x: e.clientX, y: e.clientY };
 
-      // Update glow-card elements with relative mouse position
-      const cards = document.querySelectorAll<HTMLElement>(".glow-card");
+      // Update glow-card and glow-card-visible elements with relative mouse position
+      const cards = document.querySelectorAll<HTMLElement>(".glow-card, .glow-card-visible");
       cards.forEach((card) => {
         const rect = card.getBoundingClientRect();
         const x = e.clientX - rect.left;
