@@ -120,13 +120,21 @@ export async function POST(req: Request) {
     const isMoonshot = modelId?.startsWith("kimi-");
     const temperature = isMoonshot ? 1 : 0.6;
 
+    // Models that don't support max_tokens (use max_completion_tokens internally)
+    // For these, omit maxTokens entirely — the SDK/API handles limits differently
+    const needsNoMaxTokens = modelId && (
+      modelId.startsWith("o3") || modelId.startsWith("o1") ||
+      modelId === "gpt-5.1" || modelId === "gpt-5.2" ||
+      modelId.includes("/o3") || modelId.includes("/o1")
+    );
+
     // Stream the response
     const result = await streamText({
       model,
       system: systemPrompt,
       messages: [{ role: "user", content: userMessage }],
       temperature,
-      maxTokens: 1200,
+      ...(needsNoMaxTokens ? {} : { maxTokens: 1200 }),
     });
 
     // Return plain text stream

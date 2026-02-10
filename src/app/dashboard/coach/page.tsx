@@ -30,6 +30,8 @@ import {
   Volume2,
   VolumeX,
   Square,
+  Lock,
+  Crown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
@@ -47,33 +49,41 @@ interface Attachment {
   url?: string;
 }
 
+// Premium model IDs - visible but locked for free users
+const PREMIUM_MODEL_IDS = new Set([
+  "claude-sonnet-4-5-20250929",
+  "claude-opus-4-5-20251101",
+  "gpt-5.2",
+  "gpt-5.1",
+]);
+
 // Available AI Models - Latest 2026 Models
-const AI_MODELS: { id: string; name: string; provider: string; api: ApiType }[] = [
+const AI_MODELS: { id: string; name: string; provider: string; api: ApiType; premium: boolean }[] = [
   // ===== DEFAULT - FAST & DIRECT =====
-  { id: "gpt-4.1-mini", name: "GPT-4.1 Mini (Recommended)", provider: "OpenAI (Direct)", api: "openai" },
+  { id: "gpt-4.1-mini", name: "GPT-4.1 Mini (Recommended)", provider: "OpenAI (Direct)", api: "openai", premium: false },
 
   // ===== MOONSHOT DIRECT (Cheapest) =====
-  { id: "kimi-k2.5", name: "Kimi K2.5 (Direct)", provider: "Moonshot (Direct)", api: "moonshot" },
+  { id: "kimi-k2.5", name: "Kimi K2.5 (Direct)", provider: "Moonshot (Direct)", api: "moonshot", premium: false },
 
   // ===== OPENROUTER (Budget Models) =====
-  { id: "google/gemini-3-flash-preview", name: "Gemini 3 Flash", provider: "Google", api: "openrouter" },
-  { id: "google/gemini-2.5-flash-preview", name: "Gemini 2.5 Flash", provider: "Google", api: "openrouter" },
-  { id: "x-ai/grok-4-fast", name: "Grok 4 Fast", provider: "xAI", api: "openrouter" },
-  { id: "openai/gpt-5-mini", name: "GPT-5 Mini", provider: "OpenAI", api: "openrouter" },
+  { id: "google/gemini-3-flash-preview", name: "Gemini 3 Flash", provider: "Google", api: "openrouter", premium: false },
+  { id: "google/gemini-2.5-flash-preview", name: "Gemini 2.5 Flash", provider: "Google", api: "openrouter", premium: false },
+  { id: "x-ai/grok-4-fast", name: "Grok 4 Fast", provider: "xAI", api: "openrouter", premium: false },
+  { id: "openai/gpt-5-mini", name: "GPT-5 Mini", provider: "OpenAI", api: "openrouter", premium: false },
 
   // ===== ANTHROPIC CLAUDE (Direct API) =====
-  { id: "claude-sonnet-4-5-20250929", name: "Claude Sonnet 4.5", provider: "Anthropic (Direct)", api: "anthropic" },
-  { id: "claude-opus-4-5-20251101", name: "Claude Opus 4.5", provider: "Anthropic (Direct)", api: "anthropic" },
-  { id: "claude-haiku-4-5-20251001", name: "Claude Haiku 4.5", provider: "Anthropic (Direct)", api: "anthropic" },
+  { id: "claude-sonnet-4-5-20250929", name: "Claude Sonnet 4.5", provider: "Anthropic (Direct)", api: "anthropic", premium: true },
+  { id: "claude-opus-4-5-20251101", name: "Claude Opus 4.5", provider: "Anthropic (Direct)", api: "anthropic", premium: true },
+  { id: "claude-haiku-4-5-20251001", name: "Claude Haiku 4.5", provider: "Anthropic (Direct)", api: "anthropic", premium: false },
 
   // ===== OPENAI (Direct API) =====
-  { id: "gpt-5.2", name: "GPT-5.2", provider: "OpenAI (Direct)", api: "openai" },
-  { id: "gpt-5.1", name: "GPT-5.1", provider: "OpenAI (Direct)", api: "openai" },
-  { id: "gpt-5-mini", name: "GPT-5 Mini", provider: "OpenAI (Direct)", api: "openai" },
-  { id: "o3", name: "o3", provider: "OpenAI (Direct)", api: "openai" },
-  { id: "o3-mini", name: "o3 Mini", provider: "OpenAI (Direct)", api: "openai" },
-  { id: "gpt-4.1", name: "GPT-4.1", provider: "OpenAI (Direct)", api: "openai" },
-  { id: "gpt-4.1-mini", name: "GPT-4.1 Mini", provider: "OpenAI (Direct)", api: "openai" },
+  { id: "gpt-5.2", name: "GPT-5.2", provider: "OpenAI (Direct)", api: "openai", premium: true },
+  { id: "gpt-5.1", name: "GPT-5.1", provider: "OpenAI (Direct)", api: "openai", premium: true },
+  { id: "gpt-5-mini", name: "GPT-5 Mini", provider: "OpenAI (Direct)", api: "openai", premium: false },
+  { id: "o3", name: "o3", provider: "OpenAI (Direct)", api: "openai", premium: false },
+  { id: "o3-mini", name: "o3 Mini", provider: "OpenAI (Direct)", api: "openai", premium: false },
+  { id: "gpt-4.1", name: "GPT-4.1", provider: "OpenAI (Direct)", api: "openai", premium: false },
+  { id: "gpt-4.1-mini", name: "GPT-4.1 Mini", provider: "OpenAI (Direct)", api: "openai", premium: false },
 ];
 
 // API badge styles
@@ -431,31 +441,47 @@ export default function CoachPage() {
               <div className="absolute right-0 mt-2 w-72 bg-graphite border border-gunmetal rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
                 <div className="p-2">
                   <p className="text-xs text-mist px-2 py-1">Select AI Model</p>
-                  {AI_MODELS.map((model) => (
-                    <button
-                      key={model.id}
-                      onClick={() => handleModelChange(model.id)}
-                      className={cn(
-                        "w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between",
-                        selectedModel === model.id
-                          ? "bg-neonblue/10 text-neonblue"
-                          : "text-silver hover:text-platinum hover:bg-onyx"
-                      )}
-                    >
-                      <div>
-                        <div className="font-medium flex items-center gap-2">
-                          {model.name}
-                          <span className={cn("text-[10px] font-normal", API_INFO[model.api].color)}>
-                            {API_INFO[model.api].label}
-                          </span>
+                  {AI_MODELS.map((model) => {
+                    const isLocked = model.premium && typeof window !== "undefined" && (localStorage.getItem("user_plan") || "free") === "free";
+                    return (
+                      <button
+                        key={model.id}
+                        onClick={() => {
+                          if (isLocked) return;
+                          handleModelChange(model.id);
+                        }}
+                        className={cn(
+                          "w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between",
+                          isLocked
+                            ? "text-mist cursor-not-allowed opacity-60"
+                            : selectedModel === model.id
+                              ? "bg-neonblue/10 text-neonblue"
+                              : "text-silver hover:text-platinum hover:bg-onyx"
+                        )}
+                      >
+                        <div>
+                          <div className="font-medium flex items-center gap-2">
+                            {model.name}
+                            <span className={cn("text-[10px] font-normal", API_INFO[model.api].color)}>
+                              {API_INFO[model.api].label}
+                            </span>
+                            {model.premium && (
+                              <span className="text-[10px] font-normal text-warningamber flex items-center gap-0.5">
+                                <Crown className="h-2.5 w-2.5" />
+                                Pro
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-mist">{model.provider}</div>
                         </div>
-                        <div className="text-xs text-mist">{model.provider}</div>
-                      </div>
-                      {selectedModel === model.id && (
-                        <Check className="h-4 w-4" />
-                      )}
-                    </button>
-                  ))}
+                        {isLocked ? (
+                          <Lock className="h-3.5 w-3.5 text-warningamber" />
+                        ) : selectedModel === model.id ? (
+                          <Check className="h-4 w-4" />
+                        ) : null}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

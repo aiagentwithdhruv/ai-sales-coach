@@ -272,7 +272,7 @@ Format the output in clean markdown. Use ## for slide titles, bullet points for 
         headers,
         body: JSON.stringify({
           message: prompt,
-          model: localStorage.getItem("ai_model") || "claude-sonnet-4-5-20250929",
+          model: localStorage.getItem("ai_model") || "gpt-4.1-mini",
         }),
         signal: abortControllerRef.current.signal,
       });
