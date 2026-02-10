@@ -35,7 +35,7 @@ export async function GET(
   const { activities } = await getActivities(id, { limit: 10 });
 
   return new Response(
-    JSON.stringify({ ...contact, recent_activities: activities }),
+    JSON.stringify({ contact, activities }),
     { headers: jsonHeaders }
   );
 }

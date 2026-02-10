@@ -133,8 +133,8 @@ export function ContactDetailSheet({
     if (open && contact?.id) {
       getContactDetails(contact.id).then((data) => {
         if (data) {
-          setActivities(data.activities);
-          setFreshContact(data.contact);
+          setActivities(data.activities || []);
+          setFreshContact(data.contact || null);
         }
       });
       setSuggestion(null);
