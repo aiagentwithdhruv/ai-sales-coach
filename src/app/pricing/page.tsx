@@ -239,37 +239,37 @@ export default function PricingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-16 sm:py-20">
+      <section className="pt-10 sm:pt-14 pb-8 sm:pb-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <Badge className="bg-neonblue/20 text-neonblue border-none mb-4">
+          <Badge className="bg-neonblue/10 text-neonblue border border-neonblue/20 mb-4 text-xs tracking-wide uppercase">
             Module-based pricing
           </Badge>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-platinum mb-4">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-platinum mb-3 tracking-tight">
             Simple, module-based pricing
           </h1>
-          <p className="text-xl text-silver max-w-3xl mx-auto mb-4">
+          <p className="text-lg text-silver max-w-2xl mx-auto mb-2">
             Pick what you need. Bring your own AI keys. No hidden costs.
           </p>
-          <p className="text-lg text-mist max-w-2xl mx-auto mb-10">
+          <p className="text-sm text-mist max-w-xl mx-auto mb-8">
             {TRIAL_DURATION_DAYS}-day trial with full access. No credit card required.
           </p>
 
           {/* Billing Interval Selector */}
-          <div className="inline-flex items-center bg-onyx border border-gunmetal rounded-xl p-1.5 mb-12">
+          <div className="inline-flex items-center bg-onyx/80 border border-gunmetal rounded-lg p-1">
             {BILLING_OPTIONS.map((option) => (
               <button
                 key={option.id}
                 onClick={() => setBillingInterval(option.id)}
                 className={cn(
-                  "relative px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                  "relative px-4 py-2 rounded-md text-sm font-medium transition-all duration-200",
                   billingInterval === option.id
-                    ? "bg-neonblue text-white shadow-lg shadow-neonblue/30"
+                    ? "bg-neonblue text-white shadow-md shadow-neonblue/20"
                     : "text-silver hover:text-platinum"
                 )}
               >
                 {option.label}
                 {option.badge && billingInterval === option.id && (
-                  <span className="absolute -top-2.5 -right-2 bg-automationgreen text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                  <span className="absolute -top-2 -right-1.5 bg-automationgreen text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap">
                     {option.badge}
                   </span>
                 )}
@@ -280,58 +280,46 @@ export default function PricingPage() {
       </section>
 
       {/* Free Tier Card */}
-      <section className="pb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Card className="bg-onyx border-gunmetal glow-card">
-            <CardContent className="p-6 sm:p-8">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-automationgreen/20 flex items-center justify-center">
-                      <Gift className="w-5 h-5 text-automationgreen" />
+      <section className="pb-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Card className="bg-onyx/80 border-gunmetal/60 glow-card">
+            <CardContent className="p-5 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                {/* Left: Title + limits */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-automationgreen/15 flex items-center justify-center flex-shrink-0">
+                      <Gift className="w-4 h-4 text-automationgreen" />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-platinum">Free Forever</h2>
-                      <p className="text-sm text-silver">
-                        Access every module with usage limits
-                      </p>
+                      <h2 className="text-lg font-semibold text-platinum leading-tight">Free Forever</h2>
+                      <p className="text-xs text-mist">All modules with usage limits</p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-4">
+                  <div className="flex flex-wrap gap-2">
                     {FREE_TIER_ITEMS.map((item) => (
                       <div
                         key={item.label}
-                        className="bg-graphite/50 border border-gunmetal rounded-lg p-3 text-center"
+                        className="bg-graphite/40 border border-gunmetal/50 rounded-md px-3 py-1.5 text-center"
                       >
-                        <p className="text-xl font-bold text-platinum">
-                          {item.limit}
-                        </p>
-                        <p className="text-xs text-mist mt-0.5">
-                          {item.label}
-                          {item.unit}
-                        </p>
+                        <span className="text-sm font-semibold text-platinum">{item.limit}</span>
+                        <span className="text-[11px] text-mist ml-1.5">{item.label}{item.unit}</span>
                       </div>
                     ))}
                   </div>
-
-                  <div className="mt-4 inline-flex items-center gap-2 bg-neonblue/10 border border-neonblue/20 rounded-lg px-3 py-1.5">
-                    <Sparkles className="w-4 h-4 text-neonblue" />
-                    <span className="text-sm text-neonblue font-medium">
-                      {TRIAL_DURATION_DAYS}-day trial with full access to all paid features
-                    </span>
-                  </div>
                 </div>
 
-                <div className="flex flex-col items-center lg:items-end gap-3">
-                  <div className="text-center lg:text-right">
-                    <span className="text-4xl font-bold text-platinum">$0</span>
-                    <span className="text-silver ml-1">/mo</span>
+                {/* Right: Price + CTA */}
+                <div className="flex items-center sm:flex-col sm:items-end gap-3 flex-shrink-0">
+                  <div className="text-right">
+                    <span className="text-3xl font-bold text-platinum">$0</span>
+                    <span className="text-sm text-mist ml-0.5">/mo</span>
                   </div>
                   <Link href="/signup">
-                    <Button className="bg-automationgreen hover:bg-automationgreen/90 px-8">
+                    <Button size="sm" className="bg-automationgreen/90 hover:bg-automationgreen text-black font-semibold px-5 text-xs">
                       Get Started Free
-                      <ArrowRight className="w-4 h-4 ml-2" />
+                      <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
                     </Button>
                   </Link>
                 </div>
@@ -342,18 +330,18 @@ export default function PricingPage() {
       </section>
 
       {/* Module Cards */}
-      <section className="pb-12">
+      <section className="pb-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-platinum mb-2">
+          <div className="text-center mb-6">
+            <h2 className="text-xl sm:text-2xl font-semibold text-platinum mb-1 tracking-tight">
               Pick your modules
             </h2>
-            <p className="text-silver">
+            <p className="text-sm text-mist">
               Select individual modules or grab the bundle below
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {ALL_MODULE_SLUGS.map((slug) => {
               const mod = MODULES[slug];
               const Icon = MODULE_ICONS[slug];
@@ -367,22 +355,22 @@ export default function PricingPage() {
                   key={slug}
                   onClick={() => toggleModule(slug)}
                   className={cn(
-                    "relative bg-onyx border transition-all duration-300 cursor-pointer flex flex-col group/card",
+                    "relative bg-onyx/90 border transition-all duration-200 cursor-pointer flex flex-col group/card hover:translate-y-[-2px]",
                     selected
-                      ? "border-neonblue ring-2 ring-neonblue/20 shadow-lg shadow-neonblue/10"
-                      : "border-gunmetal hover:border-transparent"
+                      ? "border-neonblue ring-1 ring-neonblue/20 shadow-md shadow-neonblue/10"
+                      : "border-gunmetal/60 hover:border-gunmetal"
                   )}
                   style={{
                     "--module-glow": colors.glow,
                     "--module-border": colors.border,
                     boxShadow: selected ? undefined : colors.shadow,
-                    backgroundImage: selected ? undefined : `radial-gradient(ellipse at 50% 0%, ${colors.glow}, transparent 70%)`,
+                    backgroundImage: selected ? undefined : `radial-gradient(ellipse at 50% 0%, ${colors.glow}, transparent 60%)`,
                   } as React.CSSProperties}
                 >
                   {/* Top glow line */}
                   {!selected && (
                     <div
-                      className="absolute top-0 left-0 right-0 h-[1px] opacity-60"
+                      className="absolute top-0 left-[15%] right-[15%] h-[1px] opacity-40"
                       style={{ background: `linear-gradient(90deg, transparent, ${colors.border}, transparent)` }}
                     />
                   )}
@@ -390,56 +378,56 @@ export default function PricingPage() {
                   {/* Selection indicator */}
                   <div
                     className={cn(
-                      "absolute top-3 right-3 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all",
+                      "absolute top-2.5 right-2.5 w-5 h-5 rounded border-[1.5px] flex items-center justify-center transition-all",
                       selected
                         ? "bg-neonblue border-neonblue"
-                        : "border-steel bg-transparent"
+                        : "border-steel/60 bg-transparent"
                     )}
                   >
-                    {selected && <Check className="w-4 h-4 text-white" />}
+                    {selected && <Check className="w-3 h-3 text-white" />}
                   </div>
 
-                  <CardHeader className="pb-3 pr-10">
+                  <CardHeader className="pb-2 pr-9 pt-4 px-4">
                     <div
                       className={cn(
-                        "w-10 h-10 rounded-xl flex items-center justify-center mb-3",
+                        "w-8 h-8 rounded-lg flex items-center justify-center mb-2",
                         colors.bg
                       )}
                     >
-                      <Icon className={cn("w-5 h-5", colors.text)} />
+                      <Icon className={cn("w-4 h-4", colors.text)} />
                     </div>
-                    <CardTitle className="text-lg font-bold text-platinum">
+                    <CardTitle className="text-[15px] font-semibold text-platinum leading-tight">
                       {mod.name}
                     </CardTitle>
-                    <p className="text-xs text-mist">{mod.description}</p>
+                    <p className="text-[11px] text-mist leading-snug mt-0.5">{mod.description}</p>
                   </CardHeader>
 
-                  <CardContent className="space-y-4 flex flex-col flex-1">
+                  <CardContent className="space-y-3 flex flex-col flex-1 px-4 pb-4">
                     {/* Pricing */}
                     <div>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-3xl font-bold text-platinum">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-bold text-platinum">
                           ${discounted % 1 === 0 ? discounted : discounted.toFixed(2)}
                         </span>
-                        <span className="text-sm text-silver">/mo</span>
+                        <span className="text-xs text-mist">/mo</span>
                       </div>
                       {showStrikethrough && (
-                        <p className="text-sm text-mist mt-0.5">
+                        <p className="text-xs text-mist mt-0.5">
                           <span className="line-through">${mod.monthlyPrice}/mo</span>
                         </p>
                       )}
-                      <p className="text-xs text-mist/60 mt-0.5">
+                      <p className="text-[10px] text-mist/50 mt-0.5">
                         Was <span className="line-through">${mod.marketPrice}/mo</span>{" "}
                         elsewhere
                       </p>
                     </div>
 
                     {/* Features */}
-                    <ul className="space-y-2 flex-1">
+                    <ul className="space-y-1.5 flex-1">
                       {mod.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <Check className="w-3.5 h-3.5 text-automationgreen flex-shrink-0 mt-0.5" />
-                          <span className="text-xs text-silver">{feature}</span>
+                        <li key={idx} className="flex items-start gap-1.5">
+                          <Check className="w-3 h-3 text-automationgreen/80 flex-shrink-0 mt-0.5" />
+                          <span className="text-[11px] text-silver/90 leading-snug">{feature}</span>
                         </li>
                       ))}
                     </ul>

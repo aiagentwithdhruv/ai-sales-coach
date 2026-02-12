@@ -538,9 +538,9 @@ body {
 
 .cursor-glow-orb {
   background: radial-gradient(
-    350px circle at var(--glow-x) var(--glow-y),
-    rgba(0, 179, 255, 0.07) 0%,
-    rgba(0, 179, 255, 0.03) 30%,
+    180px circle at var(--glow-x) var(--glow-y),
+    rgba(0, 179, 255, 0.06) 0%,
+    rgba(0, 179, 255, 0.02) 40%,
     transparent 70%
   );
   opacity: 1 !important;
@@ -565,8 +565,8 @@ body {
   position: absolute;
   inset: 0;
   background: radial-gradient(
-    400px circle at var(--card-glow-x, 50%) var(--card-glow-y, 50%),
-    rgba(0, 179, 255, 0.08) 0%,
+    200px circle at var(--card-glow-x, 50%) var(--card-glow-y, 50%),
+    rgba(0, 179, 255, 0.06) 0%,
     transparent 70%
   );
   opacity: 0;
@@ -587,8 +587,8 @@ body {
   position: absolute;
   inset: -1px;
   background: radial-gradient(
-    300px circle at var(--card-glow-x, 50%) var(--card-glow-y, 50%),
-    rgba(0, 179, 255, 0.3) 0%,
+    160px circle at var(--card-glow-x, 50%) var(--card-glow-y, 50%),
+    rgba(0, 179, 255, 0.2) 0%,
     transparent 60%
   );
   border-radius: inherit;
