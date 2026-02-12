@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
+import { ImpersonationBanner } from "@/components/ui/impersonation-banner";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -36,6 +37,7 @@ export function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-obsidian">
+      <ImpersonationBanner />
       <Sidebar
         isAdmin={isAdmin}
         mobileOpen={mobileSidebarOpen}

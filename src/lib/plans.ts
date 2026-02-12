@@ -1,7 +1,12 @@
 /**
- * Plan & Tier System
- * Defines feature gates and limits per plan.
- * Works with localStorage for now, plugs into Stripe later.
+ * Plan & Feature Gate System
+ *
+ * Now backed by user_subscriptions table (via /api/usage endpoint).
+ * Free tier: all features accessible, just with usage limits.
+ * Paid (module/bundle): unlimited usage for subscribed modules.
+ *
+ * Legacy PLANS config kept for backward compatibility with
+ * existing feature-gate components.
  */
 
 export type PlanId = "free" | "pro" | "team" | "enterprise";
@@ -9,7 +14,6 @@ export type PlanId = "free" | "pro" | "team" | "enterprise";
 export interface PlanConfig {
   id: PlanId;
   name: string;
-  dailyCredits: number; // -1 = unlimited
   maxSessionHistory: number; // -1 = unlimited
   features: {
     voicePractice: boolean;
@@ -23,90 +27,61 @@ export interface PlanConfig {
   };
 }
 
+// In the new system, free users get ALL features (with usage limits).
+// Feature gates are kept for backward compatibility but all return true.
+const ALL_FEATURES_ENABLED = {
+  voicePractice: true,
+  callAnalysis: true,
+  pdfExport: true,
+  customPersonas: true,
+  researchMode: true,
+  meetingNotes: true,
+  allAIModels: true,
+  teamDashboard: true,
+};
+
 export const PLANS: Record<PlanId, PlanConfig> = {
   free: {
     id: "free",
     name: "Free",
-    dailyCredits: 5,
-    maxSessionHistory: 20,
-    features: {
-      voicePractice: false,
-      callAnalysis: true,
-      pdfExport: false,
-      customPersonas: false,
-      researchMode: true,
-      meetingNotes: true,
-      allAIModels: false,
-      teamDashboard: false,
-    },
+    maxSessionHistory: -1,
+    features: ALL_FEATURES_ENABLED,
   },
   pro: {
     id: "pro",
     name: "Pro",
-    dailyCredits: -1,
     maxSessionHistory: -1,
-    features: {
-      voicePractice: true,
-      callAnalysis: true,
-      pdfExport: true,
-      customPersonas: true,
-      researchMode: true,
-      meetingNotes: true,
-      allAIModels: true,
-      teamDashboard: false,
-    },
+    features: ALL_FEATURES_ENABLED,
   },
   team: {
     id: "team",
     name: "Team",
-    dailyCredits: -1,
     maxSessionHistory: -1,
-    features: {
-      voicePractice: true,
-      callAnalysis: true,
-      pdfExport: true,
-      customPersonas: true,
-      researchMode: true,
-      meetingNotes: true,
-      allAIModels: true,
-      teamDashboard: true,
-    },
+    features: ALL_FEATURES_ENABLED,
   },
   enterprise: {
     id: "enterprise",
     name: "Enterprise",
-    dailyCredits: -1,
     maxSessionHistory: -1,
-    features: {
-      voicePractice: true,
-      callAnalysis: true,
-      pdfExport: true,
-      customPersonas: true,
-      researchMode: true,
-      meetingNotes: true,
-      allAIModels: true,
-      teamDashboard: true,
-    },
+    features: ALL_FEATURES_ENABLED,
   },
 };
 
-const PLAN_STORAGE_KEY = "sales-coach-plan";
-const DAILY_USAGE_KEY = "sales-coach-daily-usage";
-
 /**
- * Get the user's current plan (from localStorage for now, Stripe later)
+ * Get the user's current plan from localStorage (legacy, kept for compatibility)
+ * In the new system, use /api/usage to get actual subscription status.
  */
 export function getUserPlan(): PlanId {
   if (typeof window === "undefined") return "free";
-  return (localStorage.getItem(PLAN_STORAGE_KEY) as PlanId) || "free";
+  return (localStorage.getItem("user_plan") as PlanId) || "free";
 }
 
 /**
- * Set the user's plan (called after Stripe checkout succeeds)
+ * Set the user's plan in localStorage
  */
 export function setUserPlan(planId: PlanId): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(PLAN_STORAGE_KEY, planId);
+  localStorage.setItem("user_plan", planId);
 }
 
 /**
@@ -117,77 +92,17 @@ export function getPlanConfig(planId?: PlanId): PlanConfig {
 }
 
 /**
- * Check if a specific feature is available on the user's plan
+ * Check if a specific feature is available.
+ * In the new module-based system, all features are available to everyone.
+ * Usage limits are enforced server-side via checkUsage().
  */
-export function hasFeature(feature: keyof PlanConfig["features"]): boolean {
-  const plan = getPlanConfig();
-  return plan.features[feature];
-}
-
-interface DailyUsage {
-  date: string; // YYYY-MM-DD
-  count: number;
+export function hasFeature(_feature: keyof PlanConfig["features"]): boolean {
+  return true; // All features accessible in new model
 }
 
 /**
- * Get today's usage count for free tier tracking
+ * Get upgrade message for approaching usage limits
  */
-function getDailyUsage(): DailyUsage {
-  if (typeof window === "undefined") return { date: "", count: 0 };
-  const today = new Date().toISOString().split("T")[0];
-  try {
-    const raw = localStorage.getItem(DAILY_USAGE_KEY);
-    if (raw) {
-      const usage: DailyUsage = JSON.parse(raw);
-      if (usage.date === today) return usage;
-    }
-  } catch {
-    // ignore parse errors
-  }
-  return { date: today, count: 0 };
-}
-
-/**
- * Increment daily usage counter
- */
-export function incrementDailyUsage(): void {
-  if (typeof window === "undefined") return;
-  const usage = getDailyUsage();
-  usage.count += 1;
-  usage.date = new Date().toISOString().split("T")[0];
-  localStorage.setItem(DAILY_USAGE_KEY, JSON.stringify(usage));
-}
-
-/**
- * Check if user can use an AI credit (respects daily limit for free tier)
- */
-export function canUseCredit(): { allowed: boolean; remaining: number; limit: number } {
-  const plan = getPlanConfig();
-  if (plan.dailyCredits === -1) {
-    return { allowed: true, remaining: -1, limit: -1 };
-  }
-  const usage = getDailyUsage();
-  const remaining = Math.max(0, plan.dailyCredits - usage.count);
-  return {
-    allowed: remaining > 0,
-    remaining,
-    limit: plan.dailyCredits,
-  };
-}
-
-/**
- * Get upgrade message for a locked feature
- */
-export function getUpgradeMessage(feature: keyof PlanConfig["features"]): string {
-  const messages: Record<string, string> = {
-    voicePractice: "Upgrade to Pro for real-time voice practice with GPT-4o",
-    pdfExport: "Upgrade to Pro to export reports as PDF",
-    customPersonas: "Upgrade to Pro to create custom practice personas",
-    allAIModels: "Upgrade to Pro for access to all AI models",
-    teamDashboard: "Upgrade to Team for team analytics and management",
-    callAnalysis: "Upgrade to Pro for unlimited call analysis",
-    researchMode: "Upgrade to Pro for unlimited research",
-    meetingNotes: "Upgrade to Pro for unlimited meeting notes",
-  };
-  return messages[feature] || "Upgrade your plan for this feature";
+export function getUpgradeMessage(_feature: keyof PlanConfig["features"]): string {
+  return "Upgrade your plan for unlimited access";
 }

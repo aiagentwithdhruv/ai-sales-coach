@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { getAuthToken } from "@/hooks/useCredits";
+import { getAuthToken } from "@/lib/auth-token";
 import type {
   Contact,
   ContactCreateInput,

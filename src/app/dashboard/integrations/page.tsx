@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import {
   Globe,
   RefreshCw,
@@ -17,9 +18,12 @@ import {
   AlertCircle,
   Settings,
   ArrowRightLeft,
+  Key,
+  Download,
+  CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getAuthToken } from "@/hooks/useCredits";
+import { getAuthToken } from "@/lib/auth-token";
 import type { CRMIntegration, IntegrationProvider } from "@/types/teams";
 import { INTEGRATION_PROVIDERS } from "@/types/teams";
 
@@ -47,6 +51,25 @@ export default function IntegrationsPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  // Zoho setup dialog
+  const [zohoSetup, setZohoSetup] = useState(false);
+  const [zohoCredentials, setZohoCredentials] = useState({
+    clientId: "",
+    clientSecret: "",
+    refreshToken: "",
+    apiDomain: "https://www.zohoapis.com",
+  });
+
+  // Sync result feedback
+  const [syncResult, setSyncResult] = useState<{
+    provider: string;
+    imported: number;
+    updated: number;
+    skipped: number;
+    errors: number;
+    total: number;
+  } | null>(null);
+
   const fetchIntegrations = useCallback(async () => {
     setLoading(true);
     try {
@@ -67,12 +90,42 @@ export default function IntegrationsPage() {
     integrations.find((i) => i.provider === provider);
 
   const handleConnect = async (provider: IntegrationProvider) => {
+    // For Zoho, show setup dialog first
+    if (provider === "zoho") {
+      setZohoSetup(true);
+      return;
+    }
+
     setActionLoading(provider);
     try {
       await authFetch("/api/integrations", {
         method: "POST",
         body: JSON.stringify({ action: "connect", provider }),
       });
+      await fetchIntegrations();
+    } catch {
+      // silent
+    }
+    setActionLoading(null);
+  };
+
+  const handleZohoConnect = async () => {
+    if (!zohoCredentials.refreshToken) return;
+    setActionLoading("zoho");
+    try {
+      await authFetch("/api/integrations", {
+        method: "POST",
+        body: JSON.stringify({
+          action: "connect",
+          provider: "zoho",
+          config: {
+            instance_url: zohoCredentials.apiDomain,
+            refresh_token: zohoCredentials.refreshToken,
+            access_token: `${zohoCredentials.clientId}:${zohoCredentials.clientSecret}`, // Store both for server use
+          },
+        }),
+      });
+      setZohoSetup(false);
       await fetchIntegrations();
     } catch {
       // silent
@@ -96,11 +149,27 @@ export default function IntegrationsPage() {
 
   const handleSync = async (provider: IntegrationProvider) => {
     setActionLoading(`sync-${provider}`);
+    setSyncResult(null);
     try {
-      await authFetch("/api/integrations", {
+      const res = await authFetch("/api/integrations", {
         method: "POST",
-        body: JSON.stringify({ action: "sync", provider }),
+        body: JSON.stringify({
+          action: "sync",
+          provider,
+          sync_options: { phoneOnly: true },
+        }),
       });
+      if (res.ok) {
+        const data = await res.json();
+        setSyncResult({
+          provider,
+          imported: data.imported || 0,
+          updated: data.updated || 0,
+          skipped: data.skipped || 0,
+          errors: data.errors || 0,
+          total: data.total || data.synced || 0,
+        });
+      }
       await fetchIntegrations();
     } catch {
       // silent
@@ -132,6 +201,127 @@ export default function IntegrationsPage() {
           <p className="text-sm text-silver">Connect your CRM tools for bidirectional sync</p>
         </div>
       </div>
+
+      {/* Zoho Setup Dialog */}
+      {zohoSetup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-onyx border border-gunmetal rounded-xl w-full max-w-md mx-4 p-6 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-[#E42527]/10 flex items-center justify-center">
+                <Key className="h-5 w-5 text-[#E42527]" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-platinum">Connect Zoho CRM</h2>
+                <p className="text-xs text-mist">Self-Client OAuth — one-time setup</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="p-3 rounded-lg bg-neonblue/5 border border-neonblue/20 text-xs text-silver space-y-1">
+                <p className="font-medium text-neonblue">Setup Steps:</p>
+                <p>1. Go to <span className="text-platinum">api-console.zoho.com</span> → Create Self Client</p>
+                <p>2. Copy Client ID & Client Secret below</p>
+                <p>3. Generate grant token with scopes: <span className="text-mist font-mono text-[10px]">ZohoCRM.modules.leads.ALL,ZohoCRM.coql.READ</span></p>
+                <p>4. Exchange grant token for refresh token using curl</p>
+              </div>
+
+              <div>
+                <label className="text-xs text-mist mb-1 block">Client ID</label>
+                <Input
+                  placeholder="1000.XXXXXXXXXX.YYYYYYYYYY"
+                  value={zohoCredentials.clientId}
+                  onChange={(e) => setZohoCredentials((p) => ({ ...p, clientId: e.target.value }))}
+                  className="bg-graphite border-gunmetal text-platinum text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-mist mb-1 block">Client Secret</label>
+                <Input
+                  type="password"
+                  placeholder="XXXXXXXXXXXXXXXX"
+                  value={zohoCredentials.clientSecret}
+                  onChange={(e) => setZohoCredentials((p) => ({ ...p, clientSecret: e.target.value }))}
+                  className="bg-graphite border-gunmetal text-platinum text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-mist mb-1 block">Refresh Token</label>
+                <Input
+                  type="password"
+                  placeholder="1000.XXXXXXXX.YYYYYYYY"
+                  value={zohoCredentials.refreshToken}
+                  onChange={(e) => setZohoCredentials((p) => ({ ...p, refreshToken: e.target.value }))}
+                  className="bg-graphite border-gunmetal text-platinum text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-mist mb-1 block">API Domain</label>
+                <select
+                  value={zohoCredentials.apiDomain}
+                  onChange={(e) => setZohoCredentials((p) => ({ ...p, apiDomain: e.target.value }))}
+                  className="w-full bg-graphite border border-gunmetal text-platinum text-sm rounded-md px-3 py-2"
+                >
+                  <option value="https://www.zohoapis.com">US (zohoapis.com)</option>
+                  <option value="https://www.zohoapis.in">India (zohoapis.in)</option>
+                  <option value="https://www.zohoapis.eu">EU (zohoapis.eu)</option>
+                  <option value="https://www.zohoapis.com.au">Australia (zohoapis.com.au)</option>
+                  <option value="https://www.zohoapis.jp">Japan (zohoapis.jp)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setZohoSetup(false)}
+                className="flex-1 border-gunmetal text-silver"
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleZohoConnect}
+                disabled={!zohoCredentials.refreshToken || actionLoading === "zoho"}
+                className="flex-1 bg-[#E42527] text-white hover:bg-[#E42527]/80 gap-1.5"
+              >
+                {actionLoading === "zoho" ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Link2 className="h-3.5 w-3.5" />
+                )}
+                Connect Zoho
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sync Result Banner */}
+      {syncResult && (
+        <div className="p-4 rounded-lg bg-automationgreen/5 border border-automationgreen/20 flex items-start gap-3">
+          <CheckCircle2 className="h-5 w-5 text-automationgreen mt-0.5 shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-platinum">
+              Sync Complete — {INTEGRATION_PROVIDERS[syncResult.provider as IntegrationProvider]?.label}
+            </p>
+            <div className="flex items-center gap-4 mt-1 text-xs text-silver">
+              <span className="text-automationgreen">{syncResult.imported} imported</span>
+              <span className="text-neonblue">{syncResult.updated} updated</span>
+              {syncResult.skipped > 0 && <span className="text-mist">{syncResult.skipped} skipped</span>}
+              {syncResult.errors > 0 && <span className="text-errorred">{syncResult.errors} errors</span>}
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSyncResult(null)}
+            className="text-mist hover:text-platinum h-6 w-6 p-0"
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center py-20">

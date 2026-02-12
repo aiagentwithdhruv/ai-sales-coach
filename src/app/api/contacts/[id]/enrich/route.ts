@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import { authenticateUser, getContact, updateContact } from "@/lib/crm/contacts";
 import { logActivity } from "@/lib/crm/activities";
-import { checkCredits, deductCredits } from "@/lib/credits";
+import { checkUsage, incrementUsage } from "@/lib/usage";
+import { resolveUserKeys } from "@/lib/ai/key-resolver";
 
 const jsonHeaders = { "Content-Type": "application/json" };
 
@@ -27,28 +28,25 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Check credits first
-  const creditCheck = await checkCredits(
-    req.headers.get("authorization"),
-    1
-  );
-  if (!creditCheck.hasCredits) {
-    return new Response(
-      JSON.stringify({
-        error: creditCheck.error || "Insufficient credits",
-        credits: creditCheck.credits,
-        code: "INSUFFICIENT_CREDITS",
-      }),
-      { status: 402, headers: jsonHeaders }
-    );
-  }
-
+  // Authenticate user
   const auth = await authenticateUser(req.headers.get("authorization"));
   if ("error" in auth) {
     return new Response(JSON.stringify({ error: auth.error }), {
       status: auth.status,
       headers: jsonHeaders,
     });
+  }
+
+  // Check usage
+  const usageCheck = await checkUsage(auth.userId, "analyses_run");
+  if (!usageCheck.allowed) {
+    return new Response(
+      JSON.stringify({
+        error: usageCheck.error,
+        code: "USAGE_LIMIT_REACHED",
+      }),
+      { status: 402, headers: jsonHeaders }
+    );
   }
 
   const { id } = await params;
@@ -76,9 +74,12 @@ export async function POST(
   const query = `${personInfo} at ${companyInfo}${contact.email ? ` (${contact.email})` : ""}`;
 
   try {
+    // Resolve user API keys
+    const userKeys = await resolveUserKeys(auth.userId);
+
     // Use OpenRouter/Perplexity for research
     const apiKey =
-      process.env.PERPLEXITY_API_KEY || process.env.OPENROUTER_API_KEY;
+      process.env.PERPLEXITY_API_KEY || userKeys.openrouter || process.env.OPENROUTER_API_KEY;
     const isPerplexity = !!process.env.PERPLEXITY_API_KEY;
 
     const baseUrl = isPerplexity
@@ -126,10 +127,8 @@ export async function POST(
       enrichmentData = { company_overview: content };
     }
 
-    // Deduct credit
-    if (creditCheck.userId) {
-      await deductCredits(creditCheck.userId, 1);
-    }
+    // Increment usage
+    await incrementUsage(auth.userId, "analyses_run");
 
     // Update contact with enrichment data
     const updated = await updateContact(auth.userId, id, {

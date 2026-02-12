@@ -3,8 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getAuthToken } from "@/hooks/useCredits";
-import { useCredits } from "@/hooks/useCredits";
+import { getAuthToken } from "@/lib/auth-token";
 import { saveSession } from "@/lib/session-history";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -171,9 +170,6 @@ export default function CoachPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Credits hook for refreshing after use
-  const { refetch: refetchCredits } = useCredits();
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -286,7 +282,7 @@ export default function CoachPage() {
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         if (res.status === 402) {
-          throw new Error("Out of credits! Request more credits to continue.");
+          throw new Error("Usage limit reached. Upgrade your plan to continue.");
         }
         throw new Error(errorData.details || errorData.error || `Request failed with status ${res.status}`);
       }
@@ -314,8 +310,6 @@ export default function CoachPage() {
         model: selectedModel,
       });
 
-      // Refetch credits after successful call
-      refetchCredits();
     } catch (err) {
       // Don't show error if request was aborted (user navigated away or cancelled)
       if (err instanceof Error && err.name === 'AbortError') {

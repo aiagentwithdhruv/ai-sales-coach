@@ -12,7 +12,7 @@ import {
   OBJECTION_CATEGORIES,
   type SavedObjection,
 } from "@/lib/objection-library";
-import { getAuthToken, useCredits } from "@/hooks/useCredits";
+import { getAuthToken } from "@/lib/auth-token";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -42,8 +42,6 @@ export default function ObjectionsPage() {
   const [copiedId, setCopiedId] = useState("");
   const responseRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-
-  const { refetch: refetchCredits } = useCredits();
 
   useEffect(() => {
     setSavedObjections(getSavedObjections());
@@ -106,7 +104,7 @@ export default function ObjectionsPage() {
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         if (res.status === 402) {
-          throw new Error("Out of credits! Request more credits to continue.");
+          throw new Error("Usage limit reached. Upgrade your plan to continue.");
         }
         throw new Error(
           errorData.details ||
@@ -129,7 +127,6 @@ export default function ObjectionsPage() {
         }
       }
 
-      refetchCredits();
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") return;
       const errorMessage =

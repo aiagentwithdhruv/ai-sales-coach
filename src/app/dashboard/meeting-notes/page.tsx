@@ -5,7 +5,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { getAuthToken, useCredits } from "@/hooks/useCredits";
+import { getAuthToken } from "@/lib/auth-token";
 import { saveSession } from "@/lib/session-history";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -46,7 +46,6 @@ export default function MeetingNotesPage() {
   const responseRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const { refetch: refetchCredits } = useCredits();
   const currentModel = AI_MODELS.find((m) => m.id === selectedModel);
 
   useEffect(() => {
@@ -96,7 +95,7 @@ export default function MeetingNotesPage() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        if (res.status === 402) throw new Error("Out of credits!");
+        if (res.status === 402) throw new Error("Usage limit reached. Upgrade your plan to continue.");
         throw new Error(errorData.details || errorData.error || `Request failed (${res.status})`);
       }
 
@@ -123,7 +122,7 @@ export default function MeetingNotesPage() {
         model: selectedModel,
       });
 
-      refetchCredits();
+
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") return;
       const msg = err instanceof Error ? err.message : "Unknown error";

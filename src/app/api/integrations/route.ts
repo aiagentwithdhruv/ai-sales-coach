@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { action, provider, config, sync_config } = body;
+  const { action, provider, config, sync_config, sync_options } = body;
 
   if (!provider) {
     return new Response(JSON.stringify({ error: "provider required" }), { status: 400, headers: jsonHeaders });
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
       return new Response(JSON.stringify({ success }), { headers: jsonHeaders });
     }
     case "sync": {
-      const result = await triggerSync(auth.userId, provider);
+      const result = await triggerSync(auth.userId, provider, sync_options);
       return new Response(JSON.stringify(result), { headers: jsonHeaders });
     }
     case "update_config": {

@@ -42,7 +42,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getAuthToken } from "@/hooks/useCredits";
+import { getAuthToken } from "@/lib/auth-token";
 import type { AIAgent, AgentCreateInput } from "@/types/teams";
 import { VOICE_OPTIONS, AGENT_TEMPLATES } from "@/types/teams";
 
@@ -64,6 +64,14 @@ const TEMPLATE_ICONS: Record<string, React.ElementType> = {
   booking: Calendar,
   follow_up: ArrowRight,
   survey: MessageSquare,
+  saas_demo: BarChart3,
+  appointment_confirm: Calendar,
+  win_back: Star,
+  referral_request: Star,
+  event_invite: Calendar,
+  payment_reminder: Phone,
+  real_estate: Phone,
+  insurance_upsell: ClipboardCheck,
 };
 
 export default function AgentsPage() {
@@ -139,6 +147,10 @@ export default function AgentsPage() {
         greeting: template.greeting,
         objective: template.objective,
         template_id: templateId as AgentCreateInput["template_id"],
+        voice_id: template.recommended_voice || prev.voice_id,
+        model: template.recommended_model || prev.model,
+        temperature: template.temperature ?? prev.temperature,
+        max_call_duration_seconds: template.max_call_duration_seconds || prev.max_call_duration_seconds,
       }));
     }
   };
@@ -245,16 +257,17 @@ export default function AgentsPage() {
     setSaving(false);
   };
 
-  // Agent form component (shared between create and edit)
-  const AgentForm = ({ onSubmit, submitLabel }: { onSubmit: () => void; submitLabel: string }) => (
+  // Agent form JSX (render function, NOT a component — avoids remount/focus-loss on state change)
+  const renderAgentForm = (onSubmit: () => void, submitLabel: string) => (
     <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
       {/* Templates */}
       {!editAgent && (
         <div>
-          <Label className="text-silver text-xs mb-2 block">Start from Template</Label>
-          <div className="grid grid-cols-3 gap-2">
+          <Label className="text-silver text-xs mb-2 block">Start from Template ({Object.keys(AGENT_TEMPLATES).length} templates)</Label>
+          <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto pr-1">
             {Object.entries(AGENT_TEMPLATES).map(([id, template]) => {
               const Icon = TEMPLATE_ICONS[id] || Bot;
+              const catColor = template.category === "sales" ? "text-neonblue" : template.category === "scheduling" ? "text-automationgreen" : template.category === "retention" ? "text-warningamber" : template.category === "support" ? "text-purple-400" : "text-silver";
               return (
                 <button
                   key={id}
@@ -266,8 +279,11 @@ export default function AgentsPage() {
                       : "border-gunmetal bg-graphite/50 hover:border-silver/30"
                   )}
                 >
-                  <Icon className={cn("h-4 w-4 mb-1", form.template_id === id ? "text-neonblue" : "text-silver")} />
-                  <p className="text-xs text-platinum font-medium">{template.name}</p>
+                  <div className="flex items-center gap-1 mb-0.5">
+                    <Icon className={cn("h-3.5 w-3.5", form.template_id === id ? "text-neonblue" : "text-silver")} />
+                    <span className={cn("text-[9px] uppercase tracking-wide", catColor)}>{template.category}</span>
+                  </div>
+                  <p className="text-xs text-platinum font-medium line-clamp-1">{template.name}</p>
                   <p className="text-[10px] text-mist line-clamp-1">{template.description}</p>
                 </button>
               );
@@ -450,7 +466,7 @@ export default function AgentsPage() {
             <DialogHeader>
               <DialogTitle className="text-platinum">Create AI Agent</DialogTitle>
             </DialogHeader>
-            <AgentForm onSubmit={handleCreate} submitLabel="Create Agent" />
+            {renderAgentForm(handleCreate, "Create Agent")}
           </DialogContent>
         </Dialog>
       </div>
@@ -583,7 +599,7 @@ export default function AgentsPage() {
           <DialogHeader>
             <DialogTitle className="text-platinum">Edit Agent: {editAgent?.name}</DialogTitle>
           </DialogHeader>
-          <AgentForm onSubmit={handleUpdate} submitLabel="Save Changes" />
+          {renderAgentForm(handleUpdate, "Save Changes")}
         </DialogContent>
       </Dialog>
     </div>

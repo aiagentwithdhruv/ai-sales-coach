@@ -26,6 +26,11 @@ import {
   Loader2,
   ExternalLink,
   Lock,
+  BarChart3,
+  Plus,
+  Trash2,
+  AlertTriangle,
+  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -339,6 +344,40 @@ const API_BADGES: Record<ApiType, { label: string; color: string }> = {
   anthropic: { label: "Claude Direct", color: "bg-orange-500/20 text-orange-400" },
 };
 
+// BYOAPI provider definitions
+const BYOAPI_PROVIDERS = [
+  { id: "openai", name: "OpenAI", icon: "O", color: "bg-green-500/20 text-green-400" },
+  { id: "anthropic", name: "Anthropic", icon: "A", color: "bg-orange-500/20 text-orange-400" },
+  { id: "openrouter", name: "OpenRouter", icon: "R", color: "bg-purple-500/20 text-purple-400" },
+] as const;
+
+// Platform-managed services
+const PLATFORM_SERVICES = [
+  { name: "Twilio", description: "Voice & SMS" },
+  { name: "Deepgram", description: "Speech-to-Text" },
+  { name: "Resend", description: "Email delivery" },
+  { name: "ElevenLabs", description: "Text-to-Speech" },
+];
+
+// Types for API key management
+interface UserKeyInfo {
+  provider: string;
+  key_hint: string;
+  is_valid: boolean;
+  updated_at: string;
+}
+
+// Types for usage dashboard
+interface UsageModule {
+  used: number;
+  limit: number;
+  label: string;
+}
+
+interface UsageData {
+  modules: Record<string, UsageModule>;
+}
+
 export default function SettingsPage() {
   const [selectedModel, setSelectedModel] = useState("gpt-5-mini");
   const [saved, setSaved] = useState(false);
@@ -355,6 +394,23 @@ export default function SettingsPage() {
   // Subscription state
   const [loadingPortal, setLoadingPortal] = useState(false);
   const currentPlan = typeof window !== "undefined" ? localStorage.getItem("user_plan") || "free" : "free";
+
+  // API Keys state
+  const [userKeys, setUserKeys] = useState<UserKeyInfo[]>([]);
+  const [keysLoading, setKeysLoading] = useState(true);
+  const [addingKeyFor, setAddingKeyFor] = useState<string | null>(null);
+  const [keyInput, setKeyInput] = useState("");
+  const [keyValidating, setKeyValidating] = useState(false);
+  const [keyError, setKeyError] = useState<string | null>(null);
+  const [keySuccess, setKeySuccess] = useState<string | null>(null);
+  const [deletingKey, setDeletingKey] = useState<string | null>(null);
+
+  // Usage state
+  const [usageData, setUsageData] = useState<UsageData | null>(null);
+  const [usageLoading, setUsageLoading] = useState(true);
+
+  // Trial state
+  const [trialDaysRemaining, setTrialDaysRemaining] = useState<number | null>(null);
 
   const handleManageSubscription = async () => {
     setLoadingPortal(true);
@@ -385,6 +441,110 @@ export default function SettingsPage() {
     }
   };
 
+  // Fetch user API keys
+  const fetchUserKeys = async () => {
+    setKeysLoading(true);
+    try {
+      const res = await fetch("/api/user-keys");
+      if (res.ok) {
+        const data = await res.json();
+        setUserKeys(data.keys || []);
+      } else {
+        // API not implemented yet, use empty
+        setUserKeys([]);
+      }
+    } catch {
+      setUserKeys([]);
+    } finally {
+      setKeysLoading(false);
+    }
+  };
+
+  // Save an API key
+  const handleSaveKey = async (provider: string) => {
+    if (!keyInput.trim()) {
+      setKeyError("Please enter an API key.");
+      return;
+    }
+    setKeyValidating(true);
+    setKeyError(null);
+    setKeySuccess(null);
+    try {
+      const res = await fetch("/api/user-keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider, key: keyInput.trim() }),
+      });
+      if (res.ok) {
+        setKeySuccess("Key validated and saved successfully.");
+        setAddingKeyFor(null);
+        setKeyInput("");
+        fetchUserKeys();
+        setTimeout(() => setKeySuccess(null), 3000);
+      } else {
+        const data = await res.json();
+        setKeyError(data.error || "Failed to validate key. Please check and try again.");
+      }
+    } catch {
+      setKeyError("Network error. Please try again.");
+    } finally {
+      setKeyValidating(false);
+    }
+  };
+
+  // Delete an API key
+  const handleDeleteKey = async (provider: string) => {
+    setDeletingKey(provider);
+    try {
+      const res = await fetch(`/api/user-keys?provider=${provider}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        fetchUserKeys();
+      }
+    } catch {
+      // silent fail
+    } finally {
+      setDeletingKey(null);
+    }
+  };
+
+  // Fetch usage data
+  const fetchUsageData = async () => {
+    setUsageLoading(true);
+    try {
+      const res = await fetch("/api/usage");
+      if (res.ok) {
+        const data = await res.json();
+        setUsageData(data);
+      } else {
+        // API not implemented yet, use mock data
+        setUsageData({
+          modules: {
+            coaching_sessions: { used: 3, limit: 10, label: "Coaching Sessions" },
+            ai_calls_made: { used: 2, limit: 5, label: "AI Calls" },
+            contacts_created: { used: 25, limit: 50, label: "Contacts" },
+            followups_sent: { used: 4, limit: 10, label: "Follow-ups" },
+            analyses_run: { used: 1, limit: 5, label: "Analyses" },
+          },
+        });
+      }
+    } catch {
+      // Fallback to mock
+      setUsageData({
+        modules: {
+          coaching_sessions: { used: 3, limit: 10, label: "Coaching Sessions" },
+          ai_calls_made: { used: 2, limit: 5, label: "AI Calls" },
+          contacts_created: { used: 25, limit: 50, label: "Contacts" },
+          followups_sent: { used: 4, limit: 10, label: "Follow-ups" },
+          analyses_run: { used: 1, limit: 5, label: "Analyses" },
+        },
+      });
+    } finally {
+      setUsageLoading(false);
+    }
+  };
+
   // Load saved preferences on mount
   useEffect(() => {
     const savedModel = localStorage.getItem("ai_model");
@@ -397,6 +557,23 @@ export default function SettingsPage() {
     const savedEmail = localStorage.getItem("profile_email");
     if (savedName) setProfileName(savedName);
     if (savedEmail) setProfileEmail(savedEmail);
+
+    // Load trial info
+    const trialStart = localStorage.getItem("trial_start");
+    if (trialStart) {
+      const start = new Date(trialStart).getTime();
+      const now = Date.now();
+      const elapsed = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+      const remaining = Math.max(0, 15 - elapsed);
+      setTrialDaysRemaining(remaining);
+    } else if (currentPlan === "free") {
+      // Default trial: assume 8 days remaining if no trial_start stored
+      setTrialDaysRemaining(8);
+    }
+
+    // Fetch API keys and usage
+    fetchUserKeys();
+    fetchUsageData();
   }, []);
 
   const handleSaveModel = () => {
@@ -448,6 +625,35 @@ export default function SettingsPage() {
     setIsEditingProfile(false);
     setTempName("");
     setTempEmail("");
+  };
+
+  // Helper: get key info for a provider
+  const getKeyForProvider = (providerId: string): UserKeyInfo | undefined => {
+    return userKeys.find((k) => k.provider === providerId);
+  };
+
+  // Helper: check if user has any BYOAPI keys
+  const hasAnyKeys = userKeys.length > 0;
+
+  // Helper: get subscription label
+  const getSubscriptionLabel = () => {
+    if (currentPlan === "pro") return "Module: Coaching + CRM";
+    if (currentPlan === "team") return "All-in-One Bundle";
+    return "Free";
+  };
+
+  // Helper: usage bar percentage
+  const getUsagePercent = (used: number, limit: number) => {
+    if (limit === -1) return 0; // unlimited
+    if (limit === 0) return 100;
+    return Math.min(100, Math.round((used / limit) * 100));
+  };
+
+  // Helper: usage bar color
+  const getUsageBarColor = (percent: number) => {
+    if (percent >= 90) return "bg-red-500";
+    if (percent >= 70) return "bg-warningamber";
+    return "bg-neonblue";
   };
 
   return (
@@ -592,7 +798,9 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
 
-            {/* API Keys (Admin) */}
+            {/* ============================================= */}
+            {/* API Keys Section */}
+            {/* ============================================= */}
             <Card className="bg-graphite border-gunmetal">
               <CardHeader>
                 <CardTitle className="text-platinum flex items-center gap-2">
@@ -600,65 +808,284 @@ export default function SettingsPage() {
                   API Configuration
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-silver">
-                  API keys are configured server-side. Contact your administrator
-                  to update them.
-                </p>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-onyx rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded bg-automationgreen/20 flex items-center justify-center">
-                        <Check className="h-4 w-4 text-automationgreen" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-platinum">OpenRouter</p>
-                        <p className="text-xs text-mist">Connected</p>
-                      </div>
+              <CardContent className="space-y-5">
+                {/* Trial Banner */}
+                {!hasAnyKeys && currentPlan === "free" && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-warningamber/10 border border-warningamber/30">
+                    <AlertTriangle className="h-5 w-5 text-warningamber shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm text-platinum font-medium">
+                        Trial Mode
+                      </p>
+                      <p className="text-xs text-silver mt-0.5">
+                        Using platform AI keys for {trialDaysRemaining !== null ? trialDaysRemaining : 15} days. Add your own API keys to continue after trial ends.
+                      </p>
                     </div>
-                    <Badge className="bg-automationgreen/20 text-automationgreen">Active</Badge>
+                    {trialDaysRemaining !== null && (
+                      <Badge className="bg-warningamber/20 text-warningamber text-xs flex items-center gap-1 shrink-0">
+                        <Clock className="h-3 w-3" />
+                        {trialDaysRemaining}d left
+                      </Badge>
+                    )}
                   </div>
+                )}
 
-                  <div className="flex items-center justify-between p-3 bg-onyx rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded bg-automationgreen/20 flex items-center justify-center">
-                        <Check className="h-4 w-4 text-automationgreen" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-platinum">OpenAI</p>
-                        <p className="text-xs text-mist">Connected</p>
-                      </div>
-                    </div>
-                    <Badge className="bg-automationgreen/20 text-automationgreen">Active</Badge>
+                {/* Success message */}
+                {keySuccess && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-automationgreen/10 border border-automationgreen/30">
+                    <Check className="h-4 w-4 text-automationgreen" />
+                    <p className="text-sm text-automationgreen">{keySuccess}</p>
                   </div>
+                )}
 
-                  <div className="flex items-center justify-between p-3 bg-onyx rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded bg-automationgreen/20 flex items-center justify-center">
-                        <Check className="h-4 w-4 text-automationgreen" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-platinum">Anthropic</p>
-                        <p className="text-xs text-mist">Connected</p>
-                      </div>
-                    </div>
-                    <Badge className="bg-automationgreen/20 text-automationgreen">Active</Badge>
-                  </div>
+                {/* BYOAPI Section */}
+                <div>
+                  <p className="text-sm text-silver mb-3">
+                    Bring your own API keys for direct provider access with lower latency.
+                  </p>
 
-                  <div className="flex items-center justify-between p-3 bg-onyx rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded bg-automationgreen/20 flex items-center justify-center">
-                        <Check className="h-4 w-4 text-automationgreen" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-platinum">Perplexity AI</p>
-                        <p className="text-xs text-mist">Connected</p>
-                      </div>
+                  {keysLoading ? (
+                    <div className="flex items-center justify-center py-6">
+                      <Loader2 className="h-5 w-5 animate-spin text-mist" />
+                      <span className="text-sm text-mist ml-2">Loading keys...</span>
                     </div>
-                    <Badge className="bg-automationgreen/20 text-automationgreen">Active</Badge>
+                  ) : (
+                    <div className="space-y-3">
+                      {BYOAPI_PROVIDERS.map((provider) => {
+                        const keyInfo = getKeyForProvider(provider.id);
+                        const isAdding = addingKeyFor === provider.id;
+                        const isDeleting = deletingKey === provider.id;
+
+                        return (
+                          <div key={provider.id} className="rounded-lg bg-onyx border border-gunmetal overflow-hidden">
+                            {/* Provider row */}
+                            <div className="flex items-center justify-between p-3">
+                              <div className="flex items-center gap-3">
+                                <div className={cn("h-8 w-8 rounded flex items-center justify-center text-sm font-bold", provider.color)}>
+                                  {provider.icon}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-platinum">{provider.name}</p>
+                                  {keyInfo ? (
+                                    <p className="text-xs text-automationgreen flex items-center gap-1">
+                                      <Check className="h-3 w-3" />
+                                      Connected
+                                      <span className="text-mist ml-1">...{keyInfo.key_hint}</span>
+                                    </p>
+                                  ) : (
+                                    <p className="text-xs text-mist">Not Set</p>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                {keyInfo ? (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        setAddingKeyFor(provider.id);
+                                        setKeyInput("");
+                                        setKeyError(null);
+                                      }}
+                                      className="border-gunmetal text-silver hover:text-platinum text-xs h-8 px-3"
+                                    >
+                                      <Edit3 className="h-3 w-3 mr-1" />
+                                      Edit
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleDeleteKey(provider.id)}
+                                      disabled={isDeleting}
+                                      className="border-gunmetal text-red-400 hover:text-red-300 hover:border-red-400/50 text-xs h-8 px-3"
+                                    >
+                                      {isDeleting ? (
+                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                      ) : (
+                                        <Trash2 className="h-3 w-3" />
+                                      )}
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => {
+                                      setAddingKeyFor(provider.id);
+                                      setKeyInput("");
+                                      setKeyError(null);
+                                    }}
+                                    className="bg-neonblue hover:bg-electricblue text-white text-xs h-8 px-3"
+                                  >
+                                    <Plus className="h-3 w-3 mr-1" />
+                                    Add Key
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Inline key input */}
+                            {isAdding && (
+                              <div className="border-t border-gunmetal p-3 space-y-2">
+                                <div className="flex gap-2">
+                                  <Input
+                                    type="password"
+                                    value={keyInput}
+                                    onChange={(e) => {
+                                      setKeyInput(e.target.value);
+                                      setKeyError(null);
+                                    }}
+                                    placeholder={`Enter your ${provider.name} API key...`}
+                                    className="bg-graphite border-gunmetal text-platinum flex-1 text-sm"
+                                    autoFocus
+                                  />
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleSaveKey(provider.id)}
+                                    disabled={keyValidating || !keyInput.trim()}
+                                    className="bg-automationgreen hover:bg-automationgreen/80 text-black text-xs h-9 px-4 shrink-0"
+                                  >
+                                    {keyValidating ? (
+                                      <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                    ) : (
+                                      <Shield className="h-3 w-3 mr-1" />
+                                    )}
+                                    Validate & Save
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setAddingKeyFor(null);
+                                      setKeyInput("");
+                                      setKeyError(null);
+                                    }}
+                                    className="border-gunmetal text-silver hover:text-platinum h-9 px-2 shrink-0"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                                {keyError && (
+                                  <p className="text-xs text-red-400 flex items-center gap-1">
+                                    <AlertTriangle className="h-3 w-3" />
+                                    {keyError}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Platform Managed Section */}
+                <div>
+                  <p className="text-xs text-mist uppercase tracking-wider font-medium mb-3">
+                    Platform Managed
+                  </p>
+                  <div className="space-y-2">
+                    {PLATFORM_SERVICES.map((service) => (
+                      <div
+                        key={service.name}
+                        className="flex items-center justify-between p-3 bg-onyx rounded-lg border border-gunmetal"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded bg-automationgreen/20 flex items-center justify-center">
+                            <Check className="h-4 w-4 text-automationgreen" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-platinum">{service.name}</p>
+                            <p className="text-xs text-mist">{service.description}</p>
+                          </div>
+                        </div>
+                        <Badge className="bg-automationgreen/20 text-automationgreen text-xs">
+                          Platform Managed
+                        </Badge>
+                      </div>
+                    ))}
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* ============================================= */}
+            {/* Usage Dashboard */}
+            {/* ============================================= */}
+            <Card className="bg-graphite border-gunmetal">
+              <CardHeader>
+                <CardTitle className="text-platinum flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-neonblue" />
+                  Usage Dashboard
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {usageLoading ? (
+                  <div className="flex items-center justify-center py-6">
+                    <Loader2 className="h-5 w-5 animate-spin text-mist" />
+                    <span className="text-sm text-mist ml-2">Loading usage data...</span>
+                  </div>
+                ) : usageData ? (
+                  <>
+                    <p className="text-sm text-silver">
+                      Track your resource usage across all modules.
+                    </p>
+
+                    <div className="space-y-4">
+                      {Object.entries(usageData.modules).map(([key, module]) => {
+                        const isUnlimited = module.limit === -1;
+                        const percent = isUnlimited ? 0 : getUsagePercent(module.used, module.limit);
+                        const barColor = getUsageBarColor(percent);
+
+                        return (
+                          <div key={key} className="space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium text-platinum">
+                                {module.label}
+                              </span>
+                              <span className="text-xs text-mist">
+                                {module.used} / {isUnlimited ? "Unlimited" : module.limit}
+                              </span>
+                            </div>
+                            <div className="w-full h-2 rounded-full bg-onyx overflow-hidden">
+                              {isUnlimited ? (
+                                <div className="h-full w-full bg-automationgreen/30 rounded-full" />
+                              ) : (
+                                <div
+                                  className={cn("h-full rounded-full transition-all", barColor)}
+                                  style={{ width: `${percent}%` }}
+                                />
+                              )}
+                            </div>
+                            {!isUnlimited && percent >= 90 && (
+                              <p className="text-xs text-red-400 flex items-center gap-1">
+                                <AlertTriangle className="h-3 w-3" />
+                                Approaching limit
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {currentPlan === "free" && (
+                      <div className="pt-2">
+                        <Link href="/pricing">
+                          <Button className="w-full bg-neonblue hover:bg-electricblue text-white gap-2">
+                            <Crown className="h-4 w-4" />
+                            Upgrade for Higher Limits
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-mist text-center py-4">
+                    Unable to load usage data.
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -774,9 +1201,20 @@ export default function SettingsPage() {
                     currentPlan === "team" ? "bg-warningamber/20 text-warningamber" :
                     "bg-steel/20 text-silver"
                   )}>
-                    {currentPlan === "pro" ? "Pro" : currentPlan === "team" ? "Team" : "Free"}
+                    {getSubscriptionLabel()}
                   </Badge>
                 </div>
+
+                {/* Trial countdown */}
+                {currentPlan === "free" && trialDaysRemaining !== null && trialDaysRemaining > 0 && (
+                  <div className="flex items-center gap-2 p-2.5 rounded-lg bg-warningamber/10 border border-warningamber/20">
+                    <Clock className="h-4 w-4 text-warningamber shrink-0" />
+                    <span className="text-xs text-warningamber">
+                      Trial: {trialDaysRemaining} day{trialDaysRemaining !== 1 ? "s" : ""} remaining
+                    </span>
+                  </div>
+                )}
+
                 {currentPlan === "free" ? (
                   <Link href="/pricing">
                     <Button className="w-full bg-neonblue hover:bg-electricblue text-white gap-2">

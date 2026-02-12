@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import { authenticateUser, getContact } from "@/lib/crm/contacts";
 import { getActivities } from "@/lib/crm/activities";
-import { checkCredits, deductCredits } from "@/lib/credits";
+import { checkUsage, incrementUsage } from "@/lib/usage";
+import { resolveUserKeys } from "@/lib/ai/key-resolver";
 import { STAGE_CONFIG } from "@/types/crm";
 
 const jsonHeaders = { "Content-Type": "application/json" };
@@ -11,27 +12,25 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const creditCheck = await checkCredits(
-    req.headers.get("authorization"),
-    1
-  );
-  if (!creditCheck.hasCredits) {
-    return new Response(
-      JSON.stringify({
-        error: "Insufficient credits",
-        credits: creditCheck.credits,
-        code: "INSUFFICIENT_CREDITS",
-      }),
-      { status: 402, headers: jsonHeaders }
-    );
-  }
-
+  // Authenticate user
   const auth = await authenticateUser(req.headers.get("authorization"));
   if ("error" in auth) {
     return new Response(JSON.stringify({ error: auth.error }), {
       status: auth.status,
       headers: jsonHeaders,
     });
+  }
+
+  // Check usage
+  const usageCheck = await checkUsage(auth.userId, "analyses_run");
+  if (!usageCheck.allowed) {
+    return new Response(
+      JSON.stringify({
+        error: usageCheck.error,
+        code: "USAGE_LIMIT_REACHED",
+      }),
+      { status: 402, headers: jsonHeaders }
+    );
   }
 
   const { id } = await params;
@@ -81,8 +80,11 @@ Return ONLY valid JSON:
 }`;
 
   try {
-    const apiKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY;
-    const isOpenRouter = !!process.env.OPENROUTER_API_KEY;
+    // Resolve user API keys
+    const userKeys = await resolveUserKeys(auth.userId);
+
+    const apiKey = userKeys.openrouter || process.env.OPENROUTER_API_KEY || userKeys.openai || process.env.OPENAI_API_KEY;
+    const isOpenRouter = !!(userKeys.openrouter || process.env.OPENROUTER_API_KEY);
     const baseUrl = isOpenRouter
       ? "https://openrouter.ai/api/v1"
       : "https://api.openai.com/v1";
@@ -108,10 +110,8 @@ Return ONLY valid JSON:
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
 
-    // Deduct credit
-    if (creditCheck.userId) {
-      await deductCredits(creditCheck.userId, 1);
-    }
+    // Increment usage
+    await incrementUsage(auth.userId, "analyses_run");
 
     let suggestion;
     try {

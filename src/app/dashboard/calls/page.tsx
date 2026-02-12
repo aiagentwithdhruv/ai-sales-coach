@@ -26,7 +26,7 @@ import {
   Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getAuthToken } from "@/hooks/useCredits";
+import { getAuthToken } from "@/lib/auth-token";
 
 // Mock call data
 const RECENT_CALLS = [

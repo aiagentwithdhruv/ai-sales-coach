@@ -31,8 +31,7 @@ import {
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { getAuthToken } from "@/hooks/useCredits";
-import { useCredits } from "@/hooks/useCredits";
+import { getAuthToken } from "@/lib/auth-token";
 import { saveSession } from "@/lib/session-history";
 import { exportToPDF } from "@/lib/export-pdf";
 
@@ -195,8 +194,6 @@ export default function CompliancePage() {
   const responseRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const { refetch: refetchCredits } = useCredits();
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -277,7 +274,7 @@ IMPORTANT: Be thorough. Check EVERY sentence for potential issues. Even minor co
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        if (res.status === 402) throw new Error("Out of credits! Request more credits to continue.");
+        if (res.status === 402) throw new Error("Usage limit reached. Upgrade your plan to continue.");
         throw new Error(errorData.details || errorData.error || `Request failed (${res.status})`);
       }
 
@@ -309,7 +306,6 @@ IMPORTANT: Be thorough. Check EVERY sentence for potential issues. Even minor co
         model,
       });
 
-      refetchCredits();
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") return;
       const msg = err instanceof Error ? err.message : "Unknown error";

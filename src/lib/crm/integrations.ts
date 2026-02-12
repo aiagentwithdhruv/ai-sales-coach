@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { CRMIntegration, IntegrationProvider } from "@/types/teams";
+import { syncZohoLeads, type SyncResult } from "@/lib/crm/zoho";
 
 const getAdmin = () =>
   createClient(
@@ -108,12 +109,13 @@ export async function updateSyncConfig(
   return !error;
 }
 
-// ---------- Sync trigger (mock) ----------
+// ---------- Sync trigger ----------
 
 export async function triggerSync(
   userId: string,
-  provider: IntegrationProvider
-): Promise<{ synced: number; errors: number }> {
+  provider: IntegrationProvider,
+  syncOptions?: { status?: string; phoneOnly?: boolean; limit?: number }
+): Promise<{ synced: number; errors: number; imported?: number; updated?: number; skipped?: number; total?: number }> {
   const supabase = getAdmin();
 
   // Mark as syncing
@@ -123,23 +125,57 @@ export async function triggerSync(
     .eq("user_id", userId)
     .eq("provider", provider);
 
-  // Mock sync — in production this would call the CRM API
-  // Simulate a short delay worth of work
-  const synced = Math.floor(Math.random() * 20) + 5;
+  let result: SyncResult;
 
-  // Mark as connected + update last_sync_at
-  await supabase
-    .from("crm_integrations")
-    .update({
-      status: "connected",
-      last_sync_at: new Date().toISOString(),
-      error_message: null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("user_id", userId)
-    .eq("provider", provider);
+  try {
+    if (provider === "zoho") {
+      // Real Zoho CRM sync
+      result = await syncZohoLeads(userId, syncOptions);
+    } else {
+      // Other providers — mock for now
+      result = {
+        imported: Math.floor(Math.random() * 20) + 5,
+        updated: 0,
+        skipped: 0,
+        errors: 0,
+        total: Math.floor(Math.random() * 20) + 5,
+      };
+    }
 
-  return { synced, errors: 0 };
+    // Mark as connected + update last_sync_at
+    await supabase
+      .from("crm_integrations")
+      .update({
+        status: "connected",
+        last_sync_at: new Date().toISOString(),
+        error_message: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId)
+      .eq("provider", provider);
+
+    return {
+      synced: result.imported + result.updated,
+      errors: result.errors,
+      imported: result.imported,
+      updated: result.updated,
+      skipped: result.skipped,
+      total: result.total,
+    };
+  } catch (err) {
+    // Mark as error
+    await supabase
+      .from("crm_integrations")
+      .update({
+        status: "error",
+        error_message: err instanceof Error ? err.message : "Sync failed",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId)
+      .eq("provider", provider);
+
+    return { synced: 0, errors: 1 };
+  }
 }
 
 // ---------- Strip tokens from client response ----------

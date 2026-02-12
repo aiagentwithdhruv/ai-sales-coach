@@ -1,11 +1,14 @@
 /**
  * Meeting Notes Summarizer API Route
  * Upload meeting notes/transcript and get AI summary with action items
+ * Includes usage tracking and BYOAPI key resolution.
  */
 
 import { streamText } from "ai";
 import { getModelByIdSmart, getLanguageModel } from "@/lib/ai/providers";
-import { checkCredits, deductCredits } from "@/lib/credits";
+import { checkUsage, incrementUsage } from "@/lib/usage";
+import { resolveUserKeys } from "@/lib/ai/key-resolver";
+import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -46,12 +49,23 @@ Be specific. Extract every actionable detail. Don't miss anything important.`;
 
 export async function POST(req: Request) {
   try {
+    // Authenticate user
     const authHeader = req.headers.get("authorization");
-    const creditCheck = await checkCredits(authHeader, 1);
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
+    }
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Invalid token" }), { status: 401, headers: { "Content-Type": "application/json" } });
+    }
+    const userId = user.id;
 
-    if (!creditCheck.hasCredits) {
+    // Check usage
+    const usageCheck = await checkUsage(userId, "analyses_run");
+    if (!usageCheck.allowed) {
       return new Response(
-        JSON.stringify({ error: creditCheck.error || "Insufficient credits", code: "INSUFFICIENT_CREDITS" }),
+        JSON.stringify({ error: usageCheck.error, code: "USAGE_LIMIT_REACHED" }),
         { status: 402, headers: { "Content-Type": "application/json" } }
       );
     }
@@ -66,17 +80,11 @@ export async function POST(req: Request) {
       );
     }
 
-    if (creditCheck.userId) {
-      const deductResult = await deductCredits(creditCheck.userId, 1);
-      if (!deductResult.success) {
-        return new Response(
-          JSON.stringify({ error: "Failed to deduct credits", code: "CREDIT_DEDUCT_FAILED" }),
-          { status: 500, headers: { "Content-Type": "application/json" } }
-        );
-      }
-    }
+    // Increment usage and resolve user API keys
+    await incrementUsage(userId, "analyses_run");
+    const userKeys = await resolveUserKeys(userId);
 
-    const model = modelId ? getModelByIdSmart(modelId) : getLanguageModel();
+    const model = modelId ? getModelByIdSmart(modelId, userKeys) : getLanguageModel(undefined, userKeys);
     const isMoonshot = modelId?.startsWith("kimi-");
 
     const result = await streamText({

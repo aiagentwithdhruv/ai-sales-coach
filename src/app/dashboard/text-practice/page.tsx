@@ -6,8 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { getAuthToken } from "@/hooks/useCredits";
-import { useCredits } from "@/hooks/useCredits";
+import { getAuthToken } from "@/lib/auth-token";
 import { saveSession } from "@/lib/session-history";
 import { PRACTICE_SCENARIOS, type Scenario } from "@/lib/scenarios";
 import {
@@ -96,8 +95,6 @@ export default function TextPracticePage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const { refetch: refetchCredits } = useCredits();
-
   // Load model preference
   useEffect(() => {
     const saved = localStorage.getItem("ai_model");
@@ -157,7 +154,6 @@ export default function TextPracticePage() {
         }
       }
 
-      refetchCredits();
     } catch (err) {
       console.error("Start error:", err);
       setMessages([{ role: "assistant", content: `Hello, this is ${selectedPersona.name}. How can I help you?` }]);
@@ -218,7 +214,6 @@ export default function TextPracticePage() {
         }
       }
 
-      refetchCredits();
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") return;
       console.error("Chat error:", err);
@@ -282,7 +277,6 @@ export default function TextPracticePage() {
         model: selectedModel,
       });
 
-      refetchCredits();
     } catch (err) {
       console.error("Score error:", err);
       setScoreResponse("Failed to generate score. Please try again.");

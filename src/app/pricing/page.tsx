@@ -7,142 +7,77 @@ import { Badge } from "@/components/ui/badge";
 import { MobileNav } from "@/components/ui/mobile-nav";
 import {
   Check,
-  X,
-  Zap,
-  Rocket,
-  Building2,
   Sparkles,
   ArrowRight,
-  Crown,
   Loader2,
   Phone,
   Brain,
   BarChart3,
-  Shield,
+  Mail,
+  TrendingUp,
+  Gift,
+  Key,
+  Package,
+  ChevronDown,
+  ChevronUp,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import {
+  MODULES,
+  ALL_MODULE_SLUGS,
+  BUNDLE,
+  BILLING_DISCOUNTS,
+  getDiscountedPrice,
+  getBillingTotal,
+  getYearlySavings,
+  calculateModulesPrice,
+  isBundleCheaper,
+  type ModuleSlug,
+  type BillingInterval,
+  FREE_LIMITS,
+  TRIAL_DURATION_DAYS,
+} from "@/lib/pricing";
 
-type BillingInterval = "monthly" | "quarterly" | "yearly";
+// ─── Icon Map ─────────────────────────────────────────────────────────────────
 
-const BILLING_OPTIONS: { id: BillingInterval; label: string; discount: number; badge: string | null }[] = [
-  { id: "monthly", label: "Monthly", discount: 0, badge: null },
-  { id: "quarterly", label: "Quarterly", discount: 10, badge: "Save 10%" },
-  { id: "yearly", label: "Yearly", discount: 20, badge: "Save 20%" },
+const MODULE_ICONS: Record<ModuleSlug, typeof Brain> = {
+  coaching: Brain,
+  crm: BarChart3,
+  calling: Phone,
+  followups: Mail,
+  analytics: TrendingUp,
+};
+
+const MODULE_COLORS: Record<ModuleSlug, { text: string; bg: string }> = {
+  coaching: { text: "text-neonblue", bg: "bg-neonblue/20" },
+  crm: { text: "text-warningamber", bg: "bg-warningamber/20" },
+  calling: { text: "text-automationgreen", bg: "bg-automationgreen/20" },
+  followups: { text: "text-purple-400", bg: "bg-purple-500/20" },
+  analytics: { text: "text-cyan-400", bg: "bg-cyan-500/20" },
+};
+
+// ─── Billing Options ──────────────────────────────────────────────────────────
+
+const BILLING_OPTIONS: { id: BillingInterval; label: string; badge: string | null }[] = [
+  { id: "monthly", label: "Monthly", badge: null },
+  { id: "quarterly", label: "Quarterly", badge: BILLING_DISCOUNTS.quarterly.badge },
+  { id: "yearly", label: "Yearly", badge: BILLING_DISCOUNTS.yearly.badge },
 ];
 
-const PRICING_PLANS = [
-  {
-    id: "starter",
-    name: "Starter",
-    description: "For individual reps getting started with AI coaching",
-    icon: Zap,
-    iconColor: "text-neonblue",
-    iconBg: "bg-neonblue/20",
-    monthlyPrice: 79,
-    perUser: true,
-    features: [
-      { text: "AI sales practice (text + voice)", included: true },
-      { text: "50 AI coaching sessions/month", included: true },
-      { text: "CRM with pipeline management", included: true },
-      { text: "Up to 500 contacts", included: true },
-      { text: "Deal tracking & forecasting", included: true },
-      { text: "5 AI models (GPT-5 Mini, Haiku, Gemini)", included: true },
-      { text: "Basic call analysis", included: true },
-      { text: "Email follow-up suggestions", included: true },
-      { text: "Session history & analytics", included: true },
-      { text: "Community support", included: true },
-      { text: "Voice practice with GPT-4o Realtime", included: false },
-      { text: "AI outbound calling", included: false },
-      { text: "Premium AI models", included: false },
-    ],
-    cta: "Start 14-Day Trial",
-    ctaLink: "/signup?plan=starter",
-    popular: false,
-  },
-  {
-    id: "professional",
-    name: "Professional",
-    description: "Full-featured platform for serious sales teams",
-    icon: Rocket,
-    iconColor: "text-neonblue",
-    iconBg: "bg-neonblue/20",
-    monthlyPrice: 149,
-    perUser: true,
-    features: [
-      { text: "Everything in Starter", included: true },
-      { text: "Unlimited AI coaching sessions", included: true },
-      { text: "Voice practice with GPT-4o Realtime", included: true },
-      { text: "Unlimited contacts & pipeline", included: true },
-      { text: "AI contact enrichment", included: true },
-      { text: "All 25+ AI models (GPT-5.2, Claude Opus, Sonnet)", included: true },
-      { text: "Advanced call analysis & scoring", included: true },
-      { text: "Custom practice personas", included: true },
-      { text: "PDF export reports", included: true },
-      { text: "Webhook integrations (n8n, Zapier)", included: true },
-      { text: "Advanced analytics & forecasting", included: true },
-      { text: "Priority support", included: true },
-    ],
-    cta: "Start 14-Day Trial",
-    ctaLink: "/signup?plan=professional",
-    popular: true,
-  },
-  {
-    id: "business",
-    name: "Business",
-    description: "For sales organizations that need AI calling & team tools",
-    icon: Crown,
-    iconColor: "text-warningamber",
-    iconBg: "bg-warningamber/20",
-    monthlyPrice: 249,
-    perUser: true,
-    features: [
-      { text: "Everything in Professional", included: true },
-      { text: "AI outbound calling (campaigns)", included: true },
-      { text: "AI Agent Builder", included: true },
-      { text: "Call recordings & transcriptions", included: true },
-      { text: "Team management & dashboards", included: true },
-      { text: "Manager analytics & leaderboards", included: true },
-      { text: "Shared objection library", included: true },
-      { text: "Automated follow-up sequences", included: true },
-      { text: "API access", included: true },
-      { text: "Slack integration", included: true },
-      { text: "Dedicated success manager", included: true },
-      { text: "Onboarding & training", included: true },
-    ],
-    cta: "Start 14-Day Trial",
-    ctaLink: "/signup?plan=business",
-    popular: false,
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    description: "Custom solutions for large sales organizations",
-    icon: Building2,
-    iconColor: "text-automationgreen",
-    iconBg: "bg-automationgreen/20",
-    monthlyPrice: null,
-    perUser: false,
-    features: [
-      { text: "Everything in Business", included: true },
-      { text: "Unlimited users", included: true },
-      { text: "Custom AI model training", included: true },
-      { text: "CRM integration (HubSpot/Salesforce)", included: true },
-      { text: "SSO/SAML authentication", included: true },
-      { text: "Custom SLA & uptime guarantee", included: true },
-      { text: "White-label option", included: true },
-      { text: "On-premise deployment", included: true },
-      { text: "Dedicated account team", included: true },
-      { text: "Custom reporting & BI integration", included: true },
-      { text: "Volume discounts", included: true },
-      { text: "Annual contract flexibility", included: true },
-    ],
-    cta: "Contact Sales",
-    ctaLink: "mailto:aiwithdhruv@gmail.com?subject=QuotaHit Enterprise Inquiry",
-    popular: false,
-  },
+// ─── Free Tier Display ────────────────────────────────────────────────────────
+
+const FREE_TIER_ITEMS = [
+  { label: "AI coaching sessions", limit: FREE_LIMITS.coaching_sessions, unit: "/month" },
+  { label: "Contacts", limit: FREE_LIMITS.contacts_created, unit: " total" },
+  { label: "AI outbound calls", limit: FREE_LIMITS.ai_calls_made, unit: "/month" },
+  { label: "Follow-ups sent", limit: FREE_LIMITS.followups_sent, unit: "/month" },
+  { label: "Analyses run", limit: FREE_LIMITS.analyses_run, unit: "/month" },
 ];
+
+// ─── Competitor Comparison ────────────────────────────────────────────────────
 
 const COMPARISON_ITEMS = [
   { label: "Gong.io", price: "$108-250/user/mo", note: "Plus $5K-50K platform fee" },
@@ -152,80 +87,92 @@ const COMPARISON_ITEMS = [
   { label: "Outreach", price: "$100-400/user/mo", note: "Plus setup fees" },
 ];
 
+// ─── FAQ ──────────────────────────────────────────────────────────────────────
+
 const FAQ_ITEMS = [
   {
-    q: "How does per-user pricing work?",
-    a: "Each user (sales rep, manager, or admin) needs their own seat. Pricing is per user per month. Volume discounts are available for teams of 10+ on annual plans. Contact us for custom pricing.",
+    q: "What are modules?",
+    a: "Modules are individual feature packages you can mix and match. Instead of paying for an all-or-nothing plan, pick only the tools you need -- AI Coaching, CRM, Calling, Follow-Ups, or Analytics -- and pay for each separately. Or grab the All-in-One Bundle for the best price.",
   },
   {
-    q: "How does QuotaHit compare to Gong, Salesloft, or Outreach?",
-    a: "QuotaHit combines AI coaching, CRM, pipeline management, and AI calling in a single platform. Gong starts at $108/user/mo (plus $5K-50K platform fees), Salesloft at $140/user/mo, and Outreach at $100-400/user/mo. Our Professional plan at $149/user/mo gives you coaching + CRM + AI models — replacing 2-3 separate tools.",
+    q: "What's included in the free tier?",
+    a: `The free tier gives you access to every module with usage limits: ${FREE_LIMITS.coaching_sessions} coaching sessions/month, ${FREE_LIMITS.contacts_created} contacts, ${FREE_LIMITS.ai_calls_made} AI calls/month, ${FREE_LIMITS.followups_sent} follow-ups/month, and ${FREE_LIMITS.analyses_run} analyses/month. It's free forever with no credit card required.`,
   },
   {
-    q: "What AI models are included?",
-    a: "Starter includes 5 efficient models (GPT-5 Mini, Claude Haiku 4.5, Gemini Flash, etc.). Professional and above unlock all 25+ models including premium options like GPT-5.2, GPT-5.1, Claude Opus 4.5, Claude Sonnet 4.5, and o3 — the most capable AI models available.",
+    q: "What is BYOAPI?",
+    a: "BYOAPI stands for Bring Your Own API Keys. You provide your own AI provider keys (OpenAI, Anthropic, etc.) and connect them in settings. We handle all the infrastructure, orchestration, and tooling -- but you pay the AI providers directly at their rates. No markup from us.",
   },
   {
-    q: "Is there a free trial?",
-    a: "Yes, all paid plans include a 14-day free trial with full access to every feature. No credit card required to start. Cancel anytime during the trial.",
+    q: "Do I need all modules?",
+    a: "Not at all. Each module works independently. You can start with just AI Coaching and add CRM or Calling later. If you want three or more modules, the All-in-One Bundle is usually cheaper.",
   },
   {
-    q: "Can I switch plans anytime?",
-    a: "Absolutely. Upgrade, downgrade, or switch billing intervals at any time. Changes take effect immediately, and we prorate any differences. No lock-in contracts.",
+    q: "Can I switch between module and bundle?",
+    a: "Yes. You can switch from individual modules to the bundle (or vice versa) at any time. Changes take effect immediately and any billing differences are prorated.",
   },
   {
-    q: "What's included in AI outbound calling?",
-    a: "The Business plan includes AI-powered outbound calling campaigns. Create AI agents with custom scripts, voices, and objectives. The AI handles cold calls, qualifies leads, books meetings, and logs everything to your CRM automatically. Telephony costs (Twilio) are billed separately at ~$0.04/min.",
-  },
-  {
-    q: "Do you offer volume discounts?",
-    a: "Yes. Teams of 10+ on annual plans receive volume discounts. Enterprise customers get custom pricing based on team size and requirements. Contact sales for a quote.",
+    q: `What happens after the ${TRIAL_DURATION_DAYS}-day trial?`,
+    a: `After your ${TRIAL_DURATION_DAYS}-day trial ends, you'll automatically move to the free tier with usage limits. No charge unless you subscribe to a paid module or bundle. You keep all your data.`,
   },
   {
     q: "What payment methods do you accept?",
-    a: "We accept all major credit cards. Enterprise customers can pay via wire transfer, ACH, or invoice with NET-30 terms.",
+    a: "We accept all major credit cards via Stripe. Enterprise customers can pay via wire transfer, ACH, or invoice with NET-30 terms.",
+  },
+  {
+    q: "Can I cancel anytime?",
+    a: "Absolutely. No lock-in contracts. Cancel your subscription anytime and you'll retain access until the end of your current billing period. You can always come back to the free tier.",
   },
 ];
 
-function getDiscountedPrice(monthlyPrice: number, interval: BillingInterval): number {
-  const option = BILLING_OPTIONS.find((o) => o.id === interval)!;
-  return Math.round((monthlyPrice * (100 - option.discount)) / 100 * 100) / 100;
-}
-
-function getBillingTotal(monthlyPrice: number, interval: BillingInterval): number {
-  const perMonth = getDiscountedPrice(monthlyPrice, interval);
-  switch (interval) {
-    case "monthly":
-      return perMonth;
-    case "quarterly":
-      return Math.round(perMonth * 3 * 100) / 100;
-    case "yearly":
-      return Math.round(perMonth * 12 * 100) / 100;
-  }
-}
-
-function getSavingsPerYear(monthlyPrice: number, interval: BillingInterval): number {
-  const fullYear = monthlyPrice * 12;
-  const discountedYear = getDiscountedPrice(monthlyPrice, interval) * 12;
-  return Math.round((fullYear - discountedYear) * 100) / 100;
-}
+// ─── Page Component ───────────────────────────────────────────────────────────
 
 export default function PricingPage() {
-  const [billingInterval, setBillingInterval] = useState<BillingInterval>("yearly");
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [billingInterval, setBillingInterval] = useState<BillingInterval>("monthly");
+  const [selectedModules, setSelectedModules] = useState<ModuleSlug[]>([]);
+  const [loadingCheckout, setLoadingCheckout] = useState(false);
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
-  const handleCheckout = async (planId: string) => {
-    if (planId === "enterprise") return;
+  // ─── Module selection helpers ──────────────────────────────────────────────
 
-    setLoadingPlan(planId);
+  const toggleModule = (slug: ModuleSlug) => {
+    setSelectedModules((prev) =>
+      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
+    );
+  };
+
+  const isModuleSelected = (slug: ModuleSlug) => selectedModules.includes(slug);
+
+  // ─── Price calculations ────────────────────────────────────────────────────
+
+  const selectedTotal = selectedModules.length > 0
+    ? calculateModulesPrice(selectedModules, billingInterval)
+    : 0;
+
+  const bundleDiscounted = getDiscountedPrice(BUNDLE.monthlyPrice, billingInterval);
+  const bundleSuggested = selectedModules.length >= 3 && isBundleCheaper(selectedModules);
+  const bundleSavingsVsSelected = bundleSuggested
+    ? Math.round(selectedTotal - bundleDiscounted)
+    : 0;
+
+  // ─── Checkout handler ─────────────────────────────────────────────────────
+
+  const handleCheckout = async (type: "modules" | "bundle") => {
+    setLoadingCheckout(true);
     try {
       const supabase = getSupabaseClient();
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
       if (!session) {
-        window.location.href = `/login?redirect=/pricing&plan=${planId}`;
+        window.location.href = "/login?redirect=/pricing";
         return;
       }
+
+      const body =
+        type === "bundle"
+          ? { bundle: true, interval: billingInterval }
+          : { modules: selectedModules, interval: billingInterval };
 
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
@@ -233,7 +180,7 @@ export default function PricingPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ planId, interval: billingInterval }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
@@ -246,9 +193,11 @@ export default function PricingPage() {
     } catch {
       alert("Something went wrong. Please try again.");
     } finally {
-      setLoadingPlan(null);
+      setLoadingCheckout(false);
     }
   };
+
+  // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-obsidian">
@@ -293,17 +242,16 @@ export default function PricingPage() {
       <section className="py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Badge className="bg-neonblue/20 text-neonblue border-none mb-4">
-            Transparent per-seat pricing
+            Module-based pricing
           </Badge>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-platinum mb-4">
-            One platform. Every tool you need.
+            Simple, module-based pricing
           </h1>
           <p className="text-xl text-silver max-w-3xl mx-auto mb-4">
-            AI coaching, CRM, pipeline management, and outbound calling — all in one place.
-            Replace 3-4 tools and save thousands per rep.
+            Pick what you need. Bring your own AI keys. No hidden costs.
           </p>
           <p className="text-lg text-mist max-w-2xl mx-auto mb-10">
-            All plans include a 14-day free trial. No credit card required.
+            {TRIAL_DURATION_DAYS}-day trial with full access. No credit card required.
           </p>
 
           {/* Billing Interval Selector */}
@@ -331,153 +279,153 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Pricing Cards */}
-      <section className="pb-20">
+      {/* Free Tier Card */}
+      <section className="pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
-            {PRICING_PLANS.map((plan) => {
-              const Icon = plan.icon;
-              const isMailto = plan.ctaLink.startsWith("mailto:");
+          <Card className="bg-onyx border-gunmetal glow-card">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-automationgreen/20 flex items-center justify-center">
+                      <Gift className="w-5 h-5 text-automationgreen" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-platinum">Free Forever</h2>
+                      <p className="text-sm text-silver">
+                        Access every module with usage limits
+                      </p>
+                    </div>
+                  </div>
 
-              const effectivePrice = plan.monthlyPrice !== null && plan.monthlyPrice > 0
-                ? getDiscountedPrice(plan.monthlyPrice, billingInterval)
-                : plan.monthlyPrice;
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-4">
+                    {FREE_TIER_ITEMS.map((item) => (
+                      <div
+                        key={item.label}
+                        className="bg-graphite/50 border border-gunmetal rounded-lg p-3 text-center"
+                      >
+                        <p className="text-xl font-bold text-platinum">
+                          {item.limit}
+                        </p>
+                        <p className="text-xs text-mist mt-0.5">
+                          {item.label}
+                          {item.unit}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
 
-              const billingTotal = plan.monthlyPrice !== null && plan.monthlyPrice > 0
-                ? getBillingTotal(plan.monthlyPrice, billingInterval)
-                : null;
+                  <div className="mt-4 inline-flex items-center gap-2 bg-neonblue/10 border border-neonblue/20 rounded-lg px-3 py-1.5">
+                    <Sparkles className="w-4 h-4 text-neonblue" />
+                    <span className="text-sm text-neonblue font-medium">
+                      {TRIAL_DURATION_DAYS}-day trial with full access to all paid features
+                    </span>
+                  </div>
+                </div>
 
-              const yearlySavings = plan.monthlyPrice !== null && plan.monthlyPrice > 0
-                ? getSavingsPerYear(plan.monthlyPrice, billingInterval)
-                : 0;
+                <div className="flex flex-col items-center lg:items-end gap-3">
+                  <div className="text-center lg:text-right">
+                    <span className="text-4xl font-bold text-platinum">$0</span>
+                    <span className="text-silver ml-1">/mo</span>
+                  </div>
+                  <Link href="/signup">
+                    <Button className="bg-automationgreen hover:bg-automationgreen/90 px-8">
+                      Get Started Free
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
 
-              const showStrikethrough = billingInterval !== "monthly" && plan.monthlyPrice !== null && plan.monthlyPrice > 0;
+      {/* Module Cards */}
+      <section className="pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-platinum mb-2">
+              Pick your modules
+            </h2>
+            <p className="text-silver">
+              Select individual modules or grab the bundle below
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+            {ALL_MODULE_SLUGS.map((slug) => {
+              const mod = MODULES[slug];
+              const Icon = MODULE_ICONS[slug];
+              const colors = MODULE_COLORS[slug];
+              const selected = isModuleSelected(slug);
+              const discounted = getDiscountedPrice(mod.monthlyPrice, billingInterval);
+              const showStrikethrough = billingInterval !== "monthly";
 
               return (
                 <Card
-                  key={plan.id}
+                  key={slug}
+                  onClick={() => toggleModule(slug)}
                   className={cn(
-                    "relative bg-onyx border-gunmetal transition-all duration-300 hover:border-steel hover:shadow-lg hover:shadow-neonblue/5 flex flex-col",
-                    plan.popular ? "glow-card-visible border-neonblue ring-2 ring-neonblue/20 lg:scale-[1.03]" : "glow-card"
+                    "relative bg-onyx border-2 transition-all duration-200 cursor-pointer hover:shadow-lg flex flex-col",
+                    selected
+                      ? "border-neonblue ring-2 ring-neonblue/20 shadow-lg shadow-neonblue/10"
+                      : "border-gunmetal hover:border-steel glow-card"
                   )}
                 >
-                  {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                      <Badge className="bg-neonblue text-white border-none shadow-lg shadow-neonblue/30">
-                        Most Popular
-                      </Badge>
-                    </div>
-                  )}
+                  {/* Selection indicator */}
+                  <div
+                    className={cn(
+                      "absolute top-3 right-3 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all",
+                      selected
+                        ? "bg-neonblue border-neonblue"
+                        : "border-steel bg-transparent"
+                    )}
+                  >
+                    {selected && <Check className="w-4 h-4 text-white" />}
+                  </div>
 
-                  <CardHeader className="pb-4">
+                  <CardHeader className="pb-3 pr-10">
                     <div
                       className={cn(
-                        "w-12 h-12 rounded-xl flex items-center justify-center mb-4",
-                        plan.iconBg
+                        "w-10 h-10 rounded-xl flex items-center justify-center mb-3",
+                        colors.bg
                       )}
                     >
-                      <Icon className={cn("w-6 h-6", plan.iconColor)} />
+                      <Icon className={cn("w-5 h-5", colors.text)} />
                     </div>
-                    <CardTitle className="text-xl font-bold text-platinum">
-                      {plan.name}
+                    <CardTitle className="text-lg font-bold text-platinum">
+                      {mod.name}
                     </CardTitle>
-                    <p className="text-sm text-mist min-h-[2.5rem]">{plan.description}</p>
+                    <p className="text-xs text-mist">{mod.description}</p>
                   </CardHeader>
 
-                  <CardContent className="space-y-6 flex flex-col flex-1">
+                  <CardContent className="space-y-4 flex flex-col flex-1">
                     {/* Pricing */}
-                    <div className="min-h-[5rem]">
-                      {effectivePrice !== null ? (
-                        <div>
-                          <div className="flex items-baseline gap-2">
-                            {showStrikethrough && (
-                              <span className="text-xl text-mist line-through font-medium">
-                                ${plan.monthlyPrice}
-                              </span>
-                            )}
-                            <span className="text-4xl font-bold text-platinum">
-                              ${effectivePrice % 1 === 0 ? effectivePrice : effectivePrice.toFixed(2)}
-                            </span>
-                            <span className="text-silver">/user/mo</span>
-                          </div>
-                          {billingInterval === "quarterly" && billingTotal !== null && (
-                            <p className="text-sm text-neonblue mt-1 font-medium">
-                              Billed ${billingTotal.toFixed(2)}/user quarterly
-                            </p>
-                          )}
-                          {billingInterval === "yearly" && billingTotal !== null && (
-                            <p className="text-sm text-neonblue mt-1 font-medium">
-                              Billed ${billingTotal.toFixed(2)}/user/year
-                            </p>
-                          )}
-                          {yearlySavings > 0 && (
-                            <p className="text-xs text-automationgreen mt-1 font-semibold">
-                              Save ${yearlySavings.toFixed(0)}/user/year
-                            </p>
-                          )}
-                        </div>
-                      ) : (
-                        <div>
-                          <span className="text-4xl font-bold text-platinum">Custom</span>
-                          <p className="text-sm text-mist mt-1">
-                            Tailored to your organization
-                          </p>
-                        </div>
+                    <div>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-3xl font-bold text-platinum">
+                          ${discounted % 1 === 0 ? discounted : discounted.toFixed(2)}
+                        </span>
+                        <span className="text-sm text-silver">/mo</span>
+                      </div>
+                      {showStrikethrough && (
+                        <p className="text-sm text-mist mt-0.5">
+                          <span className="line-through">${mod.monthlyPrice}/mo</span>
+                        </p>
                       )}
+                      <p className="text-xs text-mist/60 mt-0.5">
+                        Was <span className="line-through">${mod.marketPrice}/mo</span>{" "}
+                        elsewhere
+                      </p>
                     </div>
 
-                    {/* CTA Button */}
-                    {isMailto ? (
-                      <a href={plan.ctaLink}>
-                        <Button
-                          className="w-full bg-automationgreen hover:bg-automationgreen/90"
-                        >
-                          {plan.cta}
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </Button>
-                      </a>
-                    ) : (
-                      <Button
-                        onClick={() => handleCheckout(plan.id)}
-                        disabled={loadingPlan === plan.id}
-                        className={cn(
-                          "w-full",
-                          plan.popular
-                            ? "bg-neonblue hover:bg-electricblue"
-                            : "bg-steel hover:bg-gunmetal"
-                        )}
-                      >
-                        {loadingPlan === plan.id ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Loading...
-                          </>
-                        ) : (
-                          <>
-                            {plan.cta}
-                            <ArrowRight className="w-4 h-4 ml-2" />
-                          </>
-                        )}
-                      </Button>
-                    )}
-
-                    {/* Features List */}
-                    <ul className="space-y-3 flex-1">
-                      {plan.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          {feature.included ? (
-                            <Check className="w-4 h-4 text-automationgreen flex-shrink-0 mt-0.5" />
-                          ) : (
-                            <X className="w-4 h-4 text-mist/50 flex-shrink-0 mt-0.5" />
-                          )}
-                          <span
-                            className={cn(
-                              "text-sm",
-                              feature.included ? "text-silver" : "text-mist/50"
-                            )}
-                          >
-                            {feature.text}
-                          </span>
+                    {/* Features */}
+                    <ul className="space-y-2 flex-1">
+                      {mod.features.map((feature, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <Check className="w-3.5 h-3.5 text-automationgreen flex-shrink-0 mt-0.5" />
+                          <span className="text-xs text-silver">{feature}</span>
                         </li>
                       ))}
                     </ul>
@@ -486,71 +434,158 @@ export default function PricingPage() {
               );
             })}
           </div>
-
-          {/* Savings comparison banner */}
-          {billingInterval !== "monthly" && (
-            <div className="mt-8 bg-gradient-to-r from-automationgreen/10 via-automationgreen/5 to-automationgreen/10 border border-automationgreen/20 rounded-xl p-6 text-center">
-              <p className="text-lg font-semibold text-platinum">
-                {billingInterval === "quarterly"
-                  ? "Quarterly billing saves 10% — that's $178/user/year on Professional!"
-                  : "Annual billing saves 20% — that's $358/user/year on Professional!"}
-              </p>
-              <p className="text-sm text-silver mt-1">
-                {billingInterval === "quarterly"
-                  ? "Pay every 3 months at a lower rate. Switch to yearly anytime for even more savings."
-                  : "Best value. Lock in the lowest price for a full year. Cancel anytime."}
-              </p>
-            </div>
-          )}
         </div>
       </section>
 
-      {/* What's Included Section */}
-      <section className="py-20 border-t border-gunmetal">
+      {/* Bundle Card */}
+      <section className="pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <Card className="relative bg-onyx border-2 border-neonblue glow-card-visible ring-2 ring-neonblue/20">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+              <Badge className="bg-neonblue text-white border-none shadow-lg shadow-neonblue/30 text-sm px-3 py-1">
+                Best Value
+              </Badge>
+            </div>
+
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
+                {/* Left: info */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-neonblue/20 flex items-center justify-center">
+                      <Package className="w-5 h-5 text-neonblue" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-platinum">
+                      {BUNDLE.name}
+                    </h2>
+                  </div>
+                  <p className="text-silver mb-6">{BUNDLE.description}</p>
+
+                  {/* All features grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-1.5">
+                    {ALL_MODULE_SLUGS.map((slug) => {
+                      const mod = MODULES[slug];
+                      const Icon = MODULE_ICONS[slug];
+                      const colors = MODULE_COLORS[slug];
+                      return (
+                        <div key={slug}>
+                          <div className="flex items-center gap-2 mt-3 mb-1.5">
+                            <Icon className={cn("w-4 h-4", colors.text)} />
+                            <span className="text-sm font-semibold text-platinum">
+                              {mod.name}
+                            </span>
+                          </div>
+                          {mod.features.map((f, i) => (
+                            <div
+                              key={i}
+                              className="flex items-start gap-2 py-0.5"
+                            >
+                              <Check className="w-3 h-3 text-automationgreen flex-shrink-0 mt-0.5" />
+                              <span className="text-xs text-silver">{f}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Right: price + CTA */}
+                <div className="flex flex-col items-center lg:items-end gap-4 lg:min-w-[200px]">
+                  <div className="text-center lg:text-right">
+                    <p className="text-sm text-mist mb-1">
+                      <span className="line-through">
+                        ${BUNDLE.individualTotal}/mo
+                      </span>
+                      <span className="ml-2 text-automationgreen font-semibold">
+                        Save {BUNDLE.savings}%
+                      </span>
+                    </p>
+                    <div className="flex items-baseline gap-1.5 justify-center lg:justify-end">
+                      <span className="text-4xl font-bold text-platinum">
+                        ${getDiscountedPrice(BUNDLE.monthlyPrice, billingInterval) % 1 === 0
+                          ? getDiscountedPrice(BUNDLE.monthlyPrice, billingInterval)
+                          : getDiscountedPrice(BUNDLE.monthlyPrice, billingInterval).toFixed(2)}
+                      </span>
+                      <span className="text-silver">/mo</span>
+                    </div>
+                    {billingInterval !== "monthly" && (
+                      <p className="text-xs text-mist mt-1">
+                        Was ${BUNDLE.monthlyPrice}/mo at monthly rate
+                      </p>
+                    )}
+                    {billingInterval !== "monthly" && (
+                      <p className="text-xs text-automationgreen font-semibold mt-0.5">
+                        Save ${getYearlySavings(BUNDLE.monthlyPrice, billingInterval).toFixed(0)}/year
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    onClick={() => handleCheckout("bundle")}
+                    disabled={loadingCheckout}
+                    className="bg-neonblue hover:bg-electricblue px-8 w-full lg:w-auto"
+                    size="lg"
+                  >
+                    {loadingCheckout ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        Get Bundle
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* BYOAPI Section */}
+      <section className="py-20 border-t border-gunmetal">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <div className="w-14 h-14 rounded-2xl bg-warningamber/20 flex items-center justify-center mx-auto mb-4">
+              <Key className="w-7 h-7 text-warningamber" />
+            </div>
             <h2 className="text-3xl font-bold text-platinum mb-3">
-              Everything you need to close more deals
+              Bring Your Own API Keys
             </h2>
-            <p className="text-lg text-silver">
-              Built-in tools that replace your entire sales tech stack
+            <p className="text-lg text-silver max-w-2xl mx-auto">
+              You provide AI keys (OpenAI, Anthropic). We handle infrastructure.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="bg-onyx border border-gunmetal rounded-xl p-6 text-center">
-              <div className="w-12 h-12 rounded-xl bg-neonblue/20 flex items-center justify-center mx-auto mb-4">
-                <Brain className="w-6 h-6 text-neonblue" />
+              <div className="w-10 h-10 rounded-lg bg-neonblue/20 flex items-center justify-center mx-auto mb-3">
+                <Key className="w-5 h-5 text-neonblue" />
               </div>
-              <h3 className="text-lg font-semibold text-platinum mb-2">AI Sales Coaching</h3>
+              <h3 className="text-lg font-semibold text-platinum mb-2">Your Keys</h3>
               <p className="text-sm text-silver">
-                Practice with AI personas, get real-time feedback, objection handling, and voice roleplay with GPT-4o.
+                Connect your OpenAI, Anthropic, or Google API keys in settings. Use your own accounts.
               </p>
             </div>
             <div className="bg-onyx border border-gunmetal rounded-xl p-6 text-center">
-              <div className="w-12 h-12 rounded-xl bg-warningamber/20 flex items-center justify-center mx-auto mb-4">
-                <BarChart3 className="w-6 h-6 text-warningamber" />
+              <div className="w-10 h-10 rounded-lg bg-automationgreen/20 flex items-center justify-center mx-auto mb-3">
+                <Sparkles className="w-5 h-5 text-automationgreen" />
               </div>
-              <h3 className="text-lg font-semibold text-platinum mb-2">CRM & Pipeline</h3>
+              <h3 className="text-lg font-semibold text-platinum mb-2">Our Platform</h3>
               <p className="text-sm text-silver">
-                Full CRM with drag-and-drop pipeline, contact enrichment, deal forecasting, and webhook integrations.
+                We orchestrate AI calls, manage agents, handle CRM, analytics, and all infrastructure.
               </p>
             </div>
             <div className="bg-onyx border border-gunmetal rounded-xl p-6 text-center">
-              <div className="w-12 h-12 rounded-xl bg-automationgreen/20 flex items-center justify-center mx-auto mb-4">
-                <Phone className="w-6 h-6 text-automationgreen" />
+              <div className="w-10 h-10 rounded-lg bg-warningamber/20 flex items-center justify-center mx-auto mb-3">
+                <Check className="w-5 h-5 text-warningamber" />
               </div>
-              <h3 className="text-lg font-semibold text-platinum mb-2">AI Outbound Calling</h3>
+              <h3 className="text-lg font-semibold text-platinum mb-2">No Markup</h3>
               <p className="text-sm text-silver">
-                Build AI agents that make outbound calls, qualify leads, book meetings, and log everything to your CRM.
-              </p>
-            </div>
-            <div className="bg-onyx border border-gunmetal rounded-xl p-6 text-center">
-              <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mx-auto mb-4">
-                <Shield className="w-6 h-6 text-purple-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-platinum mb-2">25+ AI Models</h3>
-              <p className="text-sm text-silver">
-                Access GPT-5.2, Claude Opus 4.5, Gemini 3, Llama 4, and more. Pick the best model for each task.
+                Zero markup on AI usage. You pay providers directly at their published rates.
               </p>
             </div>
           </div>
@@ -565,7 +600,7 @@ export default function PricingPage() {
               How we compare
             </h2>
             <p className="text-lg text-silver">
-              QuotaHit combines coaching, CRM, and calling — replacing multiple tools at a fraction of the cost
+              QuotaHit combines coaching, CRM, and calling -- replacing multiple tools at a fraction of the cost
             </p>
           </div>
 
@@ -576,11 +611,13 @@ export default function PricingPage() {
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-neonblue to-electricblue flex items-center justify-center">
                   <Sparkles className="w-4 h-4 text-white" />
                 </div>
-                <span className="font-semibold text-platinum">QuotaHit Professional</span>
+                <span className="font-semibold text-platinum">QuotaHit Bundle</span>
               </div>
               <div className="text-right">
-                <span className="text-lg font-bold text-neonblue">$149/user/mo</span>
-                <p className="text-xs text-silver">Coaching + CRM + AI models included</p>
+                <span className="text-lg font-bold text-neonblue">
+                  ${BUNDLE.monthlyPrice}/mo
+                </span>
+                <p className="text-xs text-silver">All 5 modules included</p>
               </div>
             </div>
 
@@ -614,16 +651,30 @@ export default function PricingPage() {
           <h2 className="text-3xl font-bold text-platinum text-center mb-12">
             Frequently Asked Questions
           </h2>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {FAQ_ITEMS.map((faq, idx) => (
               <div
                 key={idx}
-                className="bg-onyx border border-gunmetal rounded-lg p-6"
+                className="bg-onyx border border-gunmetal rounded-lg overflow-hidden"
               >
-                <h3 className="text-lg font-semibold text-platinum mb-2">
-                  {faq.q}
-                </h3>
-                <p className="text-sm text-silver leading-relaxed">{faq.a}</p>
+                <button
+                  onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
+                  className="w-full flex items-center justify-between p-5 text-left"
+                >
+                  <h3 className="text-lg font-semibold text-platinum pr-4">
+                    {faq.q}
+                  </h3>
+                  {expandedFaq === idx ? (
+                    <ChevronUp className="w-5 h-5 text-mist flex-shrink-0" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-mist flex-shrink-0" />
+                  )}
+                </button>
+                {expandedFaq === idx && (
+                  <div className="px-5 pb-5 -mt-1">
+                    <p className="text-sm text-silver leading-relaxed">{faq.a}</p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -640,7 +691,7 @@ export default function PricingPage() {
             Join sales teams using QuotaHit to coach reps, manage pipeline, and close deals faster with AI.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/signup?plan=professional">
+            <Link href="/signup">
               <Button
                 size="lg"
                 className="bg-neonblue hover:bg-electricblue text-lg px-8"
@@ -660,7 +711,7 @@ export default function PricingPage() {
             </a>
           </div>
           <p className="text-sm text-mist mt-6">
-            14-day free trial. No credit card required. Cancel anytime.
+            {TRIAL_DURATION_DAYS}-day free trial. No credit card required. Cancel anytime.
           </p>
         </div>
       </section>
@@ -681,6 +732,103 @@ export default function PricingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Sticky Cart Bar */}
+      {selectedModules.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-graphite/95 backdrop-blur-md border-t border-gunmetal shadow-2xl shadow-black/50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16 sm:h-18 gap-4">
+              {/* Left: selection info */}
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-neonblue/20 flex items-center justify-center">
+                    <span className="text-sm font-bold text-neonblue">
+                      {selectedModules.length}
+                    </span>
+                  </div>
+                  <span className="text-sm text-silver hidden sm:inline">
+                    module{selectedModules.length !== 1 ? "s" : ""} selected
+                  </span>
+                </div>
+
+                {/* Selected module pills */}
+                <div className="hidden md:flex items-center gap-1.5 min-w-0 overflow-x-auto">
+                  {selectedModules.map((slug) => {
+                    const Icon = MODULE_ICONS[slug];
+                    const colors = MODULE_COLORS[slug];
+                    return (
+                      <button
+                        key={slug}
+                        onClick={() => toggleModule(slug)}
+                        className="flex items-center gap-1.5 bg-onyx border border-gunmetal rounded-full px-2.5 py-1 text-xs text-silver hover:border-red-500/50 hover:text-red-400 transition-colors flex-shrink-0 group"
+                      >
+                        <Icon className={cn("w-3 h-3", colors.text)} />
+                        <span>{MODULES[slug].name}</span>
+                        <X className="w-3 h-3 text-mist group-hover:text-red-400" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Right: price + actions */}
+              <div className="flex items-center gap-4 flex-shrink-0">
+                {/* Bundle suggestion */}
+                {bundleSuggested && (
+                  <button
+                    onClick={() => handleCheckout("bundle")}
+                    className="hidden lg:flex items-center gap-2 bg-automationgreen/10 border border-automationgreen/30 rounded-lg px-3 py-1.5 text-xs text-automationgreen hover:bg-automationgreen/20 transition-colors"
+                  >
+                    <Package className="w-3.5 h-3.5" />
+                    <span>
+                      Switch to bundle and save ${bundleSavingsVsSelected}/mo
+                    </span>
+                  </button>
+                )}
+
+                {/* Total price */}
+                <div className="text-right">
+                  <span className="text-xl sm:text-2xl font-bold text-platinum">
+                    ${selectedTotal % 1 === 0 ? selectedTotal : selectedTotal.toFixed(2)}
+                  </span>
+                  <span className="text-sm text-silver">/mo</span>
+                </div>
+
+                {/* Subscribe button */}
+                <Button
+                  onClick={() => handleCheckout("modules")}
+                  disabled={loadingCheckout}
+                  className="bg-neonblue hover:bg-electricblue px-6"
+                >
+                  {loadingCheckout ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Subscribe"
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* Bundle suggestion on mobile when applicable */}
+            {bundleSuggested && (
+              <div className="lg:hidden pb-3 -mt-1">
+                <button
+                  onClick={() => handleCheckout("bundle")}
+                  className="w-full flex items-center justify-center gap-2 bg-automationgreen/10 border border-automationgreen/30 rounded-lg px-3 py-2 text-xs text-automationgreen hover:bg-automationgreen/20 transition-colors"
+                >
+                  <Package className="w-3.5 h-3.5" />
+                  <span>
+                    Switch to bundle and save ${bundleSavingsVsSelected}/mo
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

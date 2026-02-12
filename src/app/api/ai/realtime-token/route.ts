@@ -3,19 +3,53 @@
  *
  * Generates ephemeral tokens for OpenAI Realtime API connections.
  * Uses the GA (General Availability) client_secrets endpoint.
+ * Includes usage tracking and BYOAPI key resolution.
  */
 
 import { NextResponse } from "next/server";
 import { processAttachmentsForContext, type Attachment } from "@/lib/ai/attachments";
-import { checkCredits, deductCredits } from "@/lib/credits";
+import { checkUsage, incrementUsage } from "@/lib/usage";
+import { resolveUserKeys } from "@/lib/ai/key-resolver";
+import { createClient } from "@supabase/supabase-js";
 
 // GA model for Realtime API
 const REALTIME_MODEL = "gpt-4o-realtime-preview-2024-12-17";
 
 export async function POST(request: Request) {
-  const apiKey = process.env.OPENAI_API_KEY;
+  // Resolve API key — prefer user's own key, then platform key
+  let openaiKey = process.env.OPENAI_API_KEY;
 
-  if (!apiKey) {
+  // Authenticate user and check usage if auth header present
+  const authHeader = request.headers.get("authorization");
+  let userId: string | null = null;
+
+  if (authHeader?.startsWith("Bearer ")) {
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    const { data: { user } } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+    if (user) {
+      userId = user.id;
+
+      // Check usage
+      const usageCheck = await checkUsage(userId, "coaching_sessions");
+      if (!usageCheck.allowed) {
+        return NextResponse.json(
+          { error: usageCheck.error, code: "USAGE_LIMIT_REACHED" },
+          { status: 402 }
+        );
+      }
+
+      // Resolve user API keys — use user's OpenAI key if available
+      const userKeys = await resolveUserKeys(userId);
+      if (userKeys.openai) {
+        openaiKey = userKeys.openai;
+      }
+
+      // Increment usage upfront for the session
+      await incrementUsage(userId, "coaching_sessions");
+    }
+  }
+
+  if (!openaiKey) {
     return NextResponse.json(
       { error: "OpenAI API key not configured. Please add OPENAI_API_KEY to your .env.local file." },
       { status: 500 }
@@ -23,7 +57,7 @@ export async function POST(request: Request) {
   }
 
   // Check if API key format is valid (OpenAI keys start with 'sk-proj-' or 'sk-')
-  if (apiKey.startsWith('sk-ant-')) {
+  if (openaiKey.startsWith('sk-ant-')) {
     return NextResponse.json(
       {
         error: "Invalid OpenAI API key detected. The OPENAI_API_KEY is currently set to a Claude API key. Please update it with a real OpenAI key from https://platform.openai.com/api-keys",
@@ -31,22 +65,6 @@ export async function POST(request: Request) {
       },
       { status: 401 }
     );
-  }
-
-  // Credit check - require at least 1 credit to start voice session
-  const authHeader = request.headers.get("authorization");
-  if (authHeader) {
-    const creditCheck = await checkCredits(authHeader, 1);
-    if (!creditCheck.hasCredits) {
-      return NextResponse.json(
-        { error: "Insufficient credits. Voice practice costs 1 credit per minute.", credits: creditCheck.credits },
-        { status: 402 }
-      );
-    }
-    // Deduct 1 credit upfront for the first minute
-    if (creditCheck.userId) {
-      await deductCredits(creditCheck.userId, 1);
-    }
   }
 
   try {
@@ -114,7 +132,7 @@ export async function POST(request: Request) {
     const response = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
+        "Authorization": `Bearer ${openaiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(sessionConfig),
@@ -127,7 +145,7 @@ export async function POST(request: Request) {
       // Fall back to direct API key if endpoint fails
       console.log("[Realtime Token] Falling back to direct API key");
       return NextResponse.json({
-        token: apiKey,
+        token: openaiKey,
         type: "api_key",
         model: REALTIME_MODEL
       });
@@ -138,7 +156,7 @@ export async function POST(request: Request) {
 
     // The GA client_secrets endpoint returns { value: "ek_...", expires_at: ..., session: {...} }
     return NextResponse.json({
-      token: data.value || apiKey,
+      token: data.value || openaiKey,
       type: data.value ? "ephemeral" : "api_key",
       expiresAt: data.expires_at,
       model: REALTIME_MODEL,
@@ -148,7 +166,7 @@ export async function POST(request: Request) {
     console.error("[Realtime Token] Error:", error);
     // Fall back to direct API key on any error
     return NextResponse.json({
-      token: apiKey,
+      token: openaiKey,
       type: "api_key",
       model: REALTIME_MODEL
     });

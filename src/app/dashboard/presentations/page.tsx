@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { getAuthToken, useCredits } from "@/hooks/useCredits";
+import { getAuthToken } from "@/lib/auth-token";
 import { saveSession } from "@/lib/session-history";
 import { exportToPDF } from "@/lib/export-pdf";
 import ReactMarkdown from "react-markdown";
@@ -128,8 +128,6 @@ export default function PresentationsPage() {
   // Refs
   const responseRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-
-  const { refetch: refetchCredits } = useCredits();
 
   // Cleanup on unmount
   useEffect(() => {
@@ -280,7 +278,7 @@ Format the output in clean markdown. Use ## for slide titles, bullet points for 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         if (res.status === 402) {
-          throw new Error("Out of credits! Request more credits to continue.");
+          throw new Error("Usage limit reached. Upgrade your plan to continue.");
         }
         throw new Error(
           errorData.details || errorData.error || `Request failed with status ${res.status}`
@@ -330,7 +328,6 @@ Format the output in clean markdown. Use ## for slide titles, bullet points for 
         output: fullText,
       });
 
-      refetchCredits();
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") return;
       const errorMessage = err instanceof Error ? err.message : "Unknown error";

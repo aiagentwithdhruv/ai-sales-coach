@@ -2,7 +2,7 @@
  * AI Coach API Route
  *
  * Handles objection handling requests with model selection and attachments.
- * Includes credit checking for usage limiting.
+ * Includes usage tracking and BYOAPI key resolution.
  */
 
 import { streamText } from "ai";
@@ -12,8 +12,10 @@ import {
   QUICK_COACH_PROMPT,
   generateObjectionPrompt,
 } from "@/lib/ai/prompts/coaching";
-import { checkCredits, deductCredits } from "@/lib/credits";
+import { checkUsage, incrementUsage } from "@/lib/usage";
+import { resolveUserKeys } from "@/lib/ai/key-resolver";
 import { processAttachmentsForContext, type Attachment } from "@/lib/ai/attachments";
+import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -21,16 +23,25 @@ export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
-    // Check credits first
+    // Authenticate user
     const authHeader = req.headers.get("authorization");
-    const creditCheck = await checkCredits(authHeader, 1);
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
+    }
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Invalid token" }), { status: 401, headers: { "Content-Type": "application/json" } });
+    }
+    const userId = user.id;
 
-    if (!creditCheck.hasCredits) {
+    // Check usage
+    const usageCheck = await checkUsage(userId, "coaching_sessions");
+    if (!usageCheck.allowed) {
       return new Response(
         JSON.stringify({
-          error: creditCheck.error || "Insufficient credits",
-          credits: creditCheck.credits,
-          code: "INSUFFICIENT_CREDITS",
+          error: usageCheck.error,
+          code: "USAGE_LIMIT_REACHED",
         }),
         { status: 402, headers: { "Content-Type": "application/json" } }
       );
@@ -97,24 +108,14 @@ export async function POST(req: Request) {
       userMessage = `${userMessage}\n\n--- COMPANY/CONTEXT INFORMATION ---${attachmentContext}\n\nUse this context to provide more relevant and specific objection handling advice.`;
     }
 
-    // Deduct credit before making the AI call
-    if (creditCheck.userId) {
-      const deductResult = await deductCredits(creditCheck.userId, 1);
-      if (!deductResult.success) {
-        return new Response(
-          JSON.stringify({
-            error: "Failed to deduct credits",
-            code: "CREDIT_DEDUCT_FAILED",
-          }),
-          { status: 500, headers: { "Content-Type": "application/json" } }
-        );
-      }
-    }
+    // Increment usage before making the AI call
+    await incrementUsage(userId, "coaching_sessions");
 
-    // Get the model - smart selection based on model ID format
+    // Resolve user API keys and get the model
+    const userKeys = await resolveUserKeys(userId);
     const model = modelId
-      ? getModelByIdSmart(modelId)
-      : getLanguageModel();
+      ? getModelByIdSmart(modelId, userKeys)
+      : getLanguageModel(undefined, userKeys);
 
     // Moonshot API only accepts temperature 0 or 1
     const isMoonshot = modelId?.startsWith("kimi-");

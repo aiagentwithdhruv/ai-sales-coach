@@ -3,17 +3,16 @@
  *
  * Accepts audio/video recordings and returns a coaching report.
  * Transcribes with OpenAI and analyzes with a best-available model.
+ * Includes usage tracking and BYOAPI key resolution.
  */
 
 import OpenAI from "openai";
-import { checkCredits, deductCredits } from "@/lib/credits";
+import { checkUsage, incrementUsage } from "@/lib/usage";
+import { resolveUserKeys } from "@/lib/ai/key-resolver";
+import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 type AnalysisResponse = {
   summary: string;
@@ -67,17 +66,33 @@ function coerceAnalysis(jsonText: string): AnalysisResponse {
 }
 
 export async function POST(req: Request) {
-  // Credit check - call analysis is expensive (transcription + GPT-4.1), costs 3 credits
+  // Authenticate user
   const authHeader = req.headers.get("authorization");
-  const creditCheck = await checkCredits(authHeader, 3);
-  if (!creditCheck.hasCredits) {
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
+  }
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+  if (authError || !user) {
+    return new Response(JSON.stringify({ error: "Invalid token" }), { status: 401, headers: { "Content-Type": "application/json" } });
+  }
+  const userId = user.id;
+
+  // Check usage
+  const usageCheck = await checkUsage(userId, "analyses_run");
+  if (!usageCheck.allowed) {
     return new Response(
-      JSON.stringify({ error: "Insufficient credits. Call analysis costs 3 credits.", credits: creditCheck.credits }),
+      JSON.stringify({ error: usageCheck.error, code: "USAGE_LIMIT_REACHED" }),
       { status: 402, headers: { "Content-Type": "application/json" } }
     );
   }
 
   try {
+    // Resolve user API keys for OpenAI
+    const userKeys = await resolveUserKeys(userId);
+    const openai = new OpenAI({
+      apiKey: userKeys.openai || process.env.OPENAI_API_KEY,
+    });
     const formData = await req.formData();
     const fileBlob = formData.get("file");
 
@@ -145,13 +160,8 @@ export async function POST(req: Request) {
     const raw = completion.choices[0]?.message?.content || "{}";
     const analysis = coerceAnalysis(raw);
 
-    // Deduct 3 credits after successful analysis
-    if (creditCheck.userId) {
-      const deductResult = await deductCredits(creditCheck.userId, 3);
-      if (!deductResult.success) {
-        console.warn("[Call Analyze] Credit deduction failed:", deductResult.error);
-      }
-    }
+    // Increment usage after successful analysis
+    await incrementUsage(userId, "analyses_run");
 
     return new Response(
       JSON.stringify({

@@ -18,7 +18,6 @@ import {
   FileText,
   Globe,
   Image as ImageIcon,
-  Coins,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -65,10 +64,7 @@ export function RealtimeVoiceChat({
   const [currentAIText, setCurrentAIText] = useState("");
   const [coachMode, setCoachMode] = useState(false);
   const [authToken, setAuthToken] = useState<string>("");
-  const [callMinutes, setCallMinutes] = useState(0);
-  const [creditError, setCreditError] = useState<string | null>(null);
   const messageIdRef = useRef(0);
-  const creditTimerRef = useRef<NodeJS.Timeout | null>(null);
   const supabase = getSupabaseClient();
 
   // Get auth token on mount
@@ -178,49 +174,6 @@ CRITICAL VOICE CALL RULES:
     }
   }, [scriptText]);
 
-  // Per-minute credit deduction timer
-  useEffect(() => {
-    if (isConnected && authToken) {
-      // Start a 60-second interval to deduct 1 credit per minute
-      // (first minute already deducted by the token API)
-      creditTimerRef.current = setInterval(async () => {
-        try {
-          const res = await fetch("/api/credits/deduct", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${authToken}`,
-            },
-            body: JSON.stringify({ amount: 1 }),
-          });
-          const data = await res.json();
-          if (res.status === 402 || data.error === "Insufficient credits") {
-            // Out of credits - auto disconnect
-            setCreditError("Credits exhausted. Call ended automatically.");
-            disconnect();
-            return;
-          }
-          setCallMinutes(prev => prev + 1);
-        } catch (err) {
-          console.error("[Credits] Per-minute deduction failed:", err);
-        }
-      }, 60000);
-
-      return () => {
-        if (creditTimerRef.current) {
-          clearInterval(creditTimerRef.current);
-          creditTimerRef.current = null;
-        }
-      };
-    } else {
-      // Clear timer when disconnected
-      if (creditTimerRef.current) {
-        clearInterval(creditTimerRef.current);
-        creditTimerRef.current = null;
-      }
-    }
-  }, [isConnected, authToken, disconnect]);
-
   // Auto-scroll
   useEffect(() => {
     if (scrollRef.current) {
@@ -229,16 +182,10 @@ CRITICAL VOICE CALL RULES:
   }, [messages, currentUserText, currentAIText]);
 
   const handleStartCall = async () => {
-    setCreditError(null);
-    setCallMinutes(0);
     await connect();
   };
 
   const handleEndCall = () => {
-    if (creditTimerRef.current) {
-      clearInterval(creditTimerRef.current);
-      creditTimerRef.current = null;
-    }
     disconnect();
   };
 
@@ -278,15 +225,9 @@ CRITICAL VOICE CALL RULES:
                   {persona.difficulty}
                 </Badge>
                 {isConnected && (
-                  <>
-                    <Badge className="text-xs bg-automationgreen/20 text-automationgreen animate-pulse">
-                      LIVE
-                    </Badge>
-                    <Badge className="text-xs bg-warningamber/20 text-warningamber">
-                      <Coins className="h-3 w-3 mr-1" />
-                      {callMinutes + 1}m
-                    </Badge>
-                  </>
+                  <Badge className="text-xs bg-automationgreen/20 text-automationgreen animate-pulse">
+                    LIVE
+                  </Badge>
                 )}
               </CardTitle>
               <p className="text-xs text-mist">
@@ -384,17 +325,12 @@ CRITICAL VOICE CALL RULES:
 
       {/* Call Controls */}
       <div className="border-t border-gunmetal p-4 flex-shrink-0">
-        {(error || creditError) && (
+        {error && (
           <div className="mb-3 p-3 bg-errorred/10 border border-errorred/30 rounded-lg">
-            <p className="text-xs text-errorred text-center font-medium">{creditError || error}</p>
+            <p className="text-xs text-errorred text-center font-medium">{error}</p>
             {error?.includes('Claude API key') && (
               <p className="text-[10px] text-mist text-center mt-1">
                 Get your OpenAI API key at: https://platform.openai.com/api-keys
-              </p>
-            )}
-            {creditError && (
-              <p className="text-[10px] text-warningamber text-center mt-1">
-                Purchase more credits to continue practicing.
               </p>
             )}
           </div>

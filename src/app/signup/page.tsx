@@ -13,6 +13,7 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 export default function SignUpPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -50,6 +51,7 @@ export default function SignUpPage() {
       options: {
         data: {
           full_name: fullName,
+          phone: phoneNumber || undefined,
         },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
@@ -210,6 +212,21 @@ export default function SignUpPage() {
                 </div>
 
                 <div className="space-y-2">
+                  <label className="text-sm text-silver">Phone Number (optional)</label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-mist" />
+                    <Input
+                      type="tel"
+                      placeholder="+91 98765 43210"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      className="pl-10 bg-onyx border-gunmetal text-platinum placeholder:text-mist focus:border-neonblue"
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
                   <label className="text-sm text-silver">Password</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-mist" />
@@ -306,7 +323,7 @@ export default function SignUpPage() {
           <div className="w-px h-3 bg-gunmetal" />
           <div className="flex items-center gap-1.5">
             <Sparkles className="h-3.5 w-3.5 text-warningamber" />
-            <span className="text-xs">5 Free Credits</span>
+            <span className="text-xs">Free Trial</span>
           </div>
         </div>
       </div>

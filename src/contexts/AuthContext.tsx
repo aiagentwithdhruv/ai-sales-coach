@@ -21,6 +21,8 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  signInWithPhone: (phone: string) => Promise<{ error: Error | null }>;
+  verifyOTP: (phone: string, otp: string) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -131,6 +133,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [supabase.auth]
   );
 
+  const signInWithPhone = useCallback(async (phone: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithOtp({ phone });
+      if (error) throw error;
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  }, [supabase.auth]);
+
+  const verifyOTP = useCallback(async (phone: string, otp: string) => {
+    try {
+      const { error } = await supabase.auth.verifyOtp({ phone, token: otp, type: 'sms' });
+      if (error) throw error;
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  }, [supabase.auth]);
+
   return (
     <AuthContext.Provider
       value={{
@@ -142,6 +164,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signOut,
         signInWithGoogle,
         resetPassword,
+        signInWithPhone,
+        verifyOTP,
       }}
     >
       {children}

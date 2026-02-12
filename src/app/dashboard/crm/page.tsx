@@ -48,7 +48,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { getAuthToken } from "@/hooks/useCredits";
+import { getAuthToken } from "@/lib/auth-token";
 
 function formatCurrency(value: number): string {
   if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;

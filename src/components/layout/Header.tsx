@@ -3,11 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Bell, Sparkles, ChevronDown, LogOut, Settings, User, Keyboard, Coins, Menu } from "lucide-react";
+import { Search, Bell, Sparkles, ChevronDown, LogOut, Settings, User, Keyboard, Menu } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useCredits } from "@/hooks/useCredits";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,7 +39,6 @@ export function Header({ user, onMobileMenuToggle, sidebarExpanded = true, onSid
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
   const router = useRouter();
   const supabase = getSupabaseClient();
-  const { credits, isLoading: creditsLoading, hasCredits } = useCredits();
 
   // Get user from Supabase auth only
   useEffect(() => {
@@ -136,21 +134,6 @@ export function Header({ user, onMobileMenuToggle, sidebarExpanded = true, onSid
 
         {/* Right Side Actions */}
         <div className="flex items-center space-x-2 md:space-x-4">
-          {/* Credits Badge */}
-          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${
-            creditsLoading
-              ? "bg-neonblue/10 text-neonblue"
-              : hasCredits
-                ? "bg-successgreen/10 text-successgreen"
-                : "bg-errorred/10 text-errorred"
-          }`}>
-            <Coins className="h-4 w-4" />
-            <span className="text-sm font-medium">
-              {creditsLoading ? "..." : credits}
-            </span>
-            <span className="text-xs opacity-70 hidden sm:inline">credits</span>
-          </div>
-
           {/* AI Coach Button */}
           <Link href="/dashboard/coach">
             <Button className="bg-neonblue hover:bg-electricblue text-white gap-2 glow-blue">
