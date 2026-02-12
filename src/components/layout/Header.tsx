@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Bell, Sparkles, ChevronDown, LogOut, Settings, User, Keyboard, Menu } from "lucide-react";
+import { Search, Bell, Sparkles, ChevronDown, LogOut, Settings, User, Keyboard, Menu, Shield } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,6 +30,14 @@ interface HeaderProps {
   sidebarExpanded?: boolean;
   onSidebarToggle?: () => void;
 }
+
+// Admin emails — keep in sync with api/admin/impersonate/route.ts
+const ADMIN_EMAILS = [
+  "aiwithdhruv@gmail.com",
+  "dhruv@aiwithdruv.com",
+  "admin@aiwithdruv.com",
+  "dhruvtomar7008@gmail.com",
+];
 
 export function Header({ user, onMobileMenuToggle, sidebarExpanded = true, onSidebarToggle }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -78,14 +86,16 @@ export function Header({ user, onMobileMenuToggle, sidebarExpanded = true, onSid
     router.refresh();
   };
 
+  const isAdmin = ADMIN_EMAILS.includes(profileEmail);
+
   const defaultUser = {
     name: profileName,
     email: profileEmail,
     avatar: profileAvatar,
-    role: "sales_rep" as const,
+    role: isAdmin ? "admin" as const : "sales_rep" as const,
   };
 
-  const currentUser = user || defaultUser;
+  const currentUser = user?.role === "admin" ? user : (isAdmin ? { ...defaultUser, role: "admin" as const } : (user || defaultUser));
 
   const getInitials = (name: string) => {
     return name
@@ -236,6 +246,17 @@ export function Header({ user, onMobileMenuToggle, sidebarExpanded = true, onSid
                 <Keyboard className="h-4 w-4 mr-2" />
                 Keyboard Shortcuts
               </DropdownMenuItem>
+              {currentUser.role === "admin" && (
+                <>
+                  <DropdownMenuSeparator className="bg-gunmetal" />
+                  <Link href="/admin">
+                    <DropdownMenuItem className="text-warningamber hover:text-warningamber hover:bg-warningamber/10 focus:bg-warningamber/10 focus:text-warningamber cursor-pointer">
+                      <Shield className="h-4 w-4 mr-2" />
+                      Admin Dashboard
+                    </DropdownMenuItem>
+                  </Link>
+                </>
+              )}
               <DropdownMenuSeparator className="bg-gunmetal" />
               <DropdownMenuItem
                 onClick={handleSignOut}

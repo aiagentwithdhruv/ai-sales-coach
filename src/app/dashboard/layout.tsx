@@ -50,6 +50,14 @@ class DashboardErrorBoundary extends React.Component<
   }
 }
 
+// Admin emails — keep in sync with api/admin/impersonate/route.ts
+const ADMIN_EMAILS = [
+  "aiwithdhruv@gmail.com",
+  "dhruv@aiwithdruv.com",
+  "admin@aiwithdruv.com",
+  "dhruvtomar7008@gmail.com",
+];
+
 export default function DashboardRootLayout({
   children,
 }: {
@@ -91,11 +99,12 @@ export default function DashboardRootLayout({
           : null;
 
         if (session?.user) {
+          const email = session.user.email || "";
           setUser({
-            name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "User",
-            email: session.user.email || "",
+            name: session.user.user_metadata?.full_name || email.split("@")[0] || "User",
+            email,
             avatar: session.user.user_metadata?.avatar_url,
-            role: "sales_rep",
+            role: ADMIN_EMAILS.includes(email) ? "admin" : "sales_rep",
           });
           return;
         }
@@ -120,11 +129,12 @@ export default function DashboardRootLayout({
       (_event: string, session: { user: { user_metadata?: Record<string, string>; email?: string } } | null) => {
         if (!mounted) return;
         if (session?.user) {
+          const email = session.user.email || "";
           setUser({
-            name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "User",
-            email: session.user.email || "",
+            name: session.user.user_metadata?.full_name || email.split("@")[0] || "User",
+            email,
             avatar: session.user.user_metadata?.avatar_url,
-            role: "sales_rep",
+            role: ADMIN_EMAILS.includes(email) ? "admin" : "sales_rep",
           });
         } else if (!redirectingRef.current) {
           redirectingRef.current = true;
@@ -142,7 +152,7 @@ export default function DashboardRootLayout({
   // Always render dashboard immediately — no loading screen, no timeout screen
   return (
     <DashboardErrorBoundary>
-      <DashboardLayout user={user}>{children}</DashboardLayout>
+      <DashboardLayout user={user} isAdmin={user.role === "admin"}>{children}</DashboardLayout>
     </DashboardErrorBoundary>
   );
 }

@@ -56,7 +56,12 @@ interface AuditEntry {
 // Constants
 // ---------------------------------------------------------------------------
 
-const ADMIN_EMAIL = "aiwithdhruv@gmail.com";
+const ADMIN_EMAILS = [
+  "aiwithdhruv@gmail.com",
+  "dhruv@aiwithdruv.com",
+  "admin@aiwithdruv.com",
+  "dhruvtomar7008@gmail.com",
+];
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -163,7 +168,7 @@ export default function AdminDashboardPage() {
       } = await supabase.auth.getUser();
       const email = user?.email ?? null;
       setCurrentEmail(email);
-      setIsAdmin(email === ADMIN_EMAIL);
+      setIsAdmin(!!email && ADMIN_EMAILS.includes(email));
     };
     checkAuth();
   }, [supabase.auth]);
@@ -359,7 +364,7 @@ export default function AdminDashboardPage() {
   // RENDER — Admin Dashboard
   // ==========================================================================
   return (
-    <DashboardLayout isAdmin user={{ name: "Admin", email: ADMIN_EMAIL, role: "admin" }}>
+    <DashboardLayout isAdmin user={{ name: "Admin", email: currentEmail || "", role: "admin" }}>
       <div className="space-y-6">
         {/* ---------------------------------------------------------------- */}
         {/* Header                                                           */}
