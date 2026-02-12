@@ -26,12 +26,16 @@
 
 | Layer | Technology |
 |-------|-----------|
-| **Frontend** | Next.js 14 (App Router), Tailwind CSS, shadcn/ui |
+| **Frontend** | Next.js 16 (App Router), Tailwind CSS, shadcn/ui |
 | **Backend** | Next.js API Routes (serverless — no separate server needed) |
 | **Auth + Database** | Supabase (PostgreSQL + Auth + Row Level Security) |
-| **AI Models** | GPT-4o, Claude 4.6, Kimi K2.5, Gemini (via OpenRouter) |
+| **AI Models** | GPT-4.1, Claude Opus 4.6, Grok 4.1 Fast, Kimi K2.5, Gemini (via OpenRouter) |
+| **Web Search** | Perplexity Sonar (preferred), Tavily |
 | **Real-time Voice** | OpenAI Realtime API (GPT-4o voice-to-voice) |
-| **Hosting** | Vercel (Free tier) |
+| **TTS / STT** | ElevenLabs (TTS), Deepgram (STT), Whisper (transcription) |
+| **Telephony** | Twilio (outbound AI calling) |
+| **Payments** | Stripe (module-based subscriptions) |
+| **Hosting** | Vercel (auto-deploy from GitHub) |
 | **Domain** | quotahit.com |
 | **Automation** | n8n (self-hosted for AI call workflows) |
 
@@ -68,18 +72,23 @@
 
 | Feature | What It Does | AI Model Used |
 |---------|-------------|---------------|
-| **Objection Coach** | Type any sales objection, get instant AI coaching response | Kimi K2.5 / GPT-4o |
+| **AI Coach** | Type any sales question, get instant AI coaching (multi-model) | GPT-4.1, Claude Opus 4.6, Grok 4.1 Fast, Perplexity Sonar |
 | **Voice Practice** | Live voice call with AI prospect — speaks and listens in real-time | GPT-4o Realtime API |
-| **Call Analysis** | Upload a sales call recording, get AI scorecard with feedback | GPT-4o + Whisper |
+| **Call Analysis** | Upload a sales call recording, get AI scorecard with feedback | GPT-4.1 + Whisper |
 
 ### Additional Features Built
-- Multi-provider AI (switch between GPT, Claude, Gemini, Kimi)
-- Credit system with Supabase (tracks usage per user)
+- Multi-provider AI with BYOAPI (users bring their own API keys for OpenAI, Anthropic, OpenRouter, Perplexity, Tavily, ElevenLabs)
+- Module-based pricing (Practice, Call Analyzer, AI Coach, Follow-up Autopilot, Company Brain)
+- Built-in CRM with contact management, pipeline stages, and AI enrichment
+- AI outbound calling with Twilio + ElevenLabs TTS + Deepgram STT
+- Follow-up automation and quotation generation
+- Admin system with user impersonation
+- Team management and leaderboards
 - Session history and progress tracking
 - Persona selection (different AI buyer personalities)
 - Script coaching mode (AI coaches you through your script live)
 - Landing page with OG images for social sharing
-- Stripe-ready pricing page
+- Stripe-integrated pricing page with module selection
 
 ---
 
@@ -98,15 +107,18 @@ Next.js Frontend (Vercel — Free)
     ▼
 Next.js API Routes (Serverless Functions)
     │
-    ├── /api/ai/chat → Routes to OpenRouter/OpenAI/Anthropic
+    ├── /api/ai/chat → Routes to OpenAI/Anthropic/OpenRouter/Perplexity
     ├── /api/ai/realtime-token → Gets ephemeral token for voice
-    ├── /api/credits/deduct → Deducts credits per minute of voice
+    ├── /api/ai/speak → ElevenLabs TTS
+    ├── /api/user-keys → BYOAPI key management (encrypted)
+    ├── /api/contacts → CRM contact management
+    ├── /api/calling → AI outbound calling (Twilio)
     └── /api/ai/transcribe → Whisper transcription
     │
     ▼
 Supabase (Free)
     ├── Auth (email/password + OAuth)
-    ├── PostgreSQL (users, credits, sessions)
+    ├── PostgreSQL (users, contacts, teams, campaigns, API keys)
     └── Row Level Security (each user sees only their data)
 ```
 
@@ -133,11 +145,14 @@ Supabase (Free)
 | Feature | QuotaHit | Gong ($108-250/user) | Yoodli ($20/mo) | Second Nature |
 |---------|:--------:|:--------------------:|:----------------:|:-------------:|
 | AI Voice Practice | YES | NO | NO real-time | YES (avatar) |
-| Objection Coaching | YES | Analytics only | YES | YES |
+| AI Coaching (multi-model) | YES | Analytics only | YES | YES |
 | Call Analysis | YES | YES | NO | NO |
-| Price | **$0-19/mo** | **$108-250/mo** | **$20/mo** | **Custom** |
+| Built-in CRM | YES | NO | NO | NO |
+| AI Outbound Calling | YES | NO | NO | NO |
+| BYOAPI (own keys) | YES | NO | NO | NO |
+| Price | **Free + modules** | **$108-250/mo** | **$20/mo** | **Custom** |
 | Setup Time | Instant | Weeks + contract | Instant | Weeks |
-| Multi-AI Provider | YES | NO | NO | NO |
+| Multi-AI Provider | YES (6+) | NO | NO | NO |
 
 ---
 
