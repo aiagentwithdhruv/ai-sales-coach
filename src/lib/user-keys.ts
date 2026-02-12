@@ -17,7 +17,7 @@ const getAdmin = () =>
   );
 
 // AI providers that users can manage
-export const USER_MANAGED_PROVIDERS = ["openai", "anthropic", "openrouter"] as const;
+export const USER_MANAGED_PROVIDERS = ["openai", "anthropic", "openrouter", "perplexity", "tavily", "elevenlabs"] as const;
 export type UserManagedProvider = (typeof USER_MANAGED_PROVIDERS)[number];
 
 // Provider display info
@@ -36,6 +36,21 @@ export const PROVIDER_INFO: Record<UserManagedProvider, { name: string; helpUrl:
     name: "OpenRouter",
     helpUrl: "https://openrouter.ai/keys",
     placeholder: "sk-or-...",
+  },
+  perplexity: {
+    name: "Perplexity",
+    helpUrl: "https://www.perplexity.ai/settings/api",
+    placeholder: "pplx-...",
+  },
+  tavily: {
+    name: "Tavily",
+    helpUrl: "https://app.tavily.com/home",
+    placeholder: "tvly-...",
+  },
+  elevenlabs: {
+    name: "ElevenLabs",
+    helpUrl: "https://elevenlabs.io/app/settings/api-keys",
+    placeholder: "xi-...",
   },
 };
 
@@ -183,6 +198,46 @@ export async function validateKey(
           headers: { Authorization: `Bearer ${rawKey}` },
         });
         if (res.ok) return { valid: true };
+        return { valid: false, error: `HTTP ${res.status}` };
+      }
+
+      case "perplexity": {
+        const res = await fetch("https://api.perplexity.ai/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${rawKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "sonar",
+            messages: [{ role: "user", content: "hi" }],
+            max_tokens: 1,
+          }),
+        });
+        if (res.status === 401 || res.status === 403) {
+          return { valid: false, error: "Invalid API key" };
+        }
+        return { valid: true };
+      }
+
+      case "tavily": {
+        const res = await fetch("https://api.tavily.com/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ api_key: rawKey, query: "test", max_results: 1 }),
+        });
+        if (res.status === 401 || res.status === 403) {
+          return { valid: false, error: "Invalid API key" };
+        }
+        return { valid: true };
+      }
+
+      case "elevenlabs": {
+        const res = await fetch("https://api.elevenlabs.io/v1/user", {
+          headers: { "xi-api-key": rawKey },
+        });
+        if (res.ok) return { valid: true };
+        if (res.status === 401) return { valid: false, error: "Invalid API key" };
         return { valid: false, error: `HTTP ${res.status}` };
       }
 

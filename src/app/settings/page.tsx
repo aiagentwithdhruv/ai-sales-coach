@@ -37,12 +37,12 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 import Link from "next/link";
 
 // API Types for models
-type ApiType = "openrouter" | "openai" | "anthropic";
+type ApiType = "openrouter" | "openai" | "anthropic" | "perplexity";
 
 // Premium model IDs - visible but locked for free users
 const PREMIUM_MODEL_IDS = new Set([
   "claude-sonnet-4-5-20250929",
-  "claude-opus-4-5-20251101",
+  "claude-opus-4-6",
   "gpt-5.2",
   "gpt-5.1",
 ]);
@@ -63,27 +63,27 @@ const AI_MODELS: {
   // DIRECT API MODELS (Lower latency, no middleman)
   // ===========================================
 
-  // Direct Anthropic API - Claude 4.5 Series
+  // Direct Anthropic API - Claude 4.6/4.5 Series (Latest 2026)
+  {
+    id: "claude-opus-4-6",
+    name: "Claude Opus 4.6",
+    provider: "Anthropic",
+    api: "anthropic",
+    description: "Direct API - Most intelligent, agents & coding",
+    speed: "Moderate",
+    quality: "Exceptional",
+    recommended: false,
+    premium: true,
+  },
   {
     id: "claude-sonnet-4-5-20250929",
     name: "Claude Sonnet 4.5",
     provider: "Anthropic",
     api: "anthropic",
-    description: "Direct API - Best balance of intelligence & speed",
+    description: "Direct API - Best balance of speed & intelligence",
     speed: "Fast",
     quality: "Exceptional",
     recommended: true,
-    premium: true,
-  },
-  {
-    id: "claude-opus-4-5-20251101",
-    name: "Claude Opus 4.5",
-    provider: "Anthropic",
-    api: "anthropic",
-    description: "Direct API - Most capable, premium intelligence",
-    speed: "Medium",
-    quality: "Exceptional",
-    recommended: false,
     premium: true,
   },
   {
@@ -92,7 +92,7 @@ const AI_MODELS: {
     provider: "Anthropic",
     api: "anthropic",
     description: "Direct API - Fastest with near-frontier intelligence",
-    speed: "Very Fast",
+    speed: "Fastest",
     quality: "Very Good",
     recommended: false,
     premium: false,
@@ -182,6 +182,43 @@ const AI_MODELS: {
   },
 
   // ===========================================
+  // PERPLEXITY MODELS (Web Search + AI)
+  // ===========================================
+  {
+    id: "sonar-pro",
+    name: "Sonar Pro",
+    provider: "Perplexity",
+    api: "perplexity",
+    description: "Direct API - Premier web search + reasoning",
+    speed: "Fast",
+    quality: "Exceptional",
+    recommended: false,
+    premium: false,
+  },
+  {
+    id: "sonar",
+    name: "Sonar",
+    provider: "Perplexity",
+    api: "perplexity",
+    description: "Direct API - Fast web search with citations",
+    speed: "Very Fast",
+    quality: "Excellent",
+    recommended: false,
+    premium: false,
+  },
+  {
+    id: "sonar-reasoning-pro",
+    name: "Sonar Reasoning Pro",
+    provider: "Perplexity",
+    api: "perplexity",
+    description: "Direct API - Deep reasoning with web grounding",
+    speed: "Medium",
+    quality: "Exceptional",
+    recommended: false,
+    premium: false,
+  },
+
+  // ===========================================
   // OPENROUTER MODELS (Budget & Fallback)
   // ===========================================
 
@@ -240,17 +277,6 @@ const AI_MODELS: {
     provider: "OpenAI",
     api: "openrouter",
     description: "Via OpenRouter - Efficient & budget-friendly",
-    speed: "Very Fast",
-    quality: "Very Good",
-    recommended: false,
-    premium: false,
-  },
-  {
-    id: "openai/gpt-4.1-mini",
-    name: "GPT-4.1 Mini",
-    provider: "OpenAI",
-    api: "openrouter",
-    description: "Fast and efficient for everyday tasks",
     speed: "Very Fast",
     quality: "Very Good",
     recommended: false,
@@ -342,13 +368,17 @@ const API_BADGES: Record<ApiType, { label: string; color: string }> = {
   openrouter: { label: "OpenRouter", color: "bg-purple-500/20 text-purple-400" },
   openai: { label: "OpenAI Direct", color: "bg-green-500/20 text-green-400" },
   anthropic: { label: "Claude Direct", color: "bg-orange-500/20 text-orange-400" },
+  perplexity: { label: "Perplexity", color: "bg-cyan-500/20 text-cyan-400" },
 };
 
 // BYOAPI provider definitions
 const BYOAPI_PROVIDERS = [
-  { id: "openai", name: "OpenAI", icon: "O", color: "bg-green-500/20 text-green-400" },
-  { id: "anthropic", name: "Anthropic", icon: "A", color: "bg-orange-500/20 text-orange-400" },
-  { id: "openrouter", name: "OpenRouter", icon: "R", color: "bg-purple-500/20 text-purple-400" },
+  { id: "openai", name: "OpenAI", icon: "O", color: "bg-green-500/20 text-green-400", category: "ai" },
+  { id: "anthropic", name: "Anthropic", icon: "A", color: "bg-orange-500/20 text-orange-400", category: "ai" },
+  { id: "openrouter", name: "OpenRouter", icon: "R", color: "bg-purple-500/20 text-purple-400", category: "ai" },
+  { id: "perplexity", name: "Perplexity", icon: "P", color: "bg-cyan-500/20 text-cyan-400", category: "search" },
+  { id: "tavily", name: "Tavily", icon: "T", color: "bg-emerald-500/20 text-emerald-400", category: "search" },
+  { id: "elevenlabs", name: "ElevenLabs", icon: "E", color: "bg-pink-500/20 text-pink-400", category: "voice" },
 ] as const;
 
 // Platform-managed services
@@ -356,7 +386,6 @@ const PLATFORM_SERVICES = [
   { name: "Twilio", description: "Voice & SMS" },
   { name: "Deepgram", description: "Speech-to-Text" },
   { name: "Resend", description: "Email delivery" },
-  { name: "ElevenLabs", description: "Text-to-Speech" },
 ];
 
 // Types for API key management
@@ -850,8 +879,11 @@ export default function SettingsPage() {
                       <span className="text-sm text-mist ml-2">Loading keys...</span>
                     </div>
                   ) : (
-                    <div className="space-y-3">
-                      {BYOAPI_PROVIDERS.map((provider) => {
+                    <div className="space-y-4">
+                      {/* AI Providers */}
+                      <p className="text-xs text-mist uppercase tracking-wider font-medium">AI Providers</p>
+                      <div className="space-y-3">
+                      {BYOAPI_PROVIDERS.filter(p => p.category === "ai").map((provider) => {
                         const keyInfo = getKeyForProvider(provider.id);
                         const isAdding = addingKeyFor === provider.id;
                         const isDeleting = deletingKey === provider.id;
@@ -977,6 +1009,137 @@ export default function SettingsPage() {
                           </div>
                         );
                       })}
+                      </div>
+
+                      {/* Web Search Providers */}
+                      <p className="text-xs text-mist uppercase tracking-wider font-medium pt-2">Web Search</p>
+                      <div className="space-y-3">
+                      {BYOAPI_PROVIDERS.filter(p => p.category === "search").map((provider) => {
+                        const keyInfo = getKeyForProvider(provider.id);
+                        const isAdding = addingKeyFor === provider.id;
+                        const isDeleting = deletingKey === provider.id;
+
+                        return (
+                          <div key={provider.id} className="rounded-lg bg-onyx border border-gunmetal overflow-hidden">
+                            <div className="flex items-center justify-between p-3">
+                              <div className="flex items-center gap-3">
+                                <div className={cn("h-8 w-8 rounded flex items-center justify-center text-sm font-bold", provider.color)}>
+                                  {provider.icon}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-platinum">{provider.name}</p>
+                                  {keyInfo ? (
+                                    <p className="text-xs text-automationgreen flex items-center gap-1">
+                                      <Check className="h-3 w-3" />
+                                      Connected
+                                      <span className="text-mist ml-1">...{keyInfo.key_hint}</span>
+                                    </p>
+                                  ) : (
+                                    <p className="text-xs text-mist">Not Set</p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {keyInfo ? (
+                                  <>
+                                    <Button size="sm" variant="outline" onClick={() => { setAddingKeyFor(provider.id); setKeyInput(""); setKeyError(null); }} className="border-gunmetal text-silver hover:text-platinum text-xs h-8 px-3">
+                                      <Edit3 className="h-3 w-3 mr-1" />Edit
+                                    </Button>
+                                    <Button size="sm" variant="outline" onClick={() => handleDeleteKey(provider.id)} disabled={isDeleting} className="border-gunmetal text-red-400 hover:text-red-300 hover:border-red-400/50 text-xs h-8 px-3">
+                                      {isDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <Button size="sm" onClick={() => { setAddingKeyFor(provider.id); setKeyInput(""); setKeyError(null); }} className="bg-neonblue hover:bg-electricblue text-white text-xs h-8 px-3">
+                                    <Plus className="h-3 w-3 mr-1" />Add Key
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                            {isAdding && (
+                              <div className="border-t border-gunmetal p-3 space-y-2">
+                                <div className="flex gap-2">
+                                  <Input type="password" value={keyInput} onChange={(e) => { setKeyInput(e.target.value); setKeyError(null); }} placeholder={`Enter your ${provider.name} API key...`} className="bg-graphite border-gunmetal text-platinum flex-1 text-sm" autoFocus />
+                                  <Button size="sm" onClick={() => handleSaveKey(provider.id)} disabled={keyValidating || !keyInput.trim()} className="bg-automationgreen hover:bg-automationgreen/80 text-black text-xs h-9 px-4 shrink-0">
+                                    {keyValidating ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Shield className="h-3 w-3 mr-1" />}
+                                    Validate & Save
+                                  </Button>
+                                  <Button size="sm" variant="outline" onClick={() => { setAddingKeyFor(null); setKeyInput(""); setKeyError(null); }} className="border-gunmetal text-silver hover:text-platinum h-9 px-2 shrink-0">
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                                {keyError && <p className="text-xs text-red-400 flex items-center gap-1"><AlertTriangle className="h-3 w-3" />{keyError}</p>}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                      </div>
+
+                      {/* Voice Providers */}
+                      <p className="text-xs text-mist uppercase tracking-wider font-medium pt-2">Voice & Audio</p>
+                      <div className="space-y-3">
+                      {BYOAPI_PROVIDERS.filter(p => p.category === "voice").map((provider) => {
+                        const keyInfo = getKeyForProvider(provider.id);
+                        const isAdding = addingKeyFor === provider.id;
+                        const isDeleting = deletingKey === provider.id;
+
+                        return (
+                          <div key={provider.id} className="rounded-lg bg-onyx border border-gunmetal overflow-hidden">
+                            <div className="flex items-center justify-between p-3">
+                              <div className="flex items-center gap-3">
+                                <div className={cn("h-8 w-8 rounded flex items-center justify-center text-sm font-bold", provider.color)}>
+                                  {provider.icon}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-platinum">{provider.name}</p>
+                                  {keyInfo ? (
+                                    <p className="text-xs text-automationgreen flex items-center gap-1">
+                                      <Check className="h-3 w-3" />
+                                      Connected
+                                      <span className="text-mist ml-1">...{keyInfo.key_hint}</span>
+                                    </p>
+                                  ) : (
+                                    <p className="text-xs text-mist">Not Set</p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {keyInfo ? (
+                                  <>
+                                    <Button size="sm" variant="outline" onClick={() => { setAddingKeyFor(provider.id); setKeyInput(""); setKeyError(null); }} className="border-gunmetal text-silver hover:text-platinum text-xs h-8 px-3">
+                                      <Edit3 className="h-3 w-3 mr-1" />Edit
+                                    </Button>
+                                    <Button size="sm" variant="outline" onClick={() => handleDeleteKey(provider.id)} disabled={isDeleting} className="border-gunmetal text-red-400 hover:text-red-300 hover:border-red-400/50 text-xs h-8 px-3">
+                                      {isDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <Button size="sm" onClick={() => { setAddingKeyFor(provider.id); setKeyInput(""); setKeyError(null); }} className="bg-neonblue hover:bg-electricblue text-white text-xs h-8 px-3">
+                                    <Plus className="h-3 w-3 mr-1" />Add Key
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                            {isAdding && (
+                              <div className="border-t border-gunmetal p-3 space-y-2">
+                                <div className="flex gap-2">
+                                  <Input type="password" value={keyInput} onChange={(e) => { setKeyInput(e.target.value); setKeyError(null); }} placeholder={`Enter your ${provider.name} API key...`} className="bg-graphite border-gunmetal text-platinum flex-1 text-sm" autoFocus />
+                                  <Button size="sm" onClick={() => handleSaveKey(provider.id)} disabled={keyValidating || !keyInput.trim()} className="bg-automationgreen hover:bg-automationgreen/80 text-black text-xs h-9 px-4 shrink-0">
+                                    {keyValidating ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Shield className="h-3 w-3 mr-1" />}
+                                    Validate & Save
+                                  </Button>
+                                  <Button size="sm" variant="outline" onClick={() => { setAddingKeyFor(null); setKeyInput(""); setKeyError(null); }} className="border-gunmetal text-silver hover:text-platinum h-9 px-2 shrink-0">
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                                {keyError && <p className="text-xs text-red-400 flex items-center gap-1"><AlertTriangle className="h-3 w-3" />{keyError}</p>}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                      </div>
                     </div>
                   )}
                 </div>

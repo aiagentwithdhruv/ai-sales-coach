@@ -2,8 +2,8 @@
  * API Key Resolver
  *
  * Determines which API key to use for a given user and provider:
- * 1. Infrastructure keys (twilio, deepgram, resend, elevenlabs) → always platform env vars
- * 2. AI keys (openai, anthropic, openrouter):
+ * 1. Infrastructure keys (twilio, deepgram, resend) → always platform env vars
+ * 2. AI/Search/Voice keys (openai, anthropic, openrouter, perplexity, tavily, elevenlabs):
  *    a. User's own key if they've added one
  *    b. Platform key if user is within 15-day trial
  *    c. null if trial expired and no user key → "Add your API key"
@@ -19,24 +19,29 @@ const getAdmin = () =>
   );
 
 // Infrastructure providers — always use platform keys
-const INFRA_PROVIDERS = ["twilio", "deepgram", "resend", "elevenlabs"] as const;
+const INFRA_PROVIDERS = ["twilio", "deepgram", "resend"] as const;
 
 // Map provider to env var name
 const PLATFORM_KEY_MAP: Record<string, string> = {
   openai: "OPENAI_API_KEY",
   anthropic: "ANTHROPIC_API_KEY",
   openrouter: "OPENROUTER_API_KEY",
+  perplexity: "PERPLEXITY_API_KEY",
+  tavily: "TAVILY_API_KEY",
+  elevenlabs: "ELEVENLABS_API_KEY",
   twilio_sid: "TWILIO_ACCOUNT_SID",
   twilio_token: "TWILIO_AUTH_TOKEN",
   deepgram: "DEEPGRAM_API_KEY",
   resend: "RESEND_API_KEY",
-  elevenlabs: "ELEVENLABS_API_KEY",
 };
 
 export interface ResolvedKeys {
   openai?: string;
   anthropic?: string;
   openrouter?: string;
+  perplexity?: string;
+  tavily?: string;
+  elevenlabs?: string;
   source: "user" | "platform" | "trial";
 }
 
@@ -86,7 +91,7 @@ async function hasActiveSubscription(userId: string): Promise<boolean> {
  * Returns keys to use for OpenAI, Anthropic, and OpenRouter.
  */
 export async function resolveUserKeys(userId: string): Promise<ResolvedKeys> {
-  const providers: UserManagedProvider[] = ["openai", "anthropic", "openrouter"];
+  const providers: UserManagedProvider[] = ["openai", "anthropic", "openrouter", "perplexity", "tavily", "elevenlabs"];
   const keys: ResolvedKeys = { source: "platform" };
 
   // Check user's own keys first

@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS public.user_api_keys (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   provider TEXT NOT NULL CHECK (provider IN (
-    'openai', 'anthropic', 'openrouter'
+    'openai', 'anthropic', 'openrouter', 'perplexity', 'tavily', 'elevenlabs'
   )),
   encrypted_key TEXT NOT NULL,
   key_hint TEXT, -- Last 4 chars: "...xK9f"
