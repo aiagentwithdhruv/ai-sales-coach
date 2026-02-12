@@ -51,7 +51,7 @@ interface Attachment {
 // Premium model IDs - visible but locked for free users
 const PREMIUM_MODEL_IDS = new Set([
   "claude-sonnet-4-5-20250929",
-  "claude-opus-4-5-20251101",
+  "claude-opus-4-6",
   "gpt-5.2",
   "gpt-5.1",
 ]);
@@ -67,12 +67,12 @@ const AI_MODELS: { id: string; name: string; provider: string; api: ApiType; pre
   // ===== OPENROUTER (Budget Models) =====
   { id: "google/gemini-3-flash-preview", name: "Gemini 3 Flash", provider: "Google", api: "openrouter", premium: false },
   { id: "google/gemini-2.5-flash-preview", name: "Gemini 2.5 Flash", provider: "Google", api: "openrouter", premium: false },
-  { id: "x-ai/grok-4-fast", name: "Grok 4 Fast", provider: "xAI", api: "openrouter", premium: false },
+  { id: "x-ai/grok-4.1-fast", name: "Grok 4.1 Fast", provider: "xAI", api: "openrouter", premium: false },
   { id: "openai/gpt-5-mini", name: "GPT-5 Mini", provider: "OpenAI", api: "openrouter", premium: false },
 
   // ===== ANTHROPIC CLAUDE (Direct API) =====
+  { id: "claude-opus-4-6", name: "Claude Opus 4.6", provider: "Anthropic (Direct)", api: "anthropic", premium: true },
   { id: "claude-sonnet-4-5-20250929", name: "Claude Sonnet 4.5", provider: "Anthropic (Direct)", api: "anthropic", premium: true },
-  { id: "claude-opus-4-5-20251101", name: "Claude Opus 4.5", provider: "Anthropic (Direct)", api: "anthropic", premium: true },
   { id: "claude-haiku-4-5-20251001", name: "Claude Haiku 4.5", provider: "Anthropic (Direct)", api: "anthropic", premium: false },
 
   // ===== OPENAI (Direct API) =====

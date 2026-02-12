@@ -224,11 +224,11 @@ const AI_MODELS: {
 
   // xAI Grok
   {
-    id: "x-ai/grok-4-fast",
-    name: "Grok 4 Fast",
+    id: "x-ai/grok-4.1-fast",
+    name: "Grok 4.1 Fast",
     provider: "xAI",
     api: "openrouter",
-    description: "Via OpenRouter - Fast multimodal with 2M context",
+    description: "Via OpenRouter - Agentic tool calling with 2M context",
     speed: "Very Fast",
     quality: "Excellent",
     recommended: false,
