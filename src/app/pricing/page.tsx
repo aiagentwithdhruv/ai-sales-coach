@@ -10,7 +10,7 @@ import {
   Sparkles,
   ArrowRight,
   Loader2,
-  Phone,
+  PhoneCall,
   Brain,
   BarChart3,
   Mail,
@@ -46,17 +46,17 @@ import {
 const MODULE_ICONS: Record<ModuleSlug, typeof Brain> = {
   coaching: Brain,
   crm: BarChart3,
-  calling: Phone,
+  calling: PhoneCall,
   followups: Mail,
   analytics: TrendingUp,
 };
 
-const MODULE_COLORS: Record<ModuleSlug, { text: string; bg: string }> = {
-  coaching: { text: "text-neonblue", bg: "bg-neonblue/20" },
-  crm: { text: "text-warningamber", bg: "bg-warningamber/20" },
-  calling: { text: "text-automationgreen", bg: "bg-automationgreen/20" },
-  followups: { text: "text-purple-400", bg: "bg-purple-500/20" },
-  analytics: { text: "text-cyan-400", bg: "bg-cyan-500/20" },
+const MODULE_COLORS: Record<ModuleSlug, { text: string; bg: string; glow: string; border: string; shadow: string }> = {
+  coaching: { text: "text-neonblue", bg: "bg-neonblue/20", glow: "rgba(0,153,255,0.15)", border: "rgba(0,153,255,0.4)", shadow: "0 0 30px rgba(0,153,255,0.08)" },
+  crm: { text: "text-warningamber", bg: "bg-warningamber/20", glow: "rgba(255,170,0,0.12)", border: "rgba(255,170,0,0.35)", shadow: "0 0 30px rgba(255,170,0,0.06)" },
+  calling: { text: "text-automationgreen", bg: "bg-automationgreen/20", glow: "rgba(0,230,118,0.12)", border: "rgba(0,230,118,0.35)", shadow: "0 0 30px rgba(0,230,118,0.06)" },
+  followups: { text: "text-purple-400", bg: "bg-purple-500/20", glow: "rgba(168,85,247,0.12)", border: "rgba(168,85,247,0.35)", shadow: "0 0 30px rgba(168,85,247,0.06)" },
+  analytics: { text: "text-cyan-400", bg: "bg-cyan-500/20", glow: "rgba(34,211,238,0.12)", border: "rgba(34,211,238,0.35)", shadow: "0 0 30px rgba(34,211,238,0.06)" },
 };
 
 // ─── Billing Options ──────────────────────────────────────────────────────────
@@ -72,7 +72,7 @@ const BILLING_OPTIONS: { id: BillingInterval; label: string; badge: string | nul
 const FREE_TIER_ITEMS = [
   { label: "AI coaching sessions", limit: FREE_LIMITS.coaching_sessions, unit: "/month" },
   { label: "Contacts", limit: FREE_LIMITS.contacts_created, unit: " total" },
-  { label: "AI outbound calls", limit: FREE_LIMITS.ai_calls_made, unit: "/month" },
+  { label: "AI calls", limit: FREE_LIMITS.ai_calls_made, unit: "/month" },
   { label: "Follow-ups sent", limit: FREE_LIMITS.followups_sent, unit: "/month" },
   { label: "Analyses run", limit: FREE_LIMITS.analyses_run, unit: "/month" },
 ];
@@ -367,12 +367,26 @@ export default function PricingPage() {
                   key={slug}
                   onClick={() => toggleModule(slug)}
                   className={cn(
-                    "relative bg-onyx border-2 transition-all duration-200 cursor-pointer hover:shadow-lg flex flex-col",
+                    "relative bg-onyx border transition-all duration-300 cursor-pointer flex flex-col group/card",
                     selected
                       ? "border-neonblue ring-2 ring-neonblue/20 shadow-lg shadow-neonblue/10"
-                      : "border-gunmetal hover:border-steel glow-card"
+                      : "border-gunmetal hover:border-transparent"
                   )}
+                  style={{
+                    "--module-glow": colors.glow,
+                    "--module-border": colors.border,
+                    boxShadow: selected ? undefined : colors.shadow,
+                    backgroundImage: selected ? undefined : `radial-gradient(ellipse at 50% 0%, ${colors.glow}, transparent 70%)`,
+                  } as React.CSSProperties}
                 >
+                  {/* Top glow line */}
+                  {!selected && (
+                    <div
+                      className="absolute top-0 left-0 right-0 h-[1px] opacity-60"
+                      style={{ background: `linear-gradient(90deg, transparent, ${colors.border}, transparent)` }}
+                    />
+                  )}
+
                   {/* Selection indicator */}
                   <div
                     className={cn(
