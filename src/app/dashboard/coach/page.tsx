@@ -314,11 +314,14 @@ export default function CoachPage() {
       // Don't show error if request was aborted (user navigated away or cancelled)
       if (err instanceof Error && err.name === 'AbortError') {
         console.log('Request aborted');
+        setIsLoading(false);
         return;
       }
 
-      console.error("Error:", err);
+      console.error("Coach API Error:", err);
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      console.error("Full error details:", { errorMessage, errorType: typeof err });
+
       setError(errorMessage);
       setResponse(`Sorry, there was an error: ${errorMessage}. Please try again or select a different model.`);
     } finally {
