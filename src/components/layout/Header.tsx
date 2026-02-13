@@ -45,6 +45,7 @@ export function Header({ user, onMobileMenuToggle, sidebarExpanded = true, onSid
   const [profileEmail, setProfileEmail] = useState("");
   const [profileAvatar, setProfileAvatar] = useState<string | undefined>();
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
+  const [planValidUntil, setPlanValidUntil] = useState<string | null>(null);
   const router = useRouter();
   const supabase = getSupabaseClient();
 
@@ -58,6 +59,21 @@ export function Header({ user, onMobileMenuToggle, sidebarExpanded = true, onSid
         setProfileName(user.user_metadata?.full_name || user.email?.split("@")[0] || "User");
         setProfileEmail(user.email || "");
         setProfileAvatar(user.user_metadata?.avatar_url);
+
+        // Fetch plan validity
+        try {
+          const { data: subscription } = await supabase
+            .from("user_subscriptions")
+            .select("valid_until")
+            .eq("user_id", user.id)
+            .single();
+
+          if (subscription?.valid_until) {
+            setPlanValidUntil(subscription.valid_until);
+          }
+        } catch (err) {
+          // Plan not found or error, no worries
+        }
       }
     };
 
@@ -226,7 +242,14 @@ export function Header({ user, onMobileMenuToggle, sidebarExpanded = true, onSid
                     {currentUser.name}
                   </p>
                   <p className="text-xs text-mist">{currentUser.email}</p>
-                  <div className="pt-1">{getRoleBadge(currentUser.role)}</div>
+                  <div className="pt-1 flex items-center gap-2">
+                    {getRoleBadge(currentUser.role)}
+                  </div>
+                  {planValidUntil && (
+                    <p className="text-xs text-automationgreen pt-1">
+                      Plan valid till {new Date(planValidUntil).toLocaleDateString()}
+                    </p>
+                  )}
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-gunmetal" />
