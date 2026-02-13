@@ -10,8 +10,8 @@ import { NextRequest } from "next/server";
 
 const ADMIN_EMAILS = [
   "aiwithdhruv@gmail.com",
-  "dhruv@aiwithddhruv.com",
-  "admin@aiwithddhruv.com",
+  "dhruv@aiwithdruv.com",
+  "admin@aiwithdruv.com",
   "dhruvtomar7008@gmail.com",
 ];
 
