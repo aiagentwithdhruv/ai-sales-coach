@@ -27,6 +27,8 @@ import {
   Eye,
   RefreshCw,
   AlertTriangle,
+  Check,
+  Zap,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -156,6 +158,13 @@ export default function AdminDashboardPage() {
   const [impersonating, setImpersonating] = useState<string | null>(null);
   const [impersonateError, setImpersonateError] = useState<string | null>(null);
 
+  // ---- Plan activation state -----------------------------------------------
+  const [activateEmail, setActivateEmail] = useState("");
+  const [activateDate, setActivateDate] = useState("");
+  const [activatingPlan, setActivatingPlan] = useState(false);
+  const [activateSuccess, setActivateSuccess] = useState<string | null>(null);
+  const [activateError, setActivateError] = useState<string | null>(null);
+
   const supabase = getSupabaseClient();
 
   // --------------------------------------------------------------------------
@@ -227,6 +236,68 @@ export default function AdminDashboardPage() {
       fetchDashboardData();
     }
   }, [isAdmin, fetchDashboardData]);
+
+  // --------------------------------------------------------------------------
+  // Plan activation action (POST)
+  // --------------------------------------------------------------------------
+  const handleActivatePlan = async () => {
+    if (!activateEmail.trim()) {
+      setActivateError("Email is required");
+      return;
+    }
+
+    setActivatingPlan(true);
+    setActivateError(null);
+    setActivateSuccess(null);
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      setActivateError("Not authenticated");
+      setActivatingPlan(false);
+      return;
+    }
+
+    try {
+      const body: any = { email: activateEmail.trim() };
+      if (activateDate) {
+        body.valid_until = activateDate;
+      }
+
+      const response = await fetch("/api/admin/quick-activate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setActivateError(data.error || "Failed to activate plan");
+        setActivatingPlan(false);
+        return;
+      }
+
+      setActivateSuccess(`✓ Plan activated for ${activateEmail.trim()}`);
+      setActivateEmail("");
+      setActivateDate("");
+
+      // Refresh data after successful activation
+      setTimeout(() => {
+        fetchDashboardData();
+        setActivateSuccess(null);
+      }, 2000);
+    } catch {
+      setActivateError("Network error — could not activate plan");
+    } finally {
+      setActivatingPlan(false);
+    }
+  };
 
   // --------------------------------------------------------------------------
   // Impersonate action (POST)
@@ -445,6 +516,87 @@ export default function AdminDashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* ---------------------------------------------------------------- */}
+        {/* Plan Activation                                                   */}
+        {/* ---------------------------------------------------------------- */}
+        <Card className="bg-graphite border-gunmetal">
+          <CardHeader>
+            <CardTitle className="text-platinum flex items-center gap-2">
+              <Zap className="h-5 w-5 text-successgreen" />
+              Activate User Plan
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-mist mb-1 block">
+                    User Email
+                  </label>
+                  <Input
+                    type="email"
+                    placeholder="user@example.com"
+                    value={activateEmail}
+                    onChange={(e) => setActivateEmail(e.target.value)}
+                    className="bg-onyx border-gunmetal text-platinum"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && activateEmail.trim()) {
+                        handleActivatePlan();
+                      }
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-mist mb-1 block">
+                    Valid Until (optional)
+                  </label>
+                  <Input
+                    type="date"
+                    value={activateDate}
+                    onChange={(e) => setActivateDate(e.target.value)}
+                    className="bg-onyx border-gunmetal text-platinum"
+                  />
+                  <p className="text-xs text-mist mt-1">
+                    Defaults to 6 months if not specified
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                onClick={handleActivatePlan}
+                disabled={!activateEmail.trim() || activatingPlan}
+                className="w-full bg-successgreen hover:bg-green-500"
+              >
+                {activatingPlan ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Activating...
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Activate Plan (Bundle, Unlimited)
+                  </>
+                )}
+              </Button>
+
+              {activateSuccess && (
+                <div className="p-3 bg-successgreen/10 border border-successgreen/30 rounded-lg flex items-center gap-2 text-successgreen text-sm">
+                  <Check className="h-4 w-4 shrink-0" />
+                  {activateSuccess}
+                </div>
+              )}
+
+              {activateError && (
+                <div className="p-3 bg-errorred/10 border border-errorred/30 rounded-lg flex items-center gap-2 text-errorred text-sm">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  {activateError}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* ---------------------------------------------------------------- */}
         {/* Quick Impersonation                                              */}
