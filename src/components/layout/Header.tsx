@@ -66,7 +66,7 @@ export function Header({ user, onMobileMenuToggle, sidebarExpanded = true, onSid
             .from("user_subscriptions")
             .select("current_period_end")
             .eq("user_id", user.id)
-            .single();
+            .maybeSingle();
 
           if (subscription?.current_period_end) {
             setPlanValidUntil(subscription.current_period_end);

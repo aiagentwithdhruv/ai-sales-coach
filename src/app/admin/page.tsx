@@ -850,7 +850,7 @@ export default function AdminDashboardPage() {
                       </p>
                       {entry.details && (
                         <p className="text-xs text-mist mt-0.5">
-                          {entry.details}
+                          {typeof entry.details === "string" ? entry.details : JSON.stringify(entry.details)}
                         </p>
                       )}
                       <p className="text-xs text-mist mt-0.5">
