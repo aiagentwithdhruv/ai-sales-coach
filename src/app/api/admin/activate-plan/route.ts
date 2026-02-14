@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
 
     // Default: bundle plan, valid for 6 months
     const planType = plan_type || "bundle";
-    const validUntil = valid_until || new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
+    const periodEnd = valid_until || new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
     const defaultModules = [
       "coaching",
       "crm",
@@ -83,9 +83,9 @@ export async function POST(req: NextRequest) {
           plan_type: planType,
           status: "active",
           modules: modules || defaultModules,
-          valid_until: validUntil,
+          current_period_start: new Date().toISOString(),
+          current_period_end: periodEnd,
           trial_ends_at: null,
-          created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         { onConflict: "user_id" }

@@ -130,14 +130,19 @@ export async function GET(req: NextRequest) {
   const subMap = new Map((subscriptions || []).map((s) => [s.user_id, s]));
   const usageMap = new Map((usage || []).map((u) => [u.user_id, u]));
 
-  const userList = users.users.map((u) => ({
-    id: u.id,
-    email: u.email,
-    name: u.user_metadata?.full_name || u.email?.split("@")[0] || "Unknown",
-    created_at: u.created_at,
-    subscription: subMap.get(u.id) || null,
-    usage: usageMap.get(u.id) || null,
-  }));
+  const userList = users.users.map((u) => {
+    const sub = subMap.get(u.id);
+    const usg = usageMap.get(u.id);
+    return {
+      id: u.id,
+      email: u.email,
+      name: u.user_metadata?.full_name || u.email?.split("@")[0] || "Unknown",
+      created_at: u.created_at,
+      plan: sub?.plan_type || "free",
+      status: sub?.status || "free",
+      ai_calls_this_month: usg?.ai_calls_made || 0,
+    };
+  });
 
   return new Response(
     JSON.stringify({ users: userList, audit_log: auditLog || [] }),

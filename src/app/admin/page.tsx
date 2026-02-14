@@ -50,7 +50,7 @@ interface AuditEntry {
   admin_email: string;
   action: string;
   target_email: string;
-  timestamp: string;
+  created_at: string;
   details?: string;
 }
 
@@ -841,7 +841,7 @@ export default function AdminDashboardPage() {
                           {entry.action}
                         </p>
                         <span className="text-xs text-mist">
-                          {formatRelativeTime(entry.timestamp)}
+                          {formatRelativeTime(entry.created_at)}
                         </span>
                       </div>
                       <p className="text-xs text-silver mt-1">

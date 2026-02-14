@@ -64,12 +64,12 @@ export function Header({ user, onMobileMenuToggle, sidebarExpanded = true, onSid
         try {
           const { data: subscription } = await supabase
             .from("user_subscriptions")
-            .select("valid_until")
+            .select("current_period_end")
             .eq("user_id", user.id)
             .single();
 
-          if (subscription?.valid_until) {
-            setPlanValidUntil(subscription.valid_until);
+          if (subscription?.current_period_end) {
+            setPlanValidUntil(subscription.current_period_end);
           }
         } catch (err) {
           // Plan not found or error, no worries
@@ -93,7 +93,7 @@ export function Header({ user, onMobileMenuToggle, sidebarExpanded = true, onSid
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase.auth, supabaseUser]);
+  }, [supabase.auth]);
 
 
   const handleSignOut = async () => {

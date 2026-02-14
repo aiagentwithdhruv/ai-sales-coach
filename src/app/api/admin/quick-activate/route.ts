@@ -76,7 +76,7 @@ export async function POST(req: Request) {
     }
 
     const userId = targetUser.id;
-    const validUntil = valid_until || new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
+    const periodEnd = valid_until || new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
 
     // Upsert subscription with unlimited access
     const { data, error } = await supabase
@@ -87,9 +87,9 @@ export async function POST(req: Request) {
           plan_type: "bundle",
           status: "active",
           modules: ["coaching", "crm", "calling", "followups", "analytics"],
-          valid_until: validUntil,
+          current_period_start: new Date().toISOString(),
+          current_period_end: periodEnd,
           trial_ends_at: null,
-          created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         { onConflict: "user_id" }
