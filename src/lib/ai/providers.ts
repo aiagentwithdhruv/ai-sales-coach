@@ -143,6 +143,11 @@ export function getModelByIdSmart(modelId: string, userKeys?: ResolvedKeys) {
     return moonshot(modelId);
   }
 
+  // Perplexity models (sonar, sonar-pro, sonar-reasoning-pro)
+  if (modelId.startsWith("sonar")) {
+    return perplexity(modelId);
+  }
+
   // OpenRouter models have a "/" in the ID
   if (modelId.includes("/")) {
     return createOpenRouterProvider(userKeys?.openrouter)(modelId);

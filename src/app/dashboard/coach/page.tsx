@@ -31,13 +31,15 @@ import {
   Square,
   Lock,
   Crown,
+  Key,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import Link from "next/link";
 
 // API Types
-type ApiType = "openrouter" | "openai" | "anthropic" | "moonshot";
+type ApiType = "openrouter" | "openai" | "anthropic" | "moonshot" | "perplexity";
 
 // Attachment types
 type AttachmentType = "pdf" | "image" | "url";
@@ -62,13 +64,28 @@ const AI_MODELS: { id: string; name: string; provider: string; api: ApiType; pre
   { id: "gpt-4.1-mini", name: "GPT-4.1 Mini (Recommended)", provider: "OpenAI (Direct)", api: "openai", premium: false },
 
   // ===== MOONSHOT DIRECT (Cheapest) =====
-  { id: "kimi-k2.5", name: "Kimi K2.5 (Direct)", provider: "Moonshot (Direct)", api: "moonshot", premium: false },
+  { id: "kimi-k2.5", name: "Kimi K2.5", provider: "Moonshot (Direct)", api: "moonshot", premium: false },
+  { id: "kimi-k2-thinking", name: "Kimi K2 Thinking", provider: "Moonshot (Direct)", api: "moonshot", premium: false },
+  { id: "kimi-k2-thinking-turbo", name: "Kimi K2 Thinking Turbo", provider: "Moonshot (Direct)", api: "moonshot", premium: false },
 
-  // ===== OPENROUTER (Budget Models) =====
+  // ===== OPENROUTER (Budget & Multi-provider) =====
   { id: "google/gemini-3-flash-preview", name: "Gemini 3 Flash", provider: "Google", api: "openrouter", premium: false },
+  { id: "google/gemini-3-pro", name: "Gemini 3 Pro", provider: "Google", api: "openrouter", premium: false },
   { id: "google/gemini-2.5-flash-preview", name: "Gemini 2.5 Flash", provider: "Google", api: "openrouter", premium: false },
+  { id: "google/gemini-2.5-pro-preview", name: "Gemini 2.5 Pro", provider: "Google", api: "openrouter", premium: false },
   { id: "x-ai/grok-4.1-fast", name: "Grok 4.1 Fast", provider: "xAI", api: "openrouter", premium: false },
+  { id: "x-ai/grok-4.1", name: "Grok 4.1", provider: "xAI", api: "openrouter", premium: false },
   { id: "openai/gpt-5-mini", name: "GPT-5 Mini", provider: "OpenAI", api: "openrouter", premium: false },
+  { id: "meta-llama/llama-4-maverick", name: "Llama 4 Maverick", provider: "Meta", api: "openrouter", premium: false },
+  { id: "meta-llama/llama-4-scout", name: "Llama 4 Scout", provider: "Meta", api: "openrouter", premium: false },
+  { id: "deepseek/deepseek-r1", name: "DeepSeek R1", provider: "DeepSeek", api: "openrouter", premium: false },
+  { id: "deepseek/deepseek-chat", name: "DeepSeek V3", provider: "DeepSeek", api: "openrouter", premium: false },
+  { id: "qwen/qwen3-235b-a22b", name: "Qwen 3 235B", provider: "Alibaba", api: "openrouter", premium: false },
+
+  // ===== PERPLEXITY (Web Search + AI) =====
+  { id: "sonar-pro", name: "Sonar Pro", provider: "Perplexity", api: "perplexity", premium: false },
+  { id: "sonar", name: "Sonar", provider: "Perplexity", api: "perplexity", premium: false },
+  { id: "sonar-reasoning-pro", name: "Sonar Reasoning Pro", provider: "Perplexity", api: "perplexity", premium: false },
 
   // ===== ANTHROPIC CLAUDE (Direct API) =====
   { id: "claude-opus-4-6", name: "Claude Opus 4.6", provider: "Anthropic (Direct)", api: "anthropic", premium: true },
@@ -91,6 +108,7 @@ const API_INFO: Record<ApiType, { color: string; label: string }> = {
   openai: { color: "text-green-400", label: "Direct API" },
   anthropic: { color: "text-orange-400", label: "Direct API" },
   moonshot: { color: "text-blue-400", label: "Direct API" },
+  perplexity: { color: "text-cyan-400", label: "Web Search" },
 };
 
 // Common objections organized by category
@@ -159,6 +177,7 @@ export default function CoachPage() {
   const [copied, setCopied] = useState(false);
   const [selectedModel, setSelectedModel] = useState("gpt-4.1-mini");
   const [showModelPicker, setShowModelPicker] = useState(false);
+  const [modelSearch, setModelSearch] = useState("");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [showUrlInput, setShowUrlInput] = useState(false);
@@ -435,10 +454,22 @@ export default function CoachPage() {
             </Button>
 
             {showModelPicker && (
-              <div className="absolute right-0 mt-2 w-72 bg-graphite border border-gunmetal rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
-                <div className="p-2">
-                  <p className="text-xs text-mist px-2 py-1">Select AI Model</p>
-                  {AI_MODELS.map((model) => {
+              <div className="absolute right-0 mt-2 w-80 bg-graphite border border-gunmetal rounded-lg shadow-xl z-50">
+                <div className="p-2 border-b border-gunmetal">
+                  <Input
+                    type="text"
+                    placeholder="Search models..."
+                    value={modelSearch}
+                    onChange={(e) => setModelSearch(e.target.value)}
+                    className="bg-onyx border-gunmetal text-platinum text-sm h-8 placeholder:text-mist"
+                    autoFocus
+                  />
+                </div>
+                <div className="max-h-72 overflow-y-auto p-2">
+                  {AI_MODELS.filter((m) => {
+                    const q = modelSearch.toLowerCase();
+                    return !q || m.name.toLowerCase().includes(q) || m.provider.toLowerCase().includes(q) || m.id.toLowerCase().includes(q);
+                  }).map((model) => {
                     const isLocked = model.premium && typeof window !== "undefined" && (localStorage.getItem("user_plan") || "free") === "free";
                     return (
                       <button
@@ -479,6 +510,16 @@ export default function CoachPage() {
                       </button>
                     );
                   })}
+                </div>
+                <div className="p-2 border-t border-gunmetal">
+                  <Link
+                    href="/settings"
+                    onClick={() => setShowModelPicker(false)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-silver hover:text-platinum hover:bg-onyx transition-colors w-full"
+                  >
+                    <Key className="h-3.5 w-3.5 text-warningamber" />
+                    Manage API Keys
+                  </Link>
                 </div>
               </div>
             )}
