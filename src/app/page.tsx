@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { NavProductDropdown } from "@/components/ui/nav-product-dropdown";
 import { MobileNav } from "@/components/ui/mobile-nav";
+import { GeminiVoiceWidget } from "@/components/landing/GeminiVoiceWidget";
 import {
   Sparkles,
   ArrowRight,
@@ -794,6 +795,9 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Floating Gemini Voice Widget */}
+      <GeminiVoiceWidget />
     </div>
   );
 }
