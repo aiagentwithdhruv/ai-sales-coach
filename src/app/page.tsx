@@ -258,8 +258,56 @@ function ComparisonCell({ value }: { value: boolean | string }) {
 }
 
 export default function LandingPage() {
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "QuotaHit",
+    url: "https://www.quotahit.com",
+    description: "AI-powered sales coaching platform — practice pitches, handle objections, and analyze calls.",
+    foundingDate: "2026",
+    sameAs: [
+      "https://www.linkedin.com/in/aiwithdhruv/",
+      "https://github.com/aiagentwithdhruv",
+    ],
+  };
+
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "QuotaHit",
+    url: "https://www.quotahit.com",
+    description: "AI Sales Coach — Practice. Coach. Close.",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: "https://www.quotahit.com/blog?q={search_term_string}",
+      "query-input": "required name=search_term_string",
+    },
+  };
+
+  const softwareJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "QuotaHit",
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+    description: "AI sales coaching platform with voice practice, objection coaching, call analysis, and 12 sales tools.",
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.8",
+      ratingCount: "12",
+    },
+  };
+
   return (
     <div className="min-h-screen bg-obsidian">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }} />
       {/* ───────────────── Navigation ───────────────── */}
       <nav className="fixed top-0 left-0 right-0 z-50 glassmorphism border-b border-gunmetal">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

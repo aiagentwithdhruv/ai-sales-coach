@@ -49,6 +49,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: `${post.title} — QuotaHit Blog`,
     description: post.meta_description,
+    alternates: {
+      canonical: `https://www.quotahit.com/blog/${post.slug}`,
+    },
     openGraph: {
       title: post.title,
       description: post.meta_description,
@@ -61,6 +64,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       card: "summary_large_image",
       title: post.title,
       description: post.meta_description,
+      site: "@aiwithdhruv",
+      creator: "@aiwithdhruv",
     },
   };
 }
@@ -120,7 +125,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     image: post.hero_image_url,
     datePublished: post.published_at,
     dateModified: post.published_at,
-    author: { "@type": "Organization", name: "QuotaHit" },
+    author: {
+      "@type": "Person",
+      name: "Dhruv",
+      url: "https://www.linkedin.com/in/aiwithdhruv/",
+    },
     publisher: {
       "@type": "Organization",
       name: "QuotaHit",
@@ -130,14 +139,26 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       "@type": "WebPage",
       "@id": `https://www.quotahit.com/blog/${post.slug}`,
     },
+    keywords: post.tags.join(", "),
     wordCount: post.body.split(/\s+/).length,
     timeRequired: `PT${post.reading_time_min}M`,
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.quotahit.com" },
+      { "@type": "ListItem", position: 2, name: "Blog", item: "https://www.quotahit.com/blog" },
+      { "@type": "ListItem", position: 3, name: post.title, item: `https://www.quotahit.com/blog/${post.slug}` },
+    ],
   };
 
   return (
     <div className="min-h-screen bg-obsidian text-platinum">
       {/* Structured data */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
 
       {/* Nav */}
       <nav className="sticky top-0 z-50 border-b border-gunmetal bg-obsidian/80 backdrop-blur-xl">

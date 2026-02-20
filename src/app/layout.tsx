@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -19,10 +20,22 @@ const jetbrainsMono = JetBrains_Mono({
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.quotahit.com";
 
 export const metadata: Metadata = {
-  title: "QuotaHit — AI Sales Coach | Practice. Coach. Close.",
+  title: {
+    default: "QuotaHit — AI Sales Coach | Practice. Coach. Close.",
+    template: "%s — QuotaHit",
+  },
   description: "Your AI Sales Coach. Practice pitches with real-time voice, get instant objection coaching, and analyze calls — all powered by GPT-4o, Claude 4.6 & Kimi K2.5. 10-50x cheaper than Gong.",
-  keywords: ["AI Sales Coach", "Sales Training", "Sales Practice", "Objection Handling", "Call Analysis", "QuotaHit"],
+  keywords: [
+    "AI sales coach", "sales training AI", "AI sales practice", "objection handling AI",
+    "sales call analysis", "AI roleplay sales", "sales coaching software", "sales pitch practice",
+    "AI cold call practice", "sales objection coach", "Gong alternative", "QuotaHit",
+    "sales rep training", "voice sales practice", "AI sales tools",
+  ],
   metadataBase: new URL(siteUrl),
+  manifest: "/site.webmanifest",
+  alternates: {
+    canonical: siteUrl,
+  },
   openGraph: {
     title: "QuotaHit — AI Sales Coach",
     description: "Practice pitches with real-time voice, get instant objection coaching, and analyze calls. 10-50x cheaper than Gong.",
@@ -35,6 +48,8 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "QuotaHit — AI Sales Coach",
     description: "Practice pitches with real-time voice, get instant objection coaching, and analyze calls. 10-50x cheaper than Gong.",
+    site: "@aiwithdhruv",
+    creator: "@aiwithdhruv",
   },
 };
 
@@ -49,6 +64,16 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased bg-obsidian text-platinum min-h-screen`}
         suppressHydrationWarning
       >
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-T83FQXK3RZ"
+          strategy="afterInteractive"
+        />
+        <Script id="ga4-init" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-T83FQXK3RZ');`}
+        </Script>
         <AuthProvider>
           <CursorGlow />
           {children}

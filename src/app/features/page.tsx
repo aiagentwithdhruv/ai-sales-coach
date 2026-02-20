@@ -1,6 +1,25 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { MobileNav } from "@/components/ui/mobile-nav";
+
+export const metadata: Metadata = {
+  title: "Features — 12 AI Sales Tools in One Platform",
+  description:
+    "Real-time voice practice, objection coaching, call analysis, custom personas, meeting notes, PDF export & more. Powered by GPT-4o, Claude 4.6, Kimi K2.5. See all 12 AI sales features.",
+  keywords: [
+    "AI sales tools", "sales voice practice", "objection handling AI", "call analysis software",
+    "sales roleplay AI", "AI meeting notes", "sales persona practice", "sales coaching features",
+  ],
+  alternates: {
+    canonical: "https://www.quotahit.com/features",
+  },
+  openGraph: {
+    title: "QuotaHit Features — 12 AI-Powered Sales Tools",
+    description: "Voice practice, objection coaching, call analysis, and 9 more AI sales tools. All in one app.",
+    url: "https://www.quotahit.com/features",
+  },
+};
 import {
   Sparkles,
   ArrowRight,

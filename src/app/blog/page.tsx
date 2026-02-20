@@ -1,7 +1,26 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Sparkles, ArrowRight, Clock, Tag, BookOpen } from "lucide-react";
 import { MobileNav } from "@/components/ui/mobile-nav";
 import { createAdminClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "Sales Blog — AI Sales Tips, Coaching & Strategies",
+  description:
+    "Actionable sales tips, objection handling techniques, cold calling strategies, and AI coaching insights. Updated daily by QuotaHit's AI and sales experts.",
+  keywords: [
+    "sales blog", "sales tips", "objection handling tips", "cold calling strategies",
+    "AI sales coaching blog", "sales training articles", "B2B sales tips",
+  ],
+  alternates: {
+    canonical: "https://www.quotahit.com/blog",
+  },
+  openGraph: {
+    title: "QuotaHit Blog — AI Sales Tips & Coaching",
+    description: "Daily sales tips, objection handling, cold calling strategies. Written by AI and sales experts.",
+    url: "https://www.quotahit.com/blog",
+  },
+};
 
 interface BlogPost {
   id: string;
@@ -37,16 +56,6 @@ async function getPosts(page: number, tag?: string) {
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 }
-
-export const metadata = {
-  title: "Sales Blog — QuotaHit | AI Sales Tips, Objection Handling & Closing Techniques",
-  description: "Expert sales tips, AI coaching insights, objection handling scripts, and closing techniques. Learn how to sell smarter with AI-powered sales coaching.",
-  openGraph: {
-    title: "Sales Blog — QuotaHit",
-    description: "Expert sales tips, AI coaching insights, and closing techniques.",
-    type: "website",
-  },
-};
 
 export default async function BlogPage({
   searchParams,
