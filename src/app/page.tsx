@@ -287,6 +287,12 @@ export default function LandingPage() {
                 Pricing
               </Link>
               <Link
+                href="/blog"
+                className="text-silver hover:text-platinum transition-colors"
+              >
+                Blog
+              </Link>
+              <Link
                 href="/login"
                 className="text-silver hover:text-platinum transition-colors"
               >
@@ -765,6 +771,12 @@ export default function LandingPage() {
                 className="text-sm text-mist hover:text-silver transition-colors"
               >
                 Pricing
+              </Link>
+              <Link
+                href="/blog"
+                className="text-sm text-mist hover:text-silver transition-colors"
+              >
+                Blog
               </Link>
               <a
                 href="https://n8n.aiwithdhruv.cloud/form/10f459a3-ca15-466e-b718-8b11f312c3f8"
