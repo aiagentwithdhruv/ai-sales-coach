@@ -32,6 +32,9 @@ export const metadata: Metadata = {
     "sales rep training", "voice sales practice", "AI sales tools",
   ],
   metadataBase: new URL(siteUrl),
+  verification: {
+    google: "Kv0oGUXvwgTGbYfPPdE6Ry_kwsdHjImBJyHuFBWFnPc",
+  },
   manifest: "/site.webmanifest",
   alternates: {
     canonical: siteUrl,
