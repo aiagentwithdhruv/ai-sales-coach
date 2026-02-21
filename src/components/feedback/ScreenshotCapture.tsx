@@ -57,17 +57,21 @@ export function ScreenshotCapture({
     }
   }, [isAnnotating, value]);
 
-  const handleCapture = useCallback(async () => {
+  const handleCapture = useCallback(() => {
     setIsCapturing(true);
-    try {
-      const dataUrl = await capturePageScreenshot(widgetRef?.current);
-      onChange(dataUrl);
-      setIsAnnotating(true);
-    } catch {
-      // Capture failed silently
-    } finally {
-      setIsCapturing(false);
-    }
+    // Use setTimeout to fully break out of the click event handler,
+    // preventing INP violations from html2canvas blocking the main thread
+    setTimeout(async () => {
+      try {
+        const dataUrl = await capturePageScreenshot(widgetRef?.current);
+        onChange(dataUrl);
+        setIsAnnotating(true);
+      } catch {
+        // Capture failed silently
+      } finally {
+        setIsCapturing(false);
+      }
+    }, 0);
   }, [onChange, widgetRef]);
 
   const handleFileDrop = useCallback(

@@ -8,7 +8,7 @@ import html2canvas from "html2canvas";
 const MAX_WIDTH = 1200;
 const JPEG_QUALITY = 0.7;
 
-/** Capture the current page as a JPEG data URL */
+/** Capture the visible viewport as a JPEG data URL */
 export async function capturePageScreenshot(
   hideElement?: HTMLElement | null
 ): Promise<string> {
@@ -17,16 +17,22 @@ export async function capturePageScreenshot(
     hideElement.style.visibility = "hidden";
   }
 
-  // Wait one frame for the UI to update
-  await new Promise((r) => requestAnimationFrame(r));
+  // Yield to browser so visibility change paints and click handler finishes
+  // This prevents INP violations by splitting the heavy work off the event
+  await new Promise((r) => setTimeout(r, 50));
 
-  const canvas = await html2canvas(document.documentElement, {
+  const canvas = await html2canvas(document.body, {
     useCORS: true,
     scale: 1,
     logging: false,
     backgroundColor: "#0B0F14", // obsidian
-    windowWidth: document.documentElement.scrollWidth,
-    windowHeight: document.documentElement.scrollHeight,
+    // Only capture the visible viewport, not the entire scrollable page
+    x: window.scrollX,
+    y: window.scrollY,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    windowWidth: window.innerWidth,
+    windowHeight: window.innerHeight,
   });
 
   // Restore visibility
