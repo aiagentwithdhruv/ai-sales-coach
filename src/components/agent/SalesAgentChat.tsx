@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useMemo } from "react";
 import { useChat } from "ai/react";
 import { Send, Loader2 } from "lucide-react";
 import { SalesAgentMessage } from "./SalesAgentMessage";
@@ -46,6 +46,35 @@ export function SalesAgentChat({
     inputRef.current?.focus();
   }, []);
 
+  // Filter out duplicate/empty messages from multi-step tool calls.
+  // When maxSteps > 1, the AI SDK creates intermediate assistant messages
+  // (tool call steps) alongside the final text response, causing duplicates.
+  const visibleMessages = useMemo(() => {
+    const filtered = messages.filter((msg) => {
+      // Always show user messages
+      if (msg.role === "user") return true;
+      // Only show assistant messages that have actual text content
+      if (!msg.content || !msg.content.trim()) return false;
+      return true;
+    });
+
+    // Deduplicate consecutive assistant messages with identical content
+    const deduped: typeof filtered = [];
+    for (const msg of filtered) {
+      const prev = deduped[deduped.length - 1];
+      if (
+        prev &&
+        prev.role === "assistant" &&
+        msg.role === "assistant" &&
+        prev.content === msg.content
+      ) {
+        continue; // Skip duplicate
+      }
+      deduped.push(msg);
+    }
+    return deduped;
+  }, [messages]);
+
   return (
     <div className="flex flex-col h-full">
       {/* Messages area */}
@@ -54,7 +83,7 @@ export function SalesAgentChat({
         className="flex-1 overflow-y-auto px-3 py-3 space-y-1 scrollbar-thin scrollbar-thumb-gunmetal"
         style={{ maxHeight: "calc(100% - 56px)" }}
       >
-        {messages.map((msg) => (
+        {visibleMessages.map((msg) => (
           <SalesAgentMessage
             key={msg.id}
             role={msg.role as "user" | "assistant"}
