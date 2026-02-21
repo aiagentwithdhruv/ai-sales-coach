@@ -37,7 +37,8 @@
 | **Payments** | Stripe (module-based subscriptions) |
 | **Hosting** | Vercel (auto-deploy from GitHub) |
 | **Domain** | quotahit.com |
-| **Automation** | n8n (self-hosted for AI call workflows) |
+| **Automation** | n8n (self-hosted — feedback handling, blog publishing, lead capture) |
+| **Screenshots** | html2canvas (CleanShot-style region capture + annotation) |
 
 ---
 
@@ -90,6 +91,51 @@
 - Landing page with OG images for social sharing
 - Stripe-integrated pricing page with module selection
 
+### AI Sales Agent — Sarah (Week 2)
+
+Built a floating AI sales agent widget that lives on the pricing page:
+
+- **What:** A chat widget powered by Grok 4.1 Fast (via OpenRouter) that proactively greets visitors after 10 seconds
+- **Why:** Converts pricing page visitors into leads without a human being online
+- **How it works:**
+  1. Visitor lands on pricing page → widget auto-opens after 10s with audio chime
+  2. Sarah introduces herself, answers product questions, handles objections
+  3. Captures name + email when the visitor is interested
+  4. Lead data routes to n8n webhook → Telegram notification + Google Sheet
+- **Tech:** Floating widget with pulsing cyan glow, cookie-based visitor tracking (365-day), streaming AI responses, Web Audio API for notification sounds
+- **Key files:** `src/components/agent/SalesAgentWidget.tsx`, `src/app/api/agent/sales/route.ts`
+
+### Daily Blog Engine (Week 2)
+
+Automated SEO blog publishing — one post per day, zero manual effort:
+
+- **What:** n8n workflow generates and publishes a blog post every day at 9AM IST
+- **Why:** SEO traffic is free distribution. 60 rotating topics across 10 categories (cold calling, objection handling, negotiation, etc.)
+- **How it works:**
+  1. n8n Schedule Trigger fires daily at 9AM IST
+  2. Claude Sonnet 4.6 writes a 1500-word SEO-optimized blog post
+  3. Nano Banana (via OpenRouter) generates a hero image
+  4. Image uploads to Google Drive, post saves to Supabase `blog_posts` table
+  5. Blog frontend renders with pagination, tag filtering, and full SEO metadata
+- **Cost:** ~$1.80/month for daily posts (Claude Sonnet + image generation)
+- **Key files:** `src/app/blog/page.tsx`, `src/app/api/blog/route.ts`
+
+### Feedback & Bug Report Widget (Week 2)
+
+Built a CleanShot-style feedback system directly into the app:
+
+- **What:** Floating widget on every page with two tabs — Report (bugs/features/feedback) and Vote (upvote planned features)
+- **Why:** Users and Dhruv during demos can report bugs with screenshots instantly. Feedback routes directly to Telegram + email.
+- **How it works:**
+  1. User clicks feedback button (bottom-left, amber glow)
+  2. Selects category → fills in context-specific form fields → captures screenshot
+  3. **CleanShot-style region capture:** Click "Select Area" → viewport freezes → drag to select region → cyan border with corner handles + dimension labels → crop
+  4. Annotation tools: draw red rectangles and freehand lines to highlight issues
+  5. Submit → POST to Next.js API → n8n webhook → screenshot uploads to Google Drive → Telegram + Gmail notification → Google Sheet logging
+- **Tech:** html2canvas for viewport capture, Canvas API for region selection + annotation, React portal for fullscreen overlay, n8n workflow with 18 nodes
+- **Suggestion voting:** Pre-defined features users can upvote, tracked via localStorage + Google Sheet
+- **Key files:** `src/components/feedback/ScreenshotCapture.tsx`, `src/lib/screenshot.ts`, `n8n-workflows/feedback-widget.json`
+
 ---
 
 ## Architecture (How It Works)
@@ -100,29 +146,45 @@ User (Browser)
     ▼
 Next.js Frontend (Vercel — Free)
     │
-    ├── /dashboard/coach → Text chat with AI coach
-    ├── /dashboard/practice → Real-time voice via WebSocket
-    └── /dashboard/calls → Upload audio → Whisper → GPT analysis
+    ├── /                         → Landing page (hero, features, pricing)
+    ├── /blog                     → SEO blog (auto-published daily)
+    ├── /pricing                  → Pricing page + AI Sales Agent Sarah
+    ├── /dashboard/coach          → Text chat with AI coach
+    ├── /dashboard/practice       → Real-time voice via WebSocket
+    ├── /dashboard/calls          → Upload audio → Whisper → GPT analysis
+    ├── /dashboard/crm            → Contact management + pipeline
+    ├── /dashboard/ai-calling     → Outbound AI calling campaigns
+    └── [Feedback Widget]         → Floating on ALL pages (bottom-left)
     │
     ▼
 Next.js API Routes (Serverless Functions)
     │
-    ├── /api/ai/chat → Routes to OpenAI/Anthropic/OpenRouter/Perplexity
-    ├── /api/ai/realtime-token → Gets ephemeral token for voice
-    ├── /api/ai/speak → ElevenLabs TTS
-    ├── /api/user-keys → BYOAPI key management (encrypted)
-    ├── /api/contacts → CRM contact management
-    ├── /api/calling → AI outbound calling (Twilio)
-    └── /api/ai/transcribe → Whisper transcription
+    ├── /api/ai/chat              → Routes to OpenAI/Anthropic/OpenRouter/Perplexity
+    ├── /api/ai/realtime-token    → Gets ephemeral token for voice
+    ├── /api/ai/speak             → ElevenLabs TTS
+    ├── /api/agent/sales          → Sales Agent Sarah (Grok 4.1 Fast)
+    ├── /api/blog                 → Blog CRUD (auto-publish from n8n)
+    ├── /api/feedback             → Feedback submission → n8n webhook
+    ├── /api/feedback/vote        → Suggestion voting → n8n webhook
+    ├── /api/user-keys            → BYOAPI key management (encrypted)
+    ├── /api/contacts             → CRM contact management
+    ├── /api/calling              → AI outbound calling (Twilio)
+    └── /api/ai/transcribe        → Whisper transcription
     │
     ▼
-Supabase (Free)
-    ├── Auth (email/password + OAuth)
-    ├── PostgreSQL (users, contacts, teams, campaigns, API keys)
-    └── Row Level Security (each user sees only their data)
+Supabase (Free)                            n8n (Self-Hosted — Free)
+├── Auth (email/password + OAuth)          ├── Feedback Handler (18 nodes)
+├── PostgreSQL (users, contacts,           │   → Google Drive (screenshots)
+│   teams, campaigns, API keys,            │   → Telegram + Gmail notification
+│   blog_posts)                            │   → Google Sheet logging
+└── Row Level Security                     ├── Daily Blog Engine (13 nodes)
+                                           │   → Claude Sonnet + image gen
+                                           │   → Google Drive + Supabase
+                                           └── Sales Agent Leads
+                                               → Telegram notification
 ```
 
-**Key insight:** No separate backend server. Next.js API routes ARE the backend — they run as serverless functions on Vercel for free.
+**Key insight:** No separate backend server. Next.js API routes ARE the backend — they run as serverless functions on Vercel for free. n8n handles async automation (notifications, screenshots, blog publishing).
 
 ---
 
@@ -137,6 +199,7 @@ Supabase (Free)
 | **Day 5** | Credit system, personas, session history |
 | **Day 6** | Landing page, pricing page, OG images, polish |
 | **Day 7** | Deploy, test, fix bugs, go live |
+| **Week 2** | AI Sales Agent Sarah, daily blog engine, feedback widget with CleanShot-style screenshot capture, n8n automation backend |
 
 ---
 
@@ -169,6 +232,10 @@ Supabase (Free)
 5. **Pay-as-you-go AI is cheap** — Kimi K2.5 costs fractions of a cent per message. Even GPT-4o Realtime voice costs ~$0.10-0.15 per minute.
 
 6. **Ship fast, iterate later** — Week 1: core features. Week 2+: polish, marketing, monetization. Don't build everything before launching.
+
+7. **n8n for async automation** — Instead of building notification systems, email senders, and screenshot uploaders in code, use n8n workflows. One webhook + a few nodes replaces hundreds of lines of code. Self-hosted n8n is free.
+
+8. **html2canvas for in-app screenshots** — Users can capture and annotate screenshots without leaving the app. CleanShot-style region selection (drag to select area) makes bug reports 10x more useful than full-page screenshots.
 
 ---
 

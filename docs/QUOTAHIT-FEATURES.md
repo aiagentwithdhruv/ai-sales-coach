@@ -25,6 +25,9 @@
 16. [Security & Compliance](#16-security--compliance)
 17. [Technical Architecture](#17-technical-architecture)
 18. [Pricing & Plans](#18-pricing--plans)
+19. [AI Sales Agent — Sarah](#19-ai-sales-agent--sarah)
+20. [Daily Blog Engine](#20-daily-blog-engine)
+21. [Feedback & Bug Report Widget](#21-feedback--bug-report-widget)
 
 ---
 
@@ -787,6 +790,220 @@ Every database table has RLS policies ensuring:
 | **Nooks** | $200-417 | AI dialer + analytics | QuotaHit adds CRM + coaching + practice |
 | **Second Nature** | $100+ | Role-play only | QuotaHit adds CRM + calling + analytics |
 | **QuotaHit** | **$79-249** | **Everything above, combined** | **5-7 tools in one** |
+
+---
+
+## 19. AI Sales Agent — Sarah
+
+### Overview
+A proactive AI sales agent that lives on the pricing page as a floating chat widget. Sarah greets visitors, answers product questions, handles objections, and captures leads — powered by Grok 4.1 Fast via OpenRouter.
+
+### Features
+
+| Feature | Description |
+|---------|-------------|
+| **Proactive Greeting** | Auto-opens after 10 seconds on pricing page with audio notification chime |
+| **AI Conversations** | Streaming responses powered by Grok 4.1 Fast (via OpenRouter) |
+| **Lead Capture** | Captures visitor name + email during natural conversation |
+| **Visitor Tracking** | Cookie-based visitor ID with 365-day persistence |
+| **Audio Notification** | Two-tone sine wave chime (C5 523Hz + E5 659Hz) via Web Audio API |
+| **n8n Integration** | Leads route to n8n webhook → Telegram + Google Sheet |
+| **Animated Widget** | Pulsing cyan glow with spinning border gradient |
+
+### How It Works
+
+1. Visitor lands on the pricing page
+2. After 10 seconds, the chat widget auto-opens with a chime sound
+3. Sarah greets the visitor: "Hey there! I'm Sarah. Noticed you checking out pricing..."
+4. Visitor asks questions about features, pricing, or use cases
+5. When visitor shows interest, Sarah naturally captures their name and email
+6. Lead data POSTs to n8n webhook → Telegram notification to Dhruv + Google Sheet logging
+
+### Key Files
+
+- `src/components/agent/SalesAgentWidget.tsx` — Floating button + panel container
+- `src/components/agent/SalesAgentChat.tsx` — Message streaming, deduplication, auto-scroll
+- `src/components/agent/SalesAgentMessage.tsx` — Individual message rendering
+- `src/app/api/agent/sales/route.ts` — Chat endpoint (Grok 4.1 Fast via OpenRouter)
+
+### Benefits
+
+- Converts pricing page visitors into leads without a human being online
+- Available 24/7 — never misses a visitor
+- Handles common objections automatically
+- Zero cost (Grok 4.1 Fast is extremely cheap per message)
+
+---
+
+## 20. Daily Blog Engine
+
+### Overview
+An automated SEO content engine that publishes one blog post per day at 9AM IST — zero manual effort. Claude Sonnet 4.6 writes the content, Nano Banana generates hero images, and n8n orchestrates the entire pipeline.
+
+### Features
+
+| Feature | Description |
+|---------|-------------|
+| **Daily Publishing** | One SEO-optimized post every day at 9AM IST |
+| **AI Content Generation** | Claude Sonnet 4.6 writes 1500-word posts |
+| **AI Image Generation** | Nano Banana (via OpenRouter) creates hero images |
+| **60 Rotating Topics** | 10 categories x 6 topics each — never repeats in 2 months |
+| **Full SEO Metadata** | Title, meta description, OG tags, Twitter cards, JSON-LD |
+| **Tag Filtering** | Filter posts by category tags |
+| **Pagination** | 12 posts per page with navigation |
+| **Markdown Rendering** | Rich formatted content (headers, lists, code blocks, tables) |
+
+### Content Categories
+
+1. Cold Calling Techniques
+2. Objection Handling
+3. Discovery & Qualification
+4. Negotiation & Closing
+5. Sales Psychology
+6. Follow-Up Strategies
+7. Sales Technology
+8. Team Management
+9. Pipeline Management
+10. Industry-Specific Sales
+
+### How It Works
+
+1. n8n Schedule Trigger fires daily at 9AM IST
+2. Selects next topic from 60-topic rotation
+3. Claude Sonnet 4.6 generates a 1500-word SEO-optimized blog post
+4. Nano Banana generates a hero image matching the topic
+5. Image uploads to Google Drive folder
+6. Post saves to Supabase `blog_posts` table (title, slug, body, hero_image_url, tags, reading_time)
+7. Blog frontend auto-displays the new post
+
+### Key Files
+
+- `src/app/blog/page.tsx` — Paginated blog listing with tag filtering
+- `src/app/blog/[slug]/page.tsx` — Individual post page with SEO metadata
+- `src/app/api/blog/route.ts` — GET (list) + POST (create from n8n)
+- `src/app/api/blog/[slug]/route.ts` — GET (single post) + POST (update)
+
+### Cost
+
+~$1.80/month for daily posts (Claude Sonnet text generation + Nano Banana image generation via OpenRouter).
+
+### Benefits
+
+- Completely hands-off SEO content pipeline
+- Builds organic traffic over time
+- Establishes QuotaHit as a thought leader in sales coaching
+- 60 unique topics means 2 months of content before any rotation
+
+---
+
+## 21. Feedback & Bug Report Widget
+
+### Overview
+A CleanShot-style in-app feedback system with region screenshot capture, annotation tools, and suggestion voting. Floating widget available on every page for both anonymous visitors and logged-in users. All feedback routes through n8n to Telegram, Gmail, and Google Sheets.
+
+### Features
+
+| Feature | Description |
+|---------|-------------|
+| **Floating Widget** | Fixed bottom-left on all pages, amber glowing border animation |
+| **Two Tabs** | "Report" (submit feedback) + "Vote" (upvote planned features) |
+| **4 Categories** | Bug, Feature Request, Feedback, Improvement |
+| **5-Star Rating** | Clickable star rating with hover preview |
+| **Smart Form Fields** | Context-specific labels change per category |
+| **Region Screenshot** | CleanShot-style drag-to-select area capture |
+| **Annotation Tools** | Draw red rectangles and freehand lines on screenshots |
+| **Drag & Drop Upload** | Alternative to capture — drop an image file |
+| **Suggestion Voting** | Upvote pre-defined features, sorted by popularity |
+| **n8n Backend** | Screenshots → Google Drive, notifications → Telegram + Gmail, logging → Google Sheet |
+
+### Category-Specific Smart Prompts
+
+| Category | Primary Field | Secondary Field | Tertiary Field |
+|----------|---------------|-----------------|----------------|
+| Bug | What happened? | What did you expect? | Steps to reproduce |
+| Feature Request | What feature? | Why would this help? | — |
+| Feedback | What do you love? | What don't you love? | What to improve? |
+| Improvement | What to improve? | How would you change it? | — |
+
+### Screenshot Capture Flow
+
+1. User clicks "Select Area" button
+2. Widget panel hides temporarily
+3. `html2canvas` captures the visible viewport as a Canvas
+4. Dark overlay appears over the entire screen
+5. User drags to select a rectangular region (cyan dashed border, corner handles, dimension labels)
+6. Selected region is cropped and compressed to JPEG (max 1200px width, 0.7 quality)
+7. Annotation mode activates — user can draw red rectangles and freehand lines
+8. "Done" saves the annotated screenshot as a data URL
+9. ESC cancels at any point, minimum 20px region required
+
+### Suggestion Voting (Vote Tab)
+
+Pre-defined features users can upvote:
+
+| Suggestion | Description |
+|------------|-------------|
+| Team Dashboard | See your whole team's coaching progress |
+| Mobile App | Practice sales pitches on the go |
+| CRM Integrations | Sync with Salesforce, HubSpot, Pipedrive |
+| Custom AI Personas | Create your own buyer personas |
+| Live Call Recording | Record real calls for instant coaching |
+| AI Email Templates | Generate follow-ups from call analysis |
+| Sales Leaderboard | Compete with teammates on scores |
+| API Access | Integrate QuotaHit into your tools |
+
+- Votes tracked via `localStorage` (prevents duplicate votes per visitor)
+- Vote counts persisted in Google Sheet (`Suggestion Votes` tab)
+- Items sorted by most votes
+
+### n8n Backend Workflow (18 Nodes)
+
+```
+Webhook → Is Feedback? → Has Screenshot?
+                              │
+                    ┌─────────┴──────────┐
+                    ▼                    ▼
+            Base64 to Binary      No Screenshot
+                    │                    │
+                    ▼                    │
+          Upload to Drive               │
+                    │                    │
+                    ▼                    │
+         Set Screenshot URL             │
+                    │                    │
+                    └────────┬───────────┘
+                             ▼
+                      Format Feedback
+                    ┌────────┼────────┐
+                    ▼        ▼        ▼
+              Telegram    Gmail    Sheet
+                    └────────┬────────┘
+                             ▼
+                         Respond OK
+```
+
+**Vote flow:** Webhook → Format Vote → Log Vote (Sheet) → Respond OK
+
+### Key Files
+
+- `src/components/feedback/FeedbackWidget.tsx` — Main container with tabs
+- `src/components/feedback/FeedbackForm.tsx` — Multi-section form
+- `src/components/feedback/ScreenshotCapture.tsx` — Region capture + annotation
+- `src/components/feedback/SuggestionVote.tsx` — Voting interface
+- `src/components/feedback/StarRating.tsx` — 5-star rating
+- `src/lib/screenshot.ts` — html2canvas capture + crop + compress utilities
+- `src/lib/suggestions.ts` — Pre-defined suggestions list
+- `src/app/api/feedback/route.ts` — Feedback submission endpoint
+- `src/app/api/feedback/vote/route.ts` — Vote submission endpoint
+- `n8n-workflows/feedback-widget.json` — Full n8n workflow JSON (importable)
+
+### Benefits
+
+- Bug reports include actual screenshots with annotations — 10x more useful than text descriptions
+- Feedback routes directly to Telegram — issues get fixed within minutes
+- Suggestion voting shows users their voice matters and helps prioritize features
+- Works for both anonymous visitors and logged-in users
+- Zero database overhead — Google Sheet serves as the data store
 
 ---
 

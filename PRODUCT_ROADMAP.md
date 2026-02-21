@@ -1,6 +1,6 @@
 # QuotaHit — Product Roadmap (Summary for Design Doc)
 
-Last updated: 2026-02-12
+Last updated: 2026-02-22
 
 ## 1) What is already built (live in UI)
 
@@ -110,6 +110,54 @@ Key files:
 - `src/app/api/calling/campaigns/route.ts`
 - `src/lib/calling/pipeline.ts`
 - `src/lib/calling/campaign-executor.ts`
+
+### AI Sales Agent — Sarah (NEW — Feb 2026)
+- Floating chat widget on the pricing page.
+- Powered by Grok 4.1 Fast (via OpenRouter).
+- Auto-opens after 10 seconds with audio chime notification.
+- Captures leads (name + email) and routes to n8n → Telegram + Google Sheet.
+- Cookie-based visitor tracking (365-day persistence).
+
+Key files:
+- `src/components/agent/SalesAgentWidget.tsx`
+- `src/components/agent/SalesAgentChat.tsx`
+- `src/app/api/agent/sales/route.ts`
+
+### Daily Blog Engine (NEW — Feb 2026)
+- Automated SEO blog publishing — one post per day at 9AM IST.
+- Claude Sonnet 4.6 writes content, Nano Banana generates hero images.
+- Posts stored in Supabase `blog_posts` table, images in Google Drive.
+- Blog frontend with pagination, tag filtering, markdown rendering, and full SEO metadata.
+- 60 rotating topics across 10 sales categories.
+- Cost: ~$1.80/month.
+
+Key files:
+- `src/app/blog/page.tsx`
+- `src/app/blog/[slug]/page.tsx`
+- `src/app/api/blog/route.ts`
+
+### Feedback & Bug Report Widget (NEW — Feb 2026)
+- Floating widget on all pages (bottom-left, amber glow).
+- Two tabs: Report (bugs/features/feedback) + Vote (upvote planned features).
+- Category-specific smart form fields (Bug shows "Steps to reproduce", Feature shows "Why would this help?").
+- 5-star rating system.
+- CleanShot-style region screenshot capture: click "Select Area" → drag to select region → cyan border with handles → crop.
+- Annotation tools: draw red rectangles and freehand lines on screenshots.
+- Drag-and-drop image upload alternative.
+- Backend: n8n workflow (18 nodes) → Google Drive (screenshots) → Telegram + Gmail → Google Sheet.
+- Suggestion voting with localStorage tracking + Google Sheet persistence.
+
+Key files:
+- `src/components/feedback/FeedbackWidget.tsx`
+- `src/components/feedback/FeedbackForm.tsx`
+- `src/components/feedback/ScreenshotCapture.tsx`
+- `src/components/feedback/SuggestionVote.tsx`
+- `src/components/feedback/StarRating.tsx`
+- `src/lib/screenshot.ts`
+- `src/lib/suggestions.ts`
+- `src/app/api/feedback/route.ts`
+- `src/app/api/feedback/vote/route.ts`
+- `n8n-workflows/feedback-widget.json`
 
 ### Additional Features Built
 - Team management and invitations
