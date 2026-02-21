@@ -10,7 +10,9 @@
  */
 
 import { tool } from "ai";
-import { z } from "zod/v3";
+// Use zod v3 compat — Vercel AI SDK's zod-to-json-schema doesn't support zod v4 schemas
+import { z as zv3 } from "zod/v3";
+const z = zv3 as any;
 import {
   MODULES,
   BUNDLE,
@@ -221,8 +223,8 @@ export function getSalesAgentTools(visitorId: string, conversationId?: string) {
 
           const total = modules.includes("bundle")
             ? BUNDLE.monthlyPrice
-            : modules.reduce(
-                (sum, m) =>
+            : (modules as string[]).reduce(
+                (sum: number, m: string) =>
                   sum + (MODULES[m as ModuleSlug]?.monthlyPrice || 0),
                 0
               );
