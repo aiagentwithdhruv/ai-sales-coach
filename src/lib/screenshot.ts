@@ -1,6 +1,6 @@
 /**
  * Screenshot capture utilities using html2canvas.
- * Handles page capture, compression, and resize.
+ * Supports region selection (CleanShot-style) capture, compression, and crop.
  */
 
 import html2canvas from "html2canvas";
@@ -8,25 +8,25 @@ import html2canvas from "html2canvas";
 const MAX_WIDTH = 1200;
 const JPEG_QUALITY = 0.7;
 
-/** Capture the visible viewport as a JPEG data URL */
-export async function capturePageScreenshot(
+/**
+ * Capture the visible viewport as a raw Canvas element.
+ * Does NOT restore hideElement visibility — caller must handle that.
+ */
+export async function captureViewportCanvas(
   hideElement?: HTMLElement | null
-): Promise<string> {
-  // Temporarily hide the feedback widget during capture
+): Promise<HTMLCanvasElement> {
   if (hideElement) {
     hideElement.style.visibility = "hidden";
   }
 
-  // Yield to browser so visibility change paints and click handler finishes
-  // This prevents INP violations by splitting the heavy work off the event
+  // Yield to browser so visibility change paints
   await new Promise((r) => setTimeout(r, 50));
 
   const canvas = await html2canvas(document.body, {
     useCORS: true,
     scale: 1,
     logging: false,
-    backgroundColor: "#0B0F14", // obsidian
-    // Only capture the visible viewport, not the entire scrollable page
+    backgroundColor: "#0B0F14",
     x: window.scrollX,
     y: window.scrollY,
     width: window.innerWidth,
@@ -35,12 +35,31 @@ export async function capturePageScreenshot(
     windowHeight: window.innerHeight,
   });
 
-  // Restore visibility
-  if (hideElement) {
-    hideElement.style.visibility = "visible";
-  }
+  return canvas;
+}
 
-  return compressCanvas(canvas);
+/** Crop a rectangular region from a canvas and return compressed JPEG data URL */
+export function cropFromCanvas(
+  canvas: HTMLCanvasElement,
+  region: { x: number; y: number; w: number; h: number }
+): string {
+  // Normalize negative dimensions (drag right-to-left or bottom-to-top)
+  const sx = region.w < 0 ? region.x + region.w : region.x;
+  const sy = region.h < 0 ? region.y + region.h : region.y;
+  const sw = Math.abs(region.w);
+  const sh = Math.abs(region.h);
+
+  if (sw < 2 || sh < 2) return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+
+  const cropped = document.createElement("canvas");
+  cropped.width = sw;
+  cropped.height = sh;
+
+  const ctx = cropped.getContext("2d");
+  if (!ctx) return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+
+  ctx.drawImage(canvas, sx, sy, sw, sh, 0, 0, sw, sh);
+  return compressCanvas(cropped);
 }
 
 /** Compress a canvas to JPEG, resizing if wider than MAX_WIDTH */
@@ -49,7 +68,6 @@ function compressCanvas(canvas: HTMLCanvasElement): string {
     return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
   }
 
-  // Resize
   const ratio = MAX_WIDTH / canvas.width;
   const resized = document.createElement("canvas");
   resized.width = MAX_WIDTH;
