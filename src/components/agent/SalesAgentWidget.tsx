@@ -65,7 +65,7 @@ function playNotificationChime() {
 }
 
 const PROACTIVE_GREETING =
-  "Hey! I'm Sarah from QuotaHit. Looking at our pricing? I can help you find the perfect plan for your team. What kind of sales tools are you looking for?";
+  "Hey there! I'm Sarah. Noticed you checking out pricing — want me to help you figure out which modules actually make sense for your team? No sales pitch, just honest advice.";
 
 export function SalesAgentWidget({
   pageContext = "pricing",
@@ -129,7 +129,7 @@ export function SalesAgentWidget({
                   Sarah from QuotaHit
                 </p>
                 <p className="text-[10px] text-emerald-400 leading-tight">
-                  Online • Usually responds instantly
+                  Available 24/7 • Replies in seconds
                 </p>
               </div>
             </div>
