@@ -4,6 +4,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CursorGlow } from "@/components/ui/cursor-glow";
+import { ContactBanner } from "@/components/ui/contact-banner";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -78,6 +79,7 @@ gtag('js', new Date());
 gtag('config', 'G-T83FQXK3RZ');`}
         </Script>
         <AuthProvider>
+          <ContactBanner />
           <CursorGlow />
           {children}
         </AuthProvider>
