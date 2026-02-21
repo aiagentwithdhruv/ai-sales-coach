@@ -20,7 +20,7 @@ import { buildVisitorContextString } from "@/lib/agent/visitor-memory";
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-const AGENT_MODEL = "openai/gpt-4.1-mini";
+const AGENT_MODEL = "x-ai/grok-4.1-fast";
 
 function getOpenRouterModel() {
   return createOpenAI({
