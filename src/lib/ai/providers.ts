@@ -52,7 +52,7 @@ function createAnthropicProvider(apiKey?: string) {
   });
 }
 
-function createOpenRouterProvider(apiKey?: string) {
+export function createOpenRouterProvider(apiKey?: string) {
   return createOpenAI({
     apiKey: apiKey || process.env.OPENROUTER_API_KEY,
     baseURL: "https://openrouter.ai/api/v1",

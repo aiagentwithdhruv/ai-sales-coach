@@ -25,6 +25,7 @@ import {
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import { SalesAgentWidget } from "@/components/agent/SalesAgentWidget";
 import {
   MODULES,
   ALL_MODULE_SLUGS,
@@ -845,6 +846,9 @@ export default function PricingPage() {
           </div>
         </div>
       )}
+
+      {/* Sales Agent Chat Widget */}
+      <SalesAgentWidget pageContext="pricing" />
     </div>
   );
 }
