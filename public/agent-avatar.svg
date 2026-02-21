@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#00c8e8"/>
+      <stop offset="100%" stop-color="#00b3ff"/>
+    </linearGradient>
+    <linearGradient id="skin" x1="40" y1="30" x2="80" y2="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f5d0b0"/>
+      <stop offset="100%" stop-color="#e8b891"/>
+    </linearGradient>
+    <linearGradient id="hair" x1="35" y1="15" x2="85" y2="55" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2c1810"/>
+      <stop offset="100%" stop-color="#1a0e08"/>
+    </linearGradient>
+    <linearGradient id="shirt" x1="30" y1="85" x2="90" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0a0a14"/>
+      <stop offset="100%" stop-color="#111120"/>
+    </linearGradient>
+    <clipPath id="circle">
+      <circle cx="60" cy="60" r="58"/>
+    </clipPath>
+  </defs>
+  <!-- Background circle -->
+  <circle cx="60" cy="60" r="60" fill="url(#bg)"/>
+  <circle cx="60" cy="60" r="58" fill="#0a0a14"/>
+  <g clip-path="url(#circle)">
+    <!-- Shirt/body -->
+    <ellipse cx="60" cy="120" rx="42" ry="35" fill="url(#shirt)"/>
+    <ellipse cx="60" cy="120" rx="42" ry="35" fill="none" stroke="#00c8e8" stroke-width="0.5" opacity="0.3"/>
+    <!-- Neckline V -->
+    <path d="M48 88 L60 100 L72 88" fill="none" stroke="#00c8e8" stroke-width="0.8" opacity="0.4"/>
+    <!-- Neck -->
+    <rect x="52" y="76" width="16" height="14" rx="6" fill="url(#skin)"/>
+    <!-- Face -->
+    <ellipse cx="60" cy="58" rx="22" ry="26" fill="url(#skin)"/>
+    <!-- Hair back volume -->
+    <ellipse cx="60" cy="48" rx="28" ry="28" fill="url(#hair)"/>
+    <!-- Hair top shape -->
+    <path d="M32 50 Q32 22 60 20 Q88 22 88 50 Q86 38 75 32 Q65 28 60 28 Q55 28 45 32 Q34 38 32 50Z" fill="url(#hair)"/>
+    <!-- Side hair left -->
+    <path d="M34 48 Q30 60 33 80 Q35 70 38 60 Q36 52 34 48Z" fill="url(#hair)"/>
+    <!-- Side hair right -->
+    <path d="M86 48 Q90 60 87 80 Q85 70 82 60 Q84 52 86 48Z" fill="url(#hair)"/>
+    <!-- Bangs -->
+    <path d="M40 38 Q45 30 60 28 Q55 35 48 38Z" fill="url(#hair)" opacity="0.8"/>
+    <!-- Eyes -->
+    <ellipse cx="50" cy="56" rx="4" ry="3.5" fill="#fff"/>
+    <ellipse cx="70" cy="56" rx="4" ry="3.5" fill="#fff"/>
+    <circle cx="50.5" cy="56.5" r="2.2" fill="#1a1a2e"/>
+    <circle cx="70.5" cy="56.5" r="2.2" fill="#1a1a2e"/>
+    <circle cx="51.2" cy="55.5" r="0.8" fill="#fff"/>
+    <circle cx="71.2" cy="55.5" r="0.8" fill="#fff"/>
+    <!-- Eyebrows -->
+    <path d="M44 50 Q50 47 55 49" fill="none" stroke="#2c1810" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M65 49 Q70 47 76 50" fill="none" stroke="#2c1810" stroke-width="1.2" stroke-linecap="round"/>
+    <!-- Nose -->
+    <path d="M58 60 Q60 65 62 60" fill="none" stroke="#d4a882" stroke-width="0.8" stroke-linecap="round"/>
+    <!-- Smile -->
+    <path d="M52 68 Q60 74 68 68" fill="none" stroke="#c4856e" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Lips color -->
+    <path d="M53 68.5 Q60 72 67 68.5" fill="#d4736e" opacity="0.5"/>
+    <!-- Subtle blush -->
+    <circle cx="44" cy="64" r="5" fill="#e8a090" opacity="0.15"/>
+    <circle cx="76" cy="64" r="5" fill="#e8a090" opacity="0.15"/>
+    <!-- Earrings (small cyan dots) -->
+    <circle cx="36" cy="62" r="1.5" fill="#00c8e8" opacity="0.8"/>
+    <circle cx="84" cy="62" r="1.5" fill="#00c8e8" opacity="0.8"/>
+    <!-- Subtle headset/tech element -->
+    <path d="M36 52 Q32 52 32 56 Q32 60 34 62" fill="none" stroke="#00c8e8" stroke-width="1" opacity="0.4" stroke-linecap="round"/>
+  </g>
+  <!-- Border glow ring -->
+  <circle cx="60" cy="60" r="59" fill="none" stroke="url(#bg)" stroke-width="1.5" opacity="0.6"/>
+</svg>

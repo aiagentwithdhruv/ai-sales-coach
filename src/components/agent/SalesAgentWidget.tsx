@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { MessageCircle, X, Sparkles } from "lucide-react";
+import { X } from "lucide-react";
 import { SalesAgentChat } from "./SalesAgentChat";
 
 const VISITOR_COOKIE_NAME = "qh_visitor_id";
@@ -27,8 +27,45 @@ function getOrCreateVisitorId(): string {
   return id;
 }
 
+/** Play a gentle two-tone notification chime using Web Audio API */
+function playNotificationChime() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const now = ctx.currentTime;
+
+    // First tone (C5 - 523 Hz)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = "sine";
+    osc1.frequency.value = 523;
+    gain1.gain.setValueAtTime(0, now);
+    gain1.gain.linearRampToValueAtTime(0.15, now + 0.05);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+    osc1.connect(gain1).connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.4);
+
+    // Second tone (E5 - 659 Hz, slight delay)
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = "sine";
+    osc2.frequency.value = 659;
+    gain2.gain.setValueAtTime(0, now + 0.15);
+    gain2.gain.linearRampToValueAtTime(0.12, now + 0.2);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+    osc2.connect(gain2).connect(ctx.destination);
+    osc2.start(now + 0.15);
+    osc2.stop(now + 0.6);
+
+    // Cleanup
+    setTimeout(() => ctx.close(), 1000);
+  } catch {
+    // Audio not available — silently skip
+  }
+}
+
 const PROACTIVE_GREETING =
-  "Hey! Looking at our pricing? I can help you find the perfect plan for your team. What kind of sales tools are you looking for?";
+  "Hey! I'm Sarah from QuotaHit. Looking at our pricing? I can help you find the perfect plan for your team. What kind of sales tools are you looking for?";
 
 export function SalesAgentWidget({
   pageContext = "pricing",
@@ -53,6 +90,7 @@ export function SalesAgentWidget({
       setIsOpen(true);
       setHasAutoOpened(true);
       setShowPulse(false);
+      playNotificationChime();
     }, AUTO_OPEN_DELAY);
 
     return () => clearTimeout(timer);
@@ -78,15 +116,20 @@ export function SalesAgentWidget({
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-onyx border-b border-gunmetal">
             <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-neonblue to-electricblue flex items-center justify-center">
-                <Sparkles className="h-4 w-4 text-white" />
+              <div className="relative">
+                <img
+                  src="/agent-avatar.svg"
+                  alt="Sales Agent"
+                  className="h-8 w-8 rounded-full"
+                />
+                <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 bg-emerald-400 rounded-full border-2 border-onyx" />
               </div>
               <div>
                 <p className="text-sm font-semibold text-platinum leading-tight">
-                  QuotaHit Sales
+                  Sarah from QuotaHit
                 </p>
-                <p className="text-[10px] text-mist leading-tight">
-                  AI-powered • Usually responds instantly
+                <p className="text-[10px] text-emerald-400 leading-tight">
+                  Online • Usually responds instantly
                 </p>
               </div>
             </div>
@@ -185,11 +228,16 @@ export function SalesAgentWidget({
             </>
           ) : (
             <>
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-neonblue to-electricblue flex items-center justify-center flex-shrink-0">
-                <MessageCircle className="h-4 w-4 text-white" />
+              <div className="relative flex-shrink-0">
+                <img
+                  src="/agent-avatar.svg"
+                  alt="Sales Agent"
+                  className="h-9 w-9 rounded-full"
+                />
+                <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 bg-emerald-400 rounded-full border-2 border-[#111114]" />
               </div>
               <span className="text-sm font-medium text-platinum whitespace-nowrap pr-1">
-                Chat with Sales
+                Chat with Sarah
               </span>
             </>
           )}

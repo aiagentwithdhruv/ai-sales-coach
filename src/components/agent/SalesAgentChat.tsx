@@ -65,9 +65,11 @@ export function SalesAgentChat({
         {/* Loading indicator */}
         {isLoading && (
           <div className="flex gap-2 items-center px-1">
-            <div className="h-7 w-7 rounded-full bg-gradient-to-br from-neonblue to-electricblue flex items-center justify-center">
-              <span className="text-xs font-bold text-white">Q</span>
-            </div>
+            <img
+              src="/agent-avatar.svg"
+              alt="Sales Agent"
+              className="h-7 w-7 rounded-full"
+            />
             <div className="flex gap-1 items-center">
               <div className="w-1.5 h-1.5 rounded-full bg-neonblue animate-bounce" style={{ animationDelay: "0ms" }} />
               <div className="w-1.5 h-1.5 rounded-full bg-neonblue animate-bounce" style={{ animationDelay: "150ms" }} />

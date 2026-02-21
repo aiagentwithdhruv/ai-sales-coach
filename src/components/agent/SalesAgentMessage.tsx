@@ -16,9 +16,11 @@ export function SalesAgentMessage({ role, content }: SalesAgentMessageProps) {
     <div className={cn("flex gap-2 mb-3", isUser ? "justify-end" : "justify-start")}>
       {/* Avatar */}
       {!isUser && (
-        <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gradient-to-br from-neonblue to-electricblue flex items-center justify-center mt-0.5">
-          <span className="text-xs font-bold text-white">Q</span>
-        </div>
+        <img
+          src="/agent-avatar.svg"
+          alt="Sales Agent"
+          className="flex-shrink-0 h-7 w-7 rounded-full mt-0.5"
+        />
       )}
 
       {/* Message bubble */}
