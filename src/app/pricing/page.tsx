@@ -230,6 +230,16 @@ export default function PricingPage() {
                 Quota<span className="text-neonblue">Hit</span>
               </span>
             </Link>
+            <div className="hidden md:flex items-center gap-4">
+              <a href="tel:+919827853940" className="flex items-center gap-1.5 text-silver hover:text-neonblue transition-colors text-sm">
+                <Phone className="w-3.5 h-3.5 text-neonblue/70" />
+                <span className="hidden lg:inline">+91 98278 53940</span>
+              </a>
+              <a href="mailto:aiwithdhruv@gmail.com" className="flex items-center gap-1.5 text-silver hover:text-neonblue transition-colors text-sm">
+                <Mail className="w-3.5 h-3.5 text-neonblue/70" />
+                <span className="hidden lg:inline">aiwithdhruv@gmail.com</span>
+              </a>
+            </div>
             <div className="flex items-center gap-3">
               <Link href="/login" className="hidden sm:block">
                 <Button variant="ghost" className="text-silver hover:text-platinum">
