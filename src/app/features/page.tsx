@@ -43,6 +43,7 @@ import {
   Clock,
   Headphones,
   BarChart3,
+  Mail,
 } from "lucide-react";
 
 const coreFeatures = [
@@ -465,6 +466,16 @@ export default function FeaturesPage() {
               <Link href="/" className="text-sm text-mist hover:text-silver transition-colors">Home</Link>
               <Link href="/pricing" className="text-sm text-mist hover:text-silver transition-colors">Pricing</Link>
               <Link href="/login" className="text-sm text-mist hover:text-silver transition-colors">Login</Link>
+            </div>
+            <div className="flex items-center gap-4 sm:gap-6">
+              <a href="tel:+919827853940" className="flex items-center gap-1.5 text-sm text-silver hover:text-neonblue transition-colors">
+                <Phone className="w-3.5 h-3.5 text-neonblue" />
+                +91 98278 53940
+              </a>
+              <a href="mailto:aiwithdhruv@gmail.com" className="flex items-center gap-1.5 text-sm text-silver hover:text-neonblue transition-colors">
+                <Mail className="w-3.5 h-3.5 text-neonblue" />
+                aiwithdhruv@gmail.com
+              </a>
             </div>
             <p className="text-mist text-sm">
               &copy; 2026 QuotaHit. All rights reserved.

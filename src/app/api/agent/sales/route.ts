@@ -15,7 +15,7 @@ import {
   getActiveConversation,
   saveMessages,
 } from "@/lib/agent/conversation-tracker";
-import { buildVisitorContextString } from "@/lib/agent/visitor-memory";
+import { buildVisitorContextString, getLastConversationMessages } from "@/lib/agent/visitor-memory";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -63,10 +63,25 @@ export async function POST(req: Request) {
     }
 
     // Build visitor context for returning visitors
-    const visitorContext = await buildVisitorContextString(visitorId);
+    const [visitorContext, previousMessages] = await Promise.all([
+      buildVisitorContextString(visitorId),
+      getLastConversationMessages(visitorId),
+    ]);
 
-    // Get system prompt with visitor context
-    const systemPrompt = getSalesAgentPrompt(visitorContext);
+    // Build previous conversation summary for context
+    let prevConvoContext: string | undefined;
+    if (previousMessages && previousMessages.length > 0) {
+      const convoLines = previousMessages
+        .filter((m) => m.content && m.content.trim())
+        .map((m) => `${m.role === "user" ? "Visitor" : "Sarah"}: ${m.content.slice(0, 200)}`)
+        .join("\n");
+      if (convoLines) {
+        prevConvoContext = convoLines;
+      }
+    }
+
+    // Get system prompt with visitor context + previous conversation
+    const systemPrompt = getSalesAgentPrompt(visitorContext, prevConvoContext);
 
     // Get tools with visitor/conversation context
     const tools = getSalesAgentTools(visitorId, conversationId);

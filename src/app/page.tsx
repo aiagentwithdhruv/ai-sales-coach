@@ -26,6 +26,7 @@ import {
   Calendar,
   ExternalLink,
   PhoneCall,
+  Mail,
 } from "lucide-react";
 
 const features = [
@@ -848,6 +849,16 @@ export default function LandingPage() {
               >
                 Login
               </Link>
+            </div>
+            <div className="flex items-center gap-4 sm:gap-6">
+              <a href="tel:+919827853940" className="flex items-center gap-1.5 text-sm text-silver hover:text-neonblue transition-colors">
+                <Phone className="w-3.5 h-3.5 text-neonblue" />
+                +91 98278 53940
+              </a>
+              <a href="mailto:aiwithdhruv@gmail.com" className="flex items-center gap-1.5 text-sm text-silver hover:text-neonblue transition-colors">
+                <Mail className="w-3.5 h-3.5 text-neonblue" />
+                aiwithdhruv@gmail.com
+              </a>
             </div>
             <p className="text-sm text-mist">
               &copy; 2026 QuotaHit. All rights reserved.

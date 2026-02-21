@@ -11,6 +11,7 @@ export interface VisitorMemory {
   visitor_id: string;
   name?: string;
   email?: string;
+  phone?: string;
   company?: string;
   team_size?: string;
   industry?: string;
@@ -95,6 +96,8 @@ export async function buildVisitorContextString(visitorId: string): Promise<stri
     parts.push(`Returning visitor (visit #${memory.total_visits}).`);
   }
   if (memory.name) parts.push(`Name: ${memory.name}.`);
+  if (memory.phone) parts.push(`Phone: ${memory.phone}.`);
+  if (memory.email) parts.push(`Email: ${memory.email}.`);
   if (memory.company) parts.push(`Company: ${memory.company}.`);
   if (memory.team_size) parts.push(`Team size: ${memory.team_size}.`);
   if (memory.industry) parts.push(`Industry: ${memory.industry}.`);
@@ -110,9 +113,35 @@ export async function buildVisitorContextString(visitorId: string): Promise<stri
   if (memory.best_discount_offered) {
     parts.push(`Best discount offered before: ${memory.best_discount_offered}%.`);
   }
+  if (memory.conversion_status && memory.conversion_status !== "prospect") {
+    parts.push(`Status: ${memory.conversion_status}.`);
+  }
   if (memory.summary) {
     parts.push(`Summary: ${memory.summary}`);
   }
 
   return parts.length > 0 ? parts.join(" ") : undefined;
+}
+
+/** Get the last conversation's messages for a visitor to inject as context */
+export async function getLastConversationMessages(
+  visitorId: string
+): Promise<Array<{ role: string; content: string }> | null> {
+  const supabase = createAdminClient();
+
+  const { data } = await supabase
+    .from("agent_conversations")
+    .select("messages")
+    .eq("visitor_id", visitorId)
+    .order("last_message_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  if (!data?.messages || !Array.isArray(data.messages) || data.messages.length === 0) {
+    return null;
+  }
+
+  // Return last 10 messages max to keep context manageable
+  const msgs = data.messages as Array<{ role: string; content: string }>;
+  return msgs.slice(-10);
 }

@@ -371,5 +371,87 @@ export function getSalesAgentTools(visitorId: string, conversationId?: string) {
         };
       },
     }),
+
+    save_visitor_info: tool({
+      description:
+        "Save visitor details (name, phone, email, company, etc.) to memory for future conversations. Use IMMEDIATELY when the visitor shares any personal info — don't wait until the end. This helps remember them next time they visit.",
+      parameters: z.object({
+        name: z.string().optional().describe("Visitor's name"),
+        phone: z.string().optional().describe("Visitor's phone number"),
+        email: z.string().optional().describe("Visitor's email address"),
+        company: z.string().optional().describe("Company name"),
+        team_size: z.string().optional().describe("Team size (e.g., '5', '10-20', 'solo')"),
+        industry: z.string().optional().describe("Industry/vertical (e.g., 'SaaS', 'Real Estate')"),
+        current_tools: z
+          .array(z.string())
+          .optional()
+          .describe("Sales tools they currently use (e.g., ['Gong', 'HubSpot'])"),
+        objections: z
+          .array(z.string())
+          .optional()
+          .describe("Objections raised (e.g., ['too expensive', 'need to think'])"),
+        modules_interested: z
+          .array(z.string())
+          .optional()
+          .describe("Modules they showed interest in"),
+        summary: z
+          .string()
+          .optional()
+          .describe("Brief summary of this conversation for next time"),
+      }),
+      execute: async ({
+        name,
+        phone,
+        email,
+        company,
+        team_size,
+        industry,
+        current_tools,
+        objections,
+        modules_interested,
+        summary,
+      }: {
+        name?: string;
+        phone?: string;
+        email?: string;
+        company?: string;
+        team_size?: string;
+        industry?: string;
+        current_tools?: string[];
+        objections?: string[];
+        modules_interested?: string[];
+        summary?: string;
+      }) => {
+        const updates: Record<string, unknown> = {};
+        if (name) updates.name = name;
+        if (phone) updates.phone = phone;
+        if (email) updates.email = email;
+        if (company) updates.company = company;
+        if (team_size) updates.team_size = team_size;
+        if (industry) updates.industry = industry;
+        if (current_tools) updates.current_tools = current_tools;
+        if (objections) updates.all_objections = objections;
+        if (modules_interested) updates.modules_interested = modules_interested as ModuleSlug[];
+        if (summary) updates.summary = summary;
+
+        await upsertVisitorMemory(visitorId, updates as any);
+
+        // Also update conversation record
+        if (conversationId) {
+          await updateConversation(conversationId, {
+            name_collected: name,
+            email_collected: email,
+            company_collected: company,
+            team_size,
+            modules_interested: modules_interested as string[],
+          });
+        }
+
+        return {
+          success: true,
+          saved_fields: Object.keys(updates),
+        };
+      },
+    }),
   };
 }
