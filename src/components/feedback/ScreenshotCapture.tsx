@@ -41,6 +41,7 @@ export function ScreenshotCapture({
   const [drawTool, setDrawTool] = useState<DrawTool>("freehand");
   const [isDragging, setIsDragging] = useState(false);
   const [selectionActive, setSelectionActive] = useState(false);
+  const [captureError, setCaptureError] = useState("");
 
   // Annotation refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -231,22 +232,27 @@ export function ScreenshotCapture({
 
   // ─── Capture trigger ─────────────────────────────────────────────
 
-  const handleCapture = useCallback(() => {
+  const handleCapture = useCallback(async () => {
+    setCaptureError("");
     setIsCapturing(true);
-    setTimeout(async () => {
-      try {
-        const canvas = await captureViewportCanvas(widgetRef?.current);
-        fullCanvasRef.current = canvas;
-        // Don't restore widget visibility yet — selector overlay takes over
-        setIsSelecting(true);
-        setIsCapturing(false);
-      } catch {
-        if (widgetRef?.current) {
-          widgetRef.current.style.visibility = "visible";
-        }
-        setIsCapturing(false);
+
+    // Give React a frame to render the "Capturing..." state
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+    try {
+      const canvas = await captureViewportCanvas(widgetRef?.current);
+      fullCanvasRef.current = canvas;
+      // Don't restore widget visibility yet — selector overlay takes over
+      setIsSelecting(true);
+    } catch (err) {
+      console.error("[ScreenshotCapture] html2canvas failed:", err);
+      if (widgetRef?.current) {
+        widgetRef.current.style.visibility = "visible";
       }
-    }, 0);
+      setCaptureError("Screenshot capture failed. Try the Upload button instead.");
+    } finally {
+      setIsCapturing(false);
+    }
   }, [widgetRef]);
 
   // ─── File upload ──────────────────────────────────────────────────
@@ -563,6 +569,13 @@ export function ScreenshotCapture({
           />
         </label>
       </div>
+
+      {/* Error message */}
+      {captureError && (
+        <div className="px-3 py-2 rounded-lg bg-errorred/10 border border-errorred/20 text-[11px] text-errorred">
+          {captureError}
+        </div>
+      )}
 
       {/* Drop zone */}
       <div

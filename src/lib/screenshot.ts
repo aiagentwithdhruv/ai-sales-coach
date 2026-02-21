@@ -3,7 +3,7 @@
  * Supports region selection (CleanShot-style) capture, compression, and crop.
  */
 
-import html2canvas from "html2canvas";
+import html2canvas from "html2canvas-pro";
 
 const MAX_WIDTH = 1200;
 const JPEG_QUALITY = 0.7;
@@ -19,23 +19,36 @@ export async function captureViewportCanvas(
     hideElement.style.visibility = "hidden";
   }
 
-  // Yield to browser so visibility change paints
-  await new Promise((r) => setTimeout(r, 50));
+  // Wait for 2 animation frames + delay so the visibility change paints
+  await new Promise<void>((r) =>
+    requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(r, 80)))
+  );
 
-  const canvas = await html2canvas(document.body, {
-    useCORS: true,
-    scale: 1,
-    logging: false,
-    backgroundColor: "#0B0F14",
-    x: window.scrollX,
-    y: window.scrollY,
-    width: window.innerWidth,
-    height: window.innerHeight,
-    windowWidth: window.innerWidth,
-    windowHeight: window.innerHeight,
-  });
-
-  return canvas;
+  try {
+    const canvas = await html2canvas(document.body, {
+      useCORS: true,
+      scale: 1,
+      logging: false,
+      backgroundColor: "#0B0F14",
+      x: window.scrollX,
+      y: window.scrollY,
+      width: window.innerWidth,
+      height: window.innerHeight,
+      windowWidth: window.innerWidth,
+      windowHeight: window.innerHeight,
+      ignoreElements: (el: Element) => {
+        // Skip elements html2canvas can't render
+        return el.tagName === "IFRAME" || el.tagName === "VIDEO";
+      },
+    });
+    return canvas;
+  } catch (err) {
+    // Restore visibility before re-throwing
+    if (hideElement) {
+      hideElement.style.visibility = "visible";
+    }
+    throw err;
+  }
 }
 
 /** Crop a rectangular region from a canvas and return compressed JPEG data URL */
