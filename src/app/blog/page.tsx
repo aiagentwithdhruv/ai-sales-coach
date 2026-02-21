@@ -85,15 +85,6 @@ export default async function BlogPage({
             <Link href="/pricing" className="text-sm text-silver hover:text-platinum transition-colors">Pricing</Link>
             <Link href="/blog" className="text-sm text-neonblue font-medium">Blog</Link>
             <Link href="/login" className="text-sm text-silver hover:text-platinum transition-colors">Login</Link>
-            <span className="text-gunmetal/40">|</span>
-            <a href="tel:+919827853940" className="flex items-center gap-1.5 text-silver hover:text-neonblue transition-colors text-sm">
-              <Phone className="w-3.5 h-3.5 text-neonblue/70" />
-              <span className="hidden lg:inline">+91 98278 53940</span>
-            </a>
-            <a href="mailto:aiwithdhruv@gmail.com" className="flex items-center gap-1.5 text-silver hover:text-neonblue transition-colors text-sm">
-              <Mail className="w-3.5 h-3.5 text-neonblue/70" />
-              <span className="hidden lg:inline">aiwithdhruv@gmail.com</span>
-            </a>
             <Link href="/signup">
               <button className="px-4 py-2 rounded-lg bg-neonblue hover:bg-electricblue text-white text-sm font-medium transition-colors">
                 Start Free
