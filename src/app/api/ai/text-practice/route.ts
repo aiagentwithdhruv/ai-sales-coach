@@ -19,7 +19,7 @@ import { resolveUserKeys } from "@/lib/ai/key-resolver";
 import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   try {
@@ -85,7 +85,8 @@ export async function POST(req: Request) {
 
     const model = modelId ? getModelByIdSmart(modelId, userKeys) : getLanguageModel(undefined, userKeys);
     const isMoonshot = modelId?.startsWith("kimi-");
-    const temperature = isMoonshot ? 1 : 0.7;
+    const isGrokReasoning = modelId?.includes("grok-4");
+    const temperature = isMoonshot ? 1 : isGrokReasoning ? undefined : 0.7;
 
     let systemPrompt: string;
     let chatMessages = messages;
@@ -116,12 +117,19 @@ export async function POST(req: Request) {
       });
     }
 
+    // Grok 4.x reasoning models: omit maxTokens (reasoning tokens handled separately)
+    const needsNoMaxTokens = modelId && (
+      modelId.startsWith("o3") || modelId.startsWith("o1") ||
+      modelId.includes("/o3") || modelId.includes("/o1") ||
+      modelId.includes("grok-4")
+    );
+
     const result = await streamText({
       model,
       system: systemPrompt,
       messages: chatMessages,
       temperature,
-      maxTokens: mode === "score" ? 1500 : 300,
+      ...(needsNoMaxTokens ? {} : { maxTokens: mode === "score" ? 1500 : 300 }),
     });
 
     return new Response(result.textStream, {

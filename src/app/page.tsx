@@ -297,11 +297,7 @@ export default function LandingPage() {
       priceCurrency: "USD",
     },
     description: "AI sales coaching platform with voice practice, objection coaching, call analysis, and 12 sales tools.",
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.8",
-      ratingCount: "12",
-    },
+    // aggregateRating removed — no real reviews yet (adding fake reviews violates Google guidelines)
   };
 
   return (

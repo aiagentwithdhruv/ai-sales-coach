@@ -18,7 +18,7 @@ import { processAttachmentsForContext, type Attachment } from "@/lib/ai/attachme
 import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 
 export async function POST(req: Request) {
@@ -118,15 +118,19 @@ export async function POST(req: Request) {
       : getLanguageModel(undefined, userKeys);
 
     // Moonshot API only accepts temperature 0 or 1
+    // Grok 4.x reasoning models: temperature unsupported (omit it)
     const isMoonshot = modelId?.startsWith("kimi-");
-    const temperature = isMoonshot ? 1 : 0.6;
+    const isGrokReasoning = modelId?.includes("grok-4");
+    const temperature = isMoonshot ? 1 : isGrokReasoning ? undefined : 0.6;
 
     // Models that don't support max_tokens (use max_completion_tokens internally)
     // For these, omit maxTokens entirely — the SDK/API handles limits differently
+    // Includes reasoning models: o-series, GPT-5.x, and Grok 4.x (reasoning by default)
     const needsNoMaxTokens = modelId && (
       modelId.startsWith("o3") || modelId.startsWith("o1") ||
       modelId === "gpt-5.1" || modelId === "gpt-5.2" ||
-      modelId.includes("/o3") || modelId.includes("/o1")
+      modelId.includes("/o3") || modelId.includes("/o1") ||
+      modelId.includes("grok-4")
     );
 
     // Stream the response

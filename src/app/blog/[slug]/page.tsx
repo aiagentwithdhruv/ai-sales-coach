@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!post) return { title: "Post Not Found" };
 
   return {
-    title: `${post.title} — QuotaHit Blog`,
+    title: post.title,
     description: post.meta_description,
     alternates: {
       canonical: `https://www.quotahit.com/blog/${post.slug}`,

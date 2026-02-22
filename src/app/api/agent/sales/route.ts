@@ -18,7 +18,7 @@ import {
 import { buildVisitorContextString, getLastConversationMessages } from "@/lib/agent/visitor-memory";
 
 export const runtime = "nodejs";
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 const AGENT_MODEL = "x-ai/grok-4.1-fast";
 
@@ -86,14 +86,13 @@ export async function POST(req: Request) {
     // Get tools with visitor/conversation context
     const tools = getSalesAgentTools(visitorId, conversationId);
 
-    // Stream the response
+    // Stream the response (Grok 4.x is a reasoning model — omit temperature)
     const result = await streamText({
       model: getOpenRouterModel(),
       system: systemPrompt,
       messages,
       tools,
       maxSteps: 5,
-      temperature: 0.7,
       onFinish: async ({ text }) => {
         // Persist messages after response completes
         if (conversationId) {
