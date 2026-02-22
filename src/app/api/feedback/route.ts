@@ -16,10 +16,8 @@ export async function POST(req: Request) {
 
     const {
       category,
-      rating,
+      rating = 0,
       primaryText,
-      secondaryText,
-      tertiaryText,
       screenshotDataUrl,
       email,
       name,
@@ -36,7 +34,8 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!rating || rating < 1 || rating > 5) {
+    // Rating: 0 is valid for bugs/features (no rating asked), 1-5 for feedback/improvement
+    if (rating !== undefined && rating !== 0 && (rating < 1 || rating > 5)) {
       return NextResponse.json(
         { success: false, error: "Rating must be 1-5" },
         { status: 400 }
@@ -73,8 +72,6 @@ export async function POST(req: Request) {
       category,
       rating,
       primaryText: primaryText.trim(),
-      secondaryText: secondaryText?.trim() || "",
-      tertiaryText: tertiaryText?.trim() || "",
       screenshotDataUrl: screenshotDataUrl || "",
       email: email?.trim() || "Anonymous",
       name: name?.trim() || "Anonymous",

@@ -30,26 +30,12 @@ const CATEGORIES: {
 
 const FIELD_LABELS: Record<
   Category,
-  { primary: string; secondary: string; tertiary?: string }
+  { primary: string; showRating: boolean }
 > = {
-  bug: {
-    primary: "What happened?",
-    secondary: "What did you expect?",
-    tertiary: "Steps to reproduce",
-  },
-  feature_request: {
-    primary: "What feature do you want?",
-    secondary: "Why would this help you?",
-  },
-  feedback: {
-    primary: "What do you love?",
-    secondary: "What don't you love?",
-    tertiary: "What should we improve?",
-  },
-  improvement: {
-    primary: "What should we improve?",
-    secondary: "How would you change it?",
-  },
+  bug: { primary: "What happened?", showRating: false },
+  feature_request: { primary: "Describe the feature you want", showRating: false },
+  feedback: { primary: "Tell us what you think", showRating: true },
+  improvement: { primary: "What should we improve?", showRating: true },
 };
 
 interface FeedbackFormProps {
@@ -68,8 +54,6 @@ export function FeedbackForm({
   const [category, setCategory] = useState<Category | null>(null);
   const [rating, setRating] = useState(0);
   const [primaryText, setPrimaryText] = useState("");
-  const [secondaryText, setSecondaryText] = useState("");
-  const [tertiaryText, setTertiaryText] = useState("");
   const [screenshotDataUrl, setScreenshotDataUrl] = useState<string | undefined>();
   const [email, setEmail] = useState(userEmail || "");
   const [name, setName] = useState(userName || "");
@@ -79,10 +63,15 @@ export function FeedbackForm({
 
   const formRef = useRef<HTMLDivElement>(null);
 
-  const labels = category ? FIELD_LABELS[category] : null;
+  const fields = category ? FIELD_LABELS[category] : null;
 
+  // Rating required only for feedback/improvement, not bugs/features
+  const needsRating = fields?.showRating ?? false;
   const canSubmit =
-    category && rating > 0 && primaryText.trim().length >= 3 && !isSubmitting;
+    category &&
+    (!needsRating || rating > 0) &&
+    primaryText.trim().length >= 3 &&
+    !isSubmitting;
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
@@ -95,10 +84,8 @@ export function FeedbackForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           category,
-          rating,
+          rating: needsRating ? rating : 0,
           primaryText: primaryText.trim(),
-          secondaryText: secondaryText.trim() || undefined,
-          tertiaryText: tertiaryText.trim() || undefined,
           screenshotDataUrl,
           email: email.trim() || undefined,
           name: name.trim() || undefined,
@@ -172,58 +159,30 @@ export function FeedbackForm({
         </div>
       </div>
 
-      {/* Rating */}
-      <div>
-        <label className="text-[11px] text-mist uppercase tracking-wider mb-1.5 block">
-          Rate your experience
-        </label>
-        <StarRating value={rating} onChange={setRating} />
-      </div>
+      {/* Rating — only for feedback/improvement, not bugs/features */}
+      {needsRating && (
+        <div>
+          <label className="text-[11px] text-mist uppercase tracking-wider mb-1.5 block">
+            Rate your experience
+          </label>
+          <StarRating value={rating} onChange={setRating} />
+        </div>
+      )}
 
-      {/* Dynamic text fields (shown only after category is selected) */}
-      {labels && (
-        <>
-          <div>
-            <label className="text-[11px] text-mist uppercase tracking-wider mb-1 block">
-              {labels.primary} <span className="text-errorred">*</span>
-            </label>
-            <textarea
-              value={primaryText}
-              onChange={(e) => setPrimaryText(e.target.value)}
-              placeholder="Tell us more..."
-              rows={3}
-              className="w-full bg-graphite border border-gunmetal rounded-lg px-3 py-2 text-sm text-platinum placeholder:text-mist/50 outline-none focus:border-neonblue/40 resize-none transition-colors"
-            />
-          </div>
-
-          <div>
-            <label className="text-[11px] text-mist uppercase tracking-wider mb-1 block">
-              {labels.secondary}
-            </label>
-            <textarea
-              value={secondaryText}
-              onChange={(e) => setSecondaryText(e.target.value)}
-              placeholder="Optional..."
-              rows={2}
-              className="w-full bg-graphite border border-gunmetal rounded-lg px-3 py-2 text-sm text-platinum placeholder:text-mist/50 outline-none focus:border-neonblue/40 resize-none transition-colors"
-            />
-          </div>
-
-          {labels.tertiary && (
-            <div>
-              <label className="text-[11px] text-mist uppercase tracking-wider mb-1 block">
-                {labels.tertiary}
-              </label>
-              <textarea
-                value={tertiaryText}
-                onChange={(e) => setTertiaryText(e.target.value)}
-                placeholder="Optional..."
-                rows={2}
-                className="w-full bg-graphite border border-gunmetal rounded-lg px-3 py-2 text-sm text-platinum placeholder:text-mist/50 outline-none focus:border-neonblue/40 resize-none transition-colors"
-              />
-            </div>
-          )}
-        </>
+      {/* Single text field — adapts label per category */}
+      {fields && (
+        <div>
+          <label className="text-[11px] text-mist uppercase tracking-wider mb-1 block">
+            {fields.primary} <span className="text-errorred">*</span>
+          </label>
+          <textarea
+            value={primaryText}
+            onChange={(e) => setPrimaryText(e.target.value)}
+            placeholder="Tell us more..."
+            rows={3}
+            className="w-full bg-graphite border border-gunmetal rounded-lg px-3 py-2 text-sm text-platinum placeholder:text-mist/50 outline-none focus:border-neonblue/40 resize-none transition-colors"
+          />
+        </div>
       )}
 
       {/* Screenshot */}
