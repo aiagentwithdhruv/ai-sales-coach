@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Sparkles, ArrowLeft, Clock, Tag, ArrowRight, Phone, Mail } from "lucide-react";
 import { MobileNav } from "@/components/ui/mobile-nav";
+import { BlogMarkdown } from "@/components/blog/blog-markdown";
 import { createAdminClient } from "@/lib/supabase/server";
 import type { Metadata } from "next";
 
@@ -74,40 +75,6 @@ function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 }
 
-// Simple markdown-to-HTML conversion for blog bodies
-function renderMarkdown(md: string): string {
-  let html = md
-    // Code blocks
-    .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre class="bg-onyx rounded-lg p-4 overflow-x-auto my-4 text-sm"><code>$2</code></pre>')
-    // Inline code
-    .replace(/`([^`]+)`/g, '<code class="bg-onyx px-1.5 py-0.5 rounded text-neonblue text-sm">$1</code>')
-    // Headers
-    .replace(/^### (.+)$/gm, '<h3 class="text-xl font-bold text-platinum mt-8 mb-3">$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2 class="text-2xl font-bold text-platinum mt-10 mb-4">$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1 class="text-3xl font-bold text-platinum mt-10 mb-4">$1</h1>')
-    // Bold & italic
-    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-platinum font-semibold">$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    // Links
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-neonblue hover:text-electricblue underline" target="_blank" rel="noopener">$1</a>')
-    // Unordered lists
-    .replace(/^- (.+)$/gm, '<li class="ml-4 pl-2 text-silver">$1</li>')
-    // Ordered lists
-    .replace(/^\d+\. (.+)$/gm, '<li class="ml-4 pl-2 text-silver list-decimal">$1</li>')
-    // Blockquotes
-    .replace(/^> (.+)$/gm, '<blockquote class="border-l-2 border-neonblue pl-4 py-1 my-4 text-silver italic">$1</blockquote>')
-    // Horizontal rules
-    .replace(/^---$/gm, '<hr class="border-gunmetal my-8" />')
-    // Paragraphs (double newlines)
-    .replace(/\n\n/g, '</p><p class="text-silver leading-relaxed mb-4">')
-    // Single newlines within paragraphs
-    .replace(/\n/g, '<br />');
-
-  // Wrap consecutive <li> elements in <ul>
-  html = html.replace(/((?:<li[^>]*>.*?<\/li>\s*)+)/g, '<ul class="list-disc my-4 space-y-1">$1</ul>');
-
-  return `<p class="text-silver leading-relaxed mb-4">${html}</p>`;
-}
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -232,10 +199,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           )}
 
           {/* Body */}
-          <div
-            className="prose-quotahit"
-            dangerouslySetInnerHTML={{ __html: renderMarkdown(post.body) }}
-          />
+          <div className="prose-quotahit">
+            <BlogMarkdown content={post.body} />
+          </div>
 
           {/* CTA card */}
           <div className="mt-12 p-6 rounded-xl border border-neonblue/20 bg-neonblue/5">
