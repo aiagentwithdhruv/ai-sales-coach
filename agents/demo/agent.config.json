@@ -1,0 +1,26 @@
+{
+  "name": "demo",
+  "display_name": "Demo Agent",
+  "model": "claude-sonnet-4-6",
+  "temperature": 0.6,
+  "max_tokens": 2000,
+  "tools": [
+    "present_feature",
+    "answer_question",
+    "book_meeting",
+    "send_recording",
+    "get_contact"
+  ],
+  "channels": ["video", "screen_share", "chat"],
+  "trigger": "demo/scheduled",
+  "demo_flow": {
+    "intro_duration_min": 2,
+    "feature_highlight_count": 3,
+    "qa_time_min": 5,
+    "auto_followup": true
+  },
+  "retry_policy": {
+    "max_retries": 1,
+    "backoff": "linear"
+  }
+}

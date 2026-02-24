@@ -1,0 +1,28 @@
+{
+  "name": "closer",
+  "display_name": "Closer Agent",
+  "model": "claude-sonnet-4-6",
+  "temperature": 0.5,
+  "max_tokens": 2000,
+  "tools": [
+    "handle_objection",
+    "generate_proposal",
+    "send_invoice",
+    "update_deal_stage",
+    "get_contact",
+    "send_email",
+    "make_call"
+  ],
+  "channels": ["call", "email", "chat"],
+  "trigger": "lead/routed",
+  "negotiation_limits": {
+    "max_discount_percent": 15,
+    "payment_terms": "net30",
+    "min_deal_autonomous": 500,
+    "rep_notification_threshold": 10000
+  },
+  "retry_policy": {
+    "max_retries": 2,
+    "backoff": "exponential"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "qualifier",
+  "display_name": "Qualifier Agent",
+  "model": "claude-haiku-4-5-20251001",
+  "fallback_model": "gpt-4o-mini",
+  "temperature": 0.4,
+  "max_tokens": 800,
+  "tools": [
+    "qualify_lead",
+    "get_contact",
+    "update_contact",
+    "send_email",
+    "send_whatsapp"
+  ],
+  "channels": ["email", "chat", "whatsapp"],
+  "trigger": "lead/scored",
+  "score_threshold": 40,
+  "bant_weights": {
+    "budget": 0.25,
+    "authority": 0.20,
+    "need": 0.25,
+    "timeline": 0.15,
+    "competition": 0.15
+  },
+  "qualification_rules": {
+    "qualified_min_avg": 60,
+    "qualified_min_dimensions": 3,
+    "qualified_dimension_threshold": 50,
+    "disqualified_max_avg": 30
+  },
+  "retry_policy": {
+    "max_retries": 3,
+    "backoff": "exponential"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "full-autonomous-pipeline": {
+    "chain": ["scout", "researcher", "qualifier", "outreach", "closer", "ops"],
+    "description": "End-to-end: find lead → close deal → onboard client",
+    "mode": "A",
+    "trigger": "manual or scheduled",
+    "estimated_duration": "7-30 days"
+  },
+  "hybrid-pipeline": {
+    "chain": ["scout", "researcher", "qualifier", "outreach"],
+    "handoff": "human_rep",
+    "post_handoff": ["ops"],
+    "description": "AI qualifies → human closes → AI onboards",
+    "mode": "B",
+    "trigger": "manual or scheduled",
+    "estimated_duration": "14-45 days"
+  },
+  "inbound-pipeline": {
+    "chain": ["researcher", "qualifier"],
+    "branch": {
+      "high_intent": ["ops"],
+      "medium_intent": ["outreach", "closer", "ops"],
+      "low_intent": ["outreach"]
+    },
+    "description": "Inbound lead → score → route by intent level",
+    "mode": "C",
+    "trigger": "contact/created (source=inbound|website|referral)",
+    "estimated_duration": "1-14 days"
+  },
+  "re-engagement": {
+    "chain": ["researcher", "outreach"],
+    "description": "Re-score cold leads → new outreach sequence",
+    "trigger": "monthly cron",
+    "filter": "deal_stage=lead AND last_contacted > 30 days",
+    "estimated_duration": "21 days"
+  }
+}

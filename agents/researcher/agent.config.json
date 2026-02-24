@@ -1,0 +1,21 @@
+{
+  "name": "researcher",
+  "display_name": "Researcher Agent",
+  "model": "sonar",
+  "fallback_model": "perplexity/sonar",
+  "temperature": 0.3,
+  "max_tokens": 1500,
+  "tools": [
+    "enrich_contact",
+    "score_lead",
+    "search_perplexity",
+    "scrape_linkedin",
+    "update_contact"
+  ],
+  "channels": ["perplexity", "linkedin", "web"],
+  "trigger": "contact/created",
+  "retry_policy": {
+    "max_retries": 3,
+    "backoff": "exponential"
+  }
+}

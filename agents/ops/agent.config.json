@@ -1,0 +1,28 @@
+{
+  "name": "ops",
+  "display_name": "Ops Agent",
+  "model": "claude-haiku-4-5-20251001",
+  "temperature": 0.3,
+  "max_tokens": 1000,
+  "tools": [
+    "send_invoice",
+    "send_email",
+    "send_whatsapp",
+    "create_sequence",
+    "update_deal_stage",
+    "get_contact"
+  ],
+  "channels": ["email", "whatsapp", "stripe"],
+  "trigger": "deal/won",
+  "onboarding_flow": [
+    {"step": 1, "action": "generate_invoice", "delay": "0m"},
+    {"step": 2, "action": "send_welcome_email", "delay": "0m"},
+    {"step": 3, "action": "schedule_onboarding_call", "delay": "1d", "condition": "deal_value > 5000"},
+    {"step": 4, "action": "send_getting_started", "delay": "1d"},
+    {"step": 5, "action": "checkin_followup", "delay": "7d"}
+  ],
+  "retry_policy": {
+    "max_retries": 3,
+    "backoff": "exponential"
+  }
+}

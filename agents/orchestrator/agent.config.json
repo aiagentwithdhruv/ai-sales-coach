@@ -1,0 +1,27 @@
+{
+  "name": "orchestrator",
+  "display_name": "The Brain",
+  "model": null,
+  "temperature": null,
+  "max_tokens": null,
+  "tools": [
+    "route_lead",
+    "assign_agent",
+    "check_pipeline",
+    "escalate",
+    "log_decision"
+  ],
+  "channels": [],
+  "trigger": "*",
+  "routing_mode": "rule_based",
+  "escalation_rules": {
+    "deal_value_threshold": 10000,
+    "escalate_to": "human_rep",
+    "notification_channels": ["email", "whatsapp"]
+  },
+  "learning": {
+    "enabled": false,
+    "optimize_after_n_deals": 100,
+    "metrics": ["conversion_rate", "time_to_close", "deal_value"]
+  }
+}

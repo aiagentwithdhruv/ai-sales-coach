@@ -1,0 +1,21 @@
+{
+  "name": "scout",
+  "display_name": "Scout Agent",
+  "model": "claude-haiku-4-5-20251001",
+  "temperature": 0.3,
+  "max_tokens": 1000,
+  "tools": [
+    "search_linkedin",
+    "search_apollo",
+    "scrape_website",
+    "create_contact",
+    "check_duplicate"
+  ],
+  "channels": ["linkedin", "apollo", "web", "import"],
+  "schedule": "0 */6 * * *",
+  "max_leads_per_run": 50,
+  "retry_policy": {
+    "max_retries": 3,
+    "backoff": "exponential"
+  }
+}

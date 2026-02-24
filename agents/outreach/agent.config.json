@@ -1,0 +1,32 @@
+{
+  "name": "outreach",
+  "display_name": "Outreach Agent",
+  "model": "claude-haiku-4-5-20251001",
+  "temperature": 0.7,
+  "max_tokens": 500,
+  "tools": [
+    "send_email",
+    "send_whatsapp",
+    "send_linkedin_dm",
+    "make_call",
+    "create_sequence",
+    "get_contact",
+    "suggest_followup"
+  ],
+  "channels": ["email", "linkedin", "whatsapp", "call"],
+  "trigger": "lead/routed",
+  "throttle": {
+    "emails_per_day": 50,
+    "calls_per_hour": 10,
+    "messages_per_minute": 10
+  },
+  "sequence_defaults": {
+    "steps": 7,
+    "duration_days": 21,
+    "channels": ["email", "linkedin"]
+  },
+  "retry_policy": {
+    "max_retries": 3,
+    "backoff": "exponential"
+  }
+}
