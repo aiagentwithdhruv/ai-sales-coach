@@ -211,6 +211,33 @@ type Events = {
       params: Record<string, unknown>;
     };
   };
+
+  // ─── Phase 4: The Closer Events ────────────────────────────────────────────
+
+  /** Fired when a deal enters negotiation stage */
+  "deal/negotiation": {
+    data: {
+      contactId: string;
+      userId: string;
+    };
+  };
+
+  /** Fired to start client onboarding */
+  "client/onboard": {
+    data: {
+      contactId: string;
+      userId: string;
+    };
+  };
+
+  /** Fired to generate a proposal */
+  "proposal/generate": {
+    data: {
+      contactId: string;
+      userId: string;
+      dealValue?: number;
+    };
+  };
 };
 
 // ─── Client Instance ────────────────────────────────────────────────────────

@@ -39,3 +39,12 @@ export {
   recalibrateScoring,
   trackAgentPerformance,
 } from "./feedback";
+
+// Phase 4: The Closer
+export {
+  autoGenerateProposal,
+  startOnboardingOnWin,
+  processOnboardingSteps,
+  sendMeetingRemindersJob,
+  checkOverdueInvoices,
+} from "./closing";

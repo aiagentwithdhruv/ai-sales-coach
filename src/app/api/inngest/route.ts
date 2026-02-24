@@ -22,6 +22,12 @@ import {
   recordDealOutcome,
   recalibrateScoring,
   trackAgentPerformance,
+  // Phase 4: The Closer
+  autoGenerateProposal,
+  startOnboardingOnWin,
+  processOnboardingSteps,
+  sendMeetingRemindersJob,
+  checkOverdueInvoices,
 } from "@/inngest/functions";
 
 export const { GET, POST, PUT } = serve({
@@ -49,5 +55,11 @@ export const { GET, POST, PUT } = serve({
     recordDealOutcome,
     recalibrateScoring,
     trackAgentPerformance,
+    // Phase 4: The Closer
+    autoGenerateProposal,
+    startOnboardingOnWin,
+    processOnboardingSteps,
+    sendMeetingRemindersJob,
+    checkOverdueInvoices,
   ],
 });
