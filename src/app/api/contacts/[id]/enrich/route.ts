@@ -3,6 +3,7 @@ import { authenticateUser, getContact, updateContact } from "@/lib/crm/contacts"
 import { logActivity } from "@/lib/crm/activities";
 import { checkUsage, incrementUsage } from "@/lib/usage";
 import { resolveUserKeys } from "@/lib/ai/key-resolver";
+import { inngest } from "@/inngest/client";
 
 const jsonHeaders = { "Content-Type": "application/json" };
 
@@ -146,6 +147,16 @@ export async function POST(
       `Researched ${companyInfo}`,
       { fields_found: Object.keys(enrichmentData).length }
     );
+
+    // Trigger Inngest re-scoring after enrichment
+    await inngest.send({
+      name: "contact/enriched",
+      data: {
+        contactId: id,
+        userId: auth.userId,
+        enrichmentData,
+      },
+    }).catch(() => {});
 
     return new Response(JSON.stringify(updated), { headers: jsonHeaders });
   } catch (error) {

@@ -5,6 +5,7 @@ import {
   createContact,
 } from "@/lib/crm/contacts";
 import { logActivity } from "@/lib/crm/activities";
+import { inngest } from "@/inngest/client";
 import type { ContactFilters, DealStage } from "@/types/crm";
 
 const jsonHeaders = { "Content-Type": "application/json" };
@@ -68,6 +69,18 @@ export async function POST(req: NextRequest) {
     `Added ${contact.first_name} ${contact.last_name || ""} to CRM`,
     { source: contact.source }
   );
+
+  // Trigger Inngest lead pipeline (score → qualify → route)
+  await inngest.send({
+    name: "contact/created",
+    data: {
+      contactId: contact.id,
+      userId: auth.userId,
+      source: contact.source || "manual",
+    },
+  }).catch(() => {
+    // Non-blocking: don't fail contact creation if Inngest is unavailable
+  });
 
   return new Response(JSON.stringify(contact), {
     status: 201,
