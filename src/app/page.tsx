@@ -179,8 +179,8 @@ const pricingPlans = [
     period: "/month",
     description: "For solo founders who want AI selling for them",
     features: [
-      "1 AI Agent",
-      "500 leads/month",
+      "1 AI Agent active",
+      "500 contacts processed/mo",
       "Email + Chat outreach",
       "Lead scoring + qualification",
       "Voice-first CRM",
@@ -195,8 +195,8 @@ const pricingPlans = [
     period: "/month",
     description: "Full autonomous sales department for growing teams",
     features: [
-      "3 AI Agents",
-      "2,000 leads/month",
+      "3 AI Agents active",
+      "2,000 contacts processed/mo",
       "All channels (Email + LinkedIn + WhatsApp)",
       "AI Calling + cold outreach",
       "Self-improving templates",
@@ -212,8 +212,8 @@ const pricingPlans = [
     period: "/month",
     description: "Full 7-agent team with MCP and custom loadouts",
     features: [
-      "7 AI Agents (full department)",
-      "10,000 leads/month",
+      "All 7 AI Agents (full department)",
+      "Unlimited contacts processed",
       "Everything in Growth",
       "Custom Agent Loadout Builder",
       "MCP access (connect any AI tool)",
