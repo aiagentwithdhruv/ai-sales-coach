@@ -22,15 +22,15 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.quotahit.com";
 
 export const metadata: Metadata = {
   title: {
-    default: "QuotaHit — AI Sales Coach | Practice. Coach. Close.",
+    default: "QuotaHit — Your AI Sales Department | Find. Qualify. Close. Automatically.",
     template: "%s — QuotaHit",
   },
-  description: "Your AI Sales Coach. Practice pitches with real-time voice, get instant objection coaching, and analyze calls — all powered by GPT-4o, Claude 4.6 & Kimi K2.5. 10-50x cheaper than Gong.",
+  description: "Your autonomous AI Sales Department. 7 AI agents that find leads, qualify prospects, reach out on every channel, follow up, close deals, and collect payment — while you sleep. Replaces 5-7 sales tools at a fraction of the cost.",
   keywords: [
-    "AI sales coach", "sales training AI", "AI sales practice", "objection handling AI",
-    "sales call analysis", "AI roleplay sales", "sales coaching software", "sales pitch practice",
-    "AI cold call practice", "sales objection coach", "Gong alternative", "QuotaHit",
-    "sales rep training", "voice sales practice", "AI sales tools",
+    "AI SDR", "AI sales agent", "autonomous sales", "AI lead qualification", "AI sales department",
+    "AI cold calling", "AI outreach", "sales automation AI", "AI BDR", "lead scoring AI",
+    "11x alternative", "Artisan alternative", "AI sales platform", "QuotaHit",
+    "voice-first CRM", "AI sales tools", "MCP sales", "AI follow up",
   ],
   metadataBase: new URL(siteUrl),
   verification: {
@@ -44,18 +44,18 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "QuotaHit — AI Sales Coach",
-    description: "Practice pitches with real-time voice, get instant objection coaching, and analyze calls. 10-50x cheaper than Gong.",
+    title: "QuotaHit — Your AI Sales Department",
+    description: "7 AI agents that find leads, qualify, reach out, follow up, close deals, and collect payment. Your sales team that works while you sleep.",
     url: siteUrl,
     siteName: "QuotaHit",
     type: "website",
     locale: "en_US",
-    images: [{ url: `${siteUrl}/opengraph-image`, width: 1200, height: 630, alt: "QuotaHit — AI Sales Coach" }],
+    images: [{ url: `${siteUrl}/opengraph-image`, width: 1200, height: 630, alt: "QuotaHit — Your AI Sales Department" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "QuotaHit — AI Sales Coach",
-    description: "Practice pitches with real-time voice, get instant objection coaching, and analyze calls. 10-50x cheaper than Gong.",
+    title: "QuotaHit — Your AI Sales Department",
+    description: "7 AI agents that find leads, qualify, reach out, follow up, close deals, and collect payment. Works while you sleep.",
     site: "@aiwithdhruv",
     creator: "@aiwithdhruv",
   },

@@ -10,16 +10,10 @@ import {
   X,
   MessageSquare,
   Mic,
-  PenLine,
   Phone,
   Swords,
   Globe,
-  FileText,
-  BookOpen,
   UserSearch,
-  Trophy,
-  History,
-  FileDown,
   Zap,
   Users,
   Shield,
@@ -29,105 +23,90 @@ import {
   Mail,
 } from "lucide-react";
 
-const features = [
+const agents = [
   {
-    icon: MessageSquare,
-    title: "Objection Coach",
+    icon: UserSearch,
+    title: "Scout Agent",
     description:
-      "Get instant AI responses to any sales objection with context-aware handling.",
-  },
-  {
-    icon: Mic,
-    title: "Voice Practice",
-    description:
-      "Practice your pitch with AI using GPT-4o Realtime voice.",
-  },
-  {
-    icon: PenLine,
-    title: "Text Practice",
-    description:
-      "Role-play sales calls via chat with AI scoring.",
-  },
-  {
-    icon: Phone,
-    title: "Call Analysis",
-    description:
-      "Upload recordings and get AI-powered call scoring & coaching.",
-  },
-  {
-    icon: Swords,
-    title: "Sales Tools",
-    description:
-      "Email crafter, pitch scorer, battle cards, discovery questions & more.",
+      "Finds leads matching your ICP 24/7 from LinkedIn, web, and imports.",
+    color: "text-neonblue",
   },
   {
     icon: Globe,
-    title: "Research Mode",
+    title: "Researcher Agent",
     description:
-      "Perplexity-powered company research for call prep.",
+      "Auto-enriches every lead with company data, tech stack, funding, and pain points.",
+    color: "text-automationgreen",
   },
   {
-    icon: FileText,
-    title: "Meeting Notes",
+    icon: MessageSquare,
+    title: "Qualifier Agent",
     description:
-      "AI meeting summarizer with action items & follow-up emails.",
+      "Has BANT+ conversations to pre-qualify leads. No human needed.",
+    color: "text-warningamber",
   },
   {
-    icon: BookOpen,
-    title: "Objection Library",
+    icon: Mail,
+    title: "Outreach Agent",
     description:
-      "Save, search, and categorize your best objection responses.",
+      "Multi-channel sequences across email, LinkedIn, WhatsApp, and cold calling.",
+    color: "text-neonblue",
   },
   {
-    icon: UserSearch,
-    title: "Custom Personas",
+    icon: Swords,
+    title: "Closer Agent",
     description:
-      "Create buyer personas at any difficulty to practice against.",
+      "Handles objections, negotiates, sends proposals, and collects payment.",
+    color: "text-automationgreen",
   },
   {
-    icon: Trophy,
-    title: "Progress Tracking",
+    icon: Phone,
+    title: "AI Calling Engine",
     description:
-      "18 achievement badges, streaks, and progress dashboards.",
+      "Autonomous outbound calls with AI voice. Books meetings while you sleep.",
+    color: "text-warningamber",
   },
   {
-    icon: History,
-    title: "Session History",
+    icon: Mic,
+    title: "Voice-First CRM",
     description:
-      "Review all past sessions, coaching, and tool outputs.",
+      "Speak to your CRM. Instruct AI with voice. Zero typing needed.",
+    color: "text-neonblue",
   },
   {
-    icon: FileDown,
-    title: "PDF Export",
+    icon: Zap,
+    title: "Self-Improving AI",
     description:
-      "Export any research, meeting notes, or session as a styled PDF.",
+      "Templates, scoring, and timing auto-optimize from every interaction.",
+    color: "text-automationgreen",
   },
 ];
+
 
 const steps = [
   {
     number: "01",
-    title: "Practice",
+    title: "Connect",
     description:
-      "Practice your pitch against AI buyers with voice or text. Get scored on delivery, objection handling, and closing.",
+      "Import your leads or let AI find them. Connect your email, WhatsApp, and LinkedIn. Takes 5 minutes.",
     color: "text-neonblue",
     bgColor: "bg-neonblue/10",
     borderColor: "border-neonblue/30",
   },
   {
     number: "02",
-    title: "Coach",
+    title: "AI Sells",
     description:
-      "Get instant AI coaching on objections, discovery, deal strategy. Use 12 built-in sales tools to prepare for every call.",
+      "7 AI agents score, qualify, reach out, follow up, and close deals across every channel. Automatically. 24/7.",
     color: "text-automationgreen",
     bgColor: "bg-automationgreen/10",
     borderColor: "border-automationgreen/30",
   },
   {
     number: "03",
-    title: "Analyze",
+    title: "You Grow",
     description:
-      "Upload real calls, get AI scoring, and improve every day. Track your progress with badges and streaks.",
+      "Wake up to qualified leads, booked meetings, and closed deals. AI improves itself every day. You scale without hiring.",
     color: "text-warningamber",
     bgColor: "bg-warningamber/10",
     borderColor: "border-warningamber/30",
@@ -136,100 +115,112 @@ const steps = [
 
 const comparisonRows = [
   {
-    feature: "AI Roleplay Practice",
+    feature: "End-to-End Autonomous Pipeline",
     us: true,
-    gong: false,
-    yoodli: true,
-    dialpad: "partial",
+    elevenx: false,
+    artisan: false,
+    apollo: false,
   },
   {
-    feature: "Real-time Voice Practice",
+    feature: "AI Lead Qualification (BANT+)",
     us: true,
-    gong: false,
-    yoodli: false,
-    dialpad: false,
+    elevenx: "partial",
+    artisan: "partial",
+    apollo: false,
   },
   {
-    feature: "Objection Coaching",
+    feature: "Multi-Channel Outreach (Email + LinkedIn + WhatsApp + Call)",
     us: true,
-    gong: "partial",
-    yoodli: true,
-    dialpad: true,
+    elevenx: "partial",
+    artisan: "partial",
+    apollo: "partial",
   },
   {
-    feature: "Call Analysis & Scoring",
+    feature: "Autonomous AI Calling",
     us: true,
-    gong: true,
-    yoodli: false,
-    dialpad: true,
+    elevenx: true,
+    artisan: false,
+    apollo: false,
   },
   {
-    feature: "12 Sales Tools Built In",
+    feature: "Built-in CRM + Pipeline",
     us: true,
-    gong: false,
-    yoodli: false,
-    dialpad: false,
+    elevenx: false,
+    artisan: false,
+    apollo: true,
   },
   {
-    feature: "Multi-AI Provider (GPT-4o, Claude 4.6, Kimi K2.5)",
+    feature: "Self-Improving AI (auto-optimizes templates, timing, scoring)",
     us: true,
-    gong: false,
-    yoodli: false,
-    dialpad: false,
+    elevenx: false,
+    artisan: false,
+    apollo: false,
   },
   {
-    feature: "No Enterprise Contract",
+    feature: "Voice-First Interface",
     us: true,
-    gong: false,
-    yoodli: true,
-    dialpad: false,
+    elevenx: false,
+    artisan: false,
+    apollo: false,
+  },
+  {
+    feature: "Invoice + Payment Collection",
+    us: true,
+    elevenx: false,
+    artisan: false,
+    apollo: false,
   },
 ];
 
 const pricingPlans = [
   {
-    name: "Free",
-    price: "$0",
-    period: "forever",
-    description: "Get started with AI sales coaching",
+    name: "Starter",
+    price: "$299",
+    period: "/month",
+    description: "For solo founders who want AI selling for them",
     features: [
-      "5 practice sessions/month",
-      "Objection Coach",
-      "Basic call analysis",
-      "Session history",
+      "1 AI Agent",
+      "500 leads/month",
+      "Email + Chat outreach",
+      "Lead scoring + qualification",
+      "Voice-first CRM",
+      "3 pre-built agent loadouts",
     ],
-    cta: "Start Free",
+    cta: "Start Free Trial",
     highlighted: false,
   },
   {
-    name: "Pro",
-    price: "$19",
+    name: "Growth",
+    price: "$799",
     period: "/month",
-    description: "Everything you need to close more deals",
+    description: "Full autonomous sales department for growing teams",
     features: [
-      "Unlimited practice sessions",
-      "All 12 sales tools",
-      "Voice + text practice",
-      "Custom personas",
-      "PDF exports",
-      "Progress tracking",
+      "3 AI Agents",
+      "2,000 leads/month",
+      "All channels (Email + LinkedIn + WhatsApp)",
+      "AI Calling + cold outreach",
+      "Self-improving templates",
+      "Rep assignment (Mode B)",
+      "All agent loadouts",
     ],
-    cta: "Start Pro Trial",
+    cta: "Start Growth Trial",
     highlighted: true,
   },
   {
-    name: "Team",
-    price: "$49",
+    name: "Scale",
+    price: "$1,999",
     period: "/month",
-    description: "For sales teams that want to win together",
+    description: "Full 7-agent team with MCP and custom loadouts",
     features: [
-      "Everything in Pro",
-      "5 team members",
-      "Team analytics dashboard",
-      "Shared objection library",
+      "7 AI Agents (full department)",
+      "10,000 leads/month",
+      "Everything in Growth",
+      "Custom Agent Loadout Builder",
+      "MCP access (connect any AI tool)",
+      "Marketplace publishing",
       "Priority support",
     ],
-    cta: "Start Team Trial",
+    cta: "Start Scale Trial",
     highlighted: false,
   },
 ];
@@ -264,7 +255,7 @@ export default function LandingPage() {
     "@type": "Organization",
     name: "QuotaHit",
     url: "https://www.quotahit.com",
-    description: "AI-powered sales coaching platform — practice pitches, handle objections, and analyze calls.",
+    description: "Your autonomous AI Sales Department. 7 AI agents that find leads, qualify prospects, reach out, follow up, close deals, and collect payment.",
     foundingDate: "2026",
     sameAs: [
       "https://www.linkedin.com/in/aiwithdhruv/",
@@ -277,7 +268,7 @@ export default function LandingPage() {
     "@type": "WebSite",
     name: "QuotaHit",
     url: "https://www.quotahit.com",
-    description: "AI Sales Coach — Practice. Coach. Close.",
+    description: "Your AI Sales Department — Find. Qualify. Close. Automatically.",
     potentialAction: {
       "@type": "SearchAction",
       target: "https://www.quotahit.com/blog?q={search_term_string}",
@@ -292,12 +283,12 @@ export default function LandingPage() {
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web",
     offers: {
-      "@type": "Offer",
-      price: "0",
+      "@type": "AggregateOffer",
+      lowPrice: "299",
+      highPrice: "1999",
       priceCurrency: "USD",
     },
-    description: "AI sales coaching platform with voice practice, objection coaching, call analysis, and 12 sales tools.",
-    // aggregateRating removed — no real reviews yet (adding fake reviews violates Google guidelines)
+    description: "Autonomous AI Sales Department with 7 AI agents — lead generation, qualification, multi-channel outreach, follow-up, closing, and payment collection.",
   };
 
   return (
@@ -376,10 +367,10 @@ export default function LandingPage() {
               </Link>
               <MobileNav
                 links={[
-                  { href: "/features", label: "AI Product" },
+                  { href: "/features", label: "AI Agents" },
                   { href: "/#how-it-works", label: "How It Works" },
                   { href: "/pricing", label: "Pricing" },
-                  { href: "https://n8n.aiwithdhruv.cloud/form/10f459a3-ca15-466e-b718-8b11f312c3f8", label: "Test AI Call" },
+                  { href: "https://n8n.aiwithdhruv.cloud/form/10f459a3-ca15-466e-b718-8b11f312c3f8", label: "Hear Our AI Call" },
                   { href: "https://calendly.com/aiwithdhruv/makeaiworkforyou", label: "Book Demo" },
                   { href: "/login", label: "Login" },
                   { href: "/signup", label: "Sign Up" },
@@ -412,24 +403,24 @@ export default function LandingPage() {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neonblue/10 border border-neonblue/20 mb-8 animate-fade-in-up">
             <Sparkles className="h-4 w-4 text-neonblue" />
             <span className="text-sm text-neonblue font-medium">
-              Powered by GPT-4o, Claude 4.6, Kimi K2.5 & More
+              7 AI Agents. Every Channel. Zero Manual Work.
             </span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-platinum mb-4 animate-fade-in-up leading-tight">
-            Your AI Sales Coach.
+            Your AI Sales Department.
           </h1>
           <div className="inline-flex items-center gap-3 sm:gap-5 mb-6 animate-fade-in-up">
-            <span className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-wide text-neonblue hero-word-glow hero-word-box" style={{ "--glow-word-color": "rgba(0, 179, 255, 0.4)" } as React.CSSProperties}>Practice</span>
-            <span className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-wide text-automationgreen hero-word-glow hero-word-box" style={{ "--glow-word-color": "rgba(45, 255, 142, 0.4)" } as React.CSSProperties}>Coach</span>
+            <span className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-wide text-neonblue hero-word-glow hero-word-box" style={{ "--glow-word-color": "rgba(0, 179, 255, 0.4)" } as React.CSSProperties}>Find</span>
+            <span className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-wide text-automationgreen hero-word-glow hero-word-box" style={{ "--glow-word-color": "rgba(45, 255, 142, 0.4)" } as React.CSSProperties}>Qualify</span>
             <span className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-wide hero-word-glow hero-word-box" style={{ "--glow-word-color": "rgba(192, 199, 209, 0.5)", color: "#C7CCD1" } as React.CSSProperties}>Close</span>
           </div>
 
           <p className="text-lg sm:text-xl text-silver max-w-3xl mx-auto mb-10 animate-fade-in-up">
-            The only AI sales tool that combines real-time voice practice,
-            intelligent objection coaching, and call analysis — all in one app.{" "}
+            7 AI agents that find leads, qualify prospects, reach out on every
+            channel, follow up, close deals, and collect payment.{" "}
             <span className="text-platinum font-semibold">
-              10-50x cheaper than Gong or Dialpad.
+              While you sleep.
             </span>
           </p>
 
@@ -439,7 +430,7 @@ export default function LandingPage() {
                 className="btn-premium relative px-10 py-5 rounded-xl text-lg font-semibold cursor-pointer"
               >
                 <span className="btn-premium-text relative z-10 flex items-center gap-2">
-                  Start Free — No Credit Card
+                  Start Free Trial
                   <ArrowRight className="h-5 w-5" />
                 </span>
               </button>
@@ -452,7 +443,7 @@ export default function LandingPage() {
               <button className="btn-premium relative px-8 py-5 rounded-xl text-lg font-semibold cursor-pointer">
                 <span className="btn-premium-text relative z-10 flex items-center gap-2">
                   <PhoneCall className="h-5 w-5" />
-                  Test AI Call — Free
+                  Hear Our AI Call You
                   <ExternalLink className="h-4 w-4 opacity-50" />
                 </span>
               </button>
@@ -477,55 +468,55 @@ export default function LandingPage() {
             <div className="flex items-center gap-2">
               <Users className="h-5 w-5 text-automationgreen" />
               <span className="text-sm">
-                Used by sales reps at early-stage startups
+                Replaces 5-7 sales tools at a fraction of the cost
               </span>
             </div>
             <div className="hidden sm:block w-px h-5 bg-gunmetal" />
             <div className="flex items-center gap-2">
               <Shield className="h-5 w-5 text-neonblue" />
               <span className="text-sm">
-                Built by a sales rep, for sales reps
+                TCPA compliant &middot; SOC2 ready &middot; Enterprise-grade
               </span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ───────────────── Features Grid ───────────────── */}
+      {/* ───────────────── AI Agents Grid ───────────────── */}
       <section id="features" className="py-24 px-4 bg-graphite">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neonblue/10 border border-neonblue/20 mb-4">
               <Zap className="h-3.5 w-3.5 text-neonblue" />
               <span className="text-xs text-neonblue font-medium uppercase tracking-wider">
-                Full Platform
+                Your AI Sales Team
               </span>
             </div>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-platinum mb-4">
-              12 AI-Powered{" "}
-              <span className="text-neonblue">Sales Tools</span>
+              7 AI Agents That{" "}
+              <span className="text-neonblue">Sell For You</span>
             </h2>
             <p className="text-lg text-silver max-w-2xl mx-auto">
-              Everything you need to practice, coach, and close — built into one
-              app. No integrations needed.
+              A full sales department that works 24/7 across every channel.
+              No hiring. No training. No missed follow-ups.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {features.map((feature, index) => (
+            {agents.map((agent, index) => (
               <div
-                key={feature.title}
+                key={agent.title}
                 className="glow-card p-6 rounded-xl bg-onyx border border-gunmetal hover:border-neonblue/50 transition-all duration-300 group hover-lift"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                <div className="w-11 h-11 rounded-lg bg-neonblue/10 flex items-center justify-center mb-4 group-hover:bg-neonblue/20 transition-colors">
-                  <feature.icon className="h-5 w-5 text-neonblue" />
+                <div className={`w-11 h-11 rounded-lg ${agent.color === "text-neonblue" ? "bg-neonblue/10 group-hover:bg-neonblue/20" : agent.color === "text-automationgreen" ? "bg-automationgreen/10 group-hover:bg-automationgreen/20" : "bg-warningamber/10 group-hover:bg-warningamber/20"} flex items-center justify-center mb-4 transition-colors`}>
+                  <agent.icon className={`h-5 w-5 ${agent.color}`} />
                 </div>
                 <h3 className="text-base font-semibold text-platinum mb-2">
-                  {feature.title}
+                  {agent.title}
                 </h3>
                 <p className="text-silver text-sm leading-relaxed">
-                  {feature.description}
+                  {agent.description}
                 </p>
               </div>
             ))}
@@ -542,7 +533,7 @@ export default function LandingPage() {
               <span className="text-automationgreen">Close More Deals</span>
             </h2>
             <p className="text-lg text-silver max-w-2xl mx-auto">
-              A simple workflow that makes you a better seller every single day.
+              Set it up once. AI handles everything from lead to payment.
             </p>
           </div>
 
@@ -583,12 +574,11 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-platinum mb-4">
-              Why Sales Reps{" "}
-              <span className="text-neonblue">Choose Us</span> Over Enterprise
-              Tools
+              Why Teams{" "}
+              <span className="text-neonblue">Switch</span> to QuotaHit
             </h2>
             <p className="text-lg text-silver max-w-2xl mx-auto">
-              Enterprise features without the enterprise price tag or contracts.
+              The only platform that goes from lead to payment. No stitching tools together.
             </p>
           </div>
 
@@ -598,22 +588,22 @@ export default function LandingPage() {
             <div className="grid grid-cols-5 bg-onyx border-b border-gunmetal">
               <div className="p-4 text-sm font-medium text-mist">Feature</div>
               <div className="p-4 text-center">
-                <div className="text-sm font-bold text-neonblue">Us</div>
+                <div className="text-sm font-bold text-neonblue">QuotaHit</div>
                 <div className="text-xs text-automationgreen font-medium">
-                  $0-19/mo
+                  $299-1,999/mo
                 </div>
               </div>
               <div className="p-4 text-center">
-                <div className="text-sm font-medium text-silver">Gong</div>
-                <div className="text-xs text-mist">$108-250/mo</div>
+                <div className="text-sm font-medium text-silver">11x.ai</div>
+                <div className="text-xs text-mist">$800-1,500/mo</div>
               </div>
               <div className="p-4 text-center">
-                <div className="text-sm font-medium text-silver">Yoodli</div>
-                <div className="text-xs text-mist">$0-20/mo</div>
+                <div className="text-sm font-medium text-silver">Artisan</div>
+                <div className="text-xs text-mist">$2,000+/mo</div>
               </div>
               <div className="p-4 text-center">
-                <div className="text-sm font-medium text-silver">Dialpad</div>
-                <div className="text-xs text-mist">$39-170/mo</div>
+                <div className="text-sm font-medium text-silver">Apollo</div>
+                <div className="text-xs text-mist">$49-119/mo</div>
               </div>
             </div>
 
@@ -636,13 +626,13 @@ export default function LandingPage() {
                   <ComparisonCell value={row.us} />
                 </div>
                 <div className="p-4 flex items-center justify-center">
-                  <ComparisonCell value={row.gong} />
+                  <ComparisonCell value={row.elevenx} />
                 </div>
                 <div className="p-4 flex items-center justify-center">
-                  <ComparisonCell value={row.yoodli} />
+                  <ComparisonCell value={row.artisan} />
                 </div>
                 <div className="p-4 flex items-center justify-center">
-                  <ComparisonCell value={row.dialpad} />
+                  <ComparisonCell value={row.apollo} />
                 </div>
               </div>
             ))}
@@ -654,21 +644,21 @@ export default function LandingPage() {
               </div>
               <div className="p-4 text-center">
                 <span className="text-sm font-bold text-automationgreen">
-                  FREE-$19/mo
+                  $299-1,999/mo
                 </span>
               </div>
               <div className="p-4 text-center">
                 <span className="text-sm text-errorred font-medium">
-                  $108-250/mo
+                  $800-1,500/mo
                 </span>
-              </div>
-              <div className="p-4 text-center">
-                <span className="text-sm text-silver">$0-20/mo</span>
               </div>
               <div className="p-4 text-center">
                 <span className="text-sm text-errorred font-medium">
-                  $39-170/mo
+                  $2,000+/mo
                 </span>
+              </div>
+              <div className="p-4 text-center">
+                <span className="text-sm text-silver">$49-119/mo</span>
               </div>
             </div>
             </div>
@@ -685,7 +675,7 @@ export default function LandingPage() {
               <span className="text-neonblue">Pricing</span>
             </h2>
             <p className="text-lg text-silver max-w-2xl mx-auto">
-              Start free. Upgrade when you are ready. No surprises.
+              Less than hiring one SDR. More output than an entire team.
             </p>
           </div>
 
@@ -764,23 +754,39 @@ export default function LandingPage() {
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-platinum mb-6 animate-fade-in-up">
-            Start Practicing in{" "}
-            <span className="text-neonblue">30 Seconds</span>
+            Your Sales Team That{" "}
+            <span className="text-neonblue">Never Sleeps</span>
           </h2>
           <p className="text-lg text-silver mb-10 max-w-xl mx-auto">
-            No credit card. No setup. Just sign up and start practicing.
+            Set up in 5 minutes. Wake up to qualified leads, booked meetings, and closed deals.
           </p>
-          <Link href="/dashboard">
-            <Button
-              size="lg"
-              className="bg-neonblue hover:bg-electricblue text-white px-10 py-7 text-lg glow-blue animate-pulse-glow cursor-pointer"
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/signup">
+              <Button
+                size="lg"
+                className="bg-neonblue hover:bg-electricblue text-white px-10 py-7 text-lg glow-blue animate-pulse-glow cursor-pointer"
+              >
+                Start Free Trial
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <a
+              href="https://calendly.com/aiwithdhruv/makeaiworkforyou"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              Start Free — No Credit Card
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-gunmetal text-platinum hover:bg-gunmetal px-10 py-7 text-lg cursor-pointer"
+              >
+                <Calendar className="mr-2 h-5 w-5" />
+                Book a Demo
+              </Button>
+            </a>
+          </div>
           <p className="text-sm text-mist mt-6">
-            Free forever plan available. No credit card required.
+            14-day free trial. No credit card required.
           </p>
         </div>
       </section>
@@ -802,7 +808,7 @@ export default function LandingPage() {
                 href="/features"
                 className="text-sm text-mist hover:text-silver transition-colors"
               >
-                AI Product
+                AI Agents
               </Link>
               <Link
                 href="/pricing"
@@ -822,7 +828,7 @@ export default function LandingPage() {
                 rel="noopener noreferrer"
                 className="text-sm text-automationgreen hover:text-automationgreen/80 transition-colors flex items-center gap-1"
               >
-                Test AI Call <ExternalLink className="h-3 w-3" />
+                Hear Our AI Call <ExternalLink className="h-3 w-3" />
               </a>
               <a
                 href="https://calendly.com/aiwithdhruv/makeaiworkforyou"

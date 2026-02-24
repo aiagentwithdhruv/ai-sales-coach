@@ -2,29 +2,36 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { ChevronDown, Mic, MessageSquare, Phone, ArrowRight } from "lucide-react";
+import { ChevronDown, UserSearch, MessageSquare, Mail, Phone, Swords, ArrowRight } from "lucide-react";
 
 const products = [
   {
-    icon: Mic,
-    title: "Voice Practice",
-    desc: "Practice pitches with real-time AI voice",
+    icon: UserSearch,
+    title: "Scout + Researcher",
+    desc: "AI finds and enriches leads 24/7",
     color: "text-neonblue",
     bg: "bg-neonblue/10",
   },
   {
     icon: MessageSquare,
-    title: "Objection Coach",
-    desc: "Handle any objection with AI coaching",
+    title: "Qualifier Agent",
+    desc: "BANT+ conversations, zero human needed",
     color: "text-automationgreen",
     bg: "bg-automationgreen/10",
   },
   {
-    icon: Phone,
-    title: "Call Analysis",
-    desc: "Upload calls, get instant AI scoring",
+    icon: Mail,
+    title: "Outreach Agent",
+    desc: "Email, LinkedIn, WhatsApp, cold calling",
     color: "text-warningamber",
     bg: "bg-warningamber/10",
+  },
+  {
+    icon: Swords,
+    title: "Closer Agent",
+    desc: "Negotiates, sends proposals, collects payment",
+    color: "text-neonblue",
+    bg: "bg-neonblue/10",
   },
 ];
 
@@ -59,7 +66,7 @@ export function NavProductDropdown() {
         className="flex items-center gap-1 text-silver hover:text-platinum transition-colors cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
       >
-        AI Product
+        AI Agents
         <ChevronDown
           className={`h-3.5 w-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
         />
@@ -102,7 +109,7 @@ export function NavProductDropdown() {
               onClick={() => setIsOpen(false)}
             >
               <span className="text-xs font-medium text-neonblue">
-                See All Tools
+                See All 7 Agents
               </span>
               <ArrowRight className="h-3 w-3 text-neonblue group-hover:translate-x-1 transition-transform" />
             </Link>

@@ -4,144 +4,148 @@ import { Button } from "@/components/ui/button";
 import { MobileNav } from "@/components/ui/mobile-nav";
 
 export const metadata: Metadata = {
-  title: "Features — 12 AI Sales Tools in One Platform",
+  title: "AI Agents — Your Full Autonomous Sales Department",
   description:
-    "Real-time voice practice, objection coaching, call analysis, custom personas, meeting notes, PDF export & more. Powered by GPT-4o, Claude 4.6, Kimi K2.5. See all 12 AI sales features.",
+    "7 AI agents that find leads, qualify prospects, reach out on every channel, follow up, close deals, and collect payment. Meet your AI sales team.",
   keywords: [
-    "AI sales tools", "sales voice practice", "objection handling AI", "call analysis software",
-    "sales roleplay AI", "AI meeting notes", "sales persona practice", "sales coaching features",
+    "AI SDR", "AI sales agent", "autonomous sales", "AI lead qualification",
+    "AI outreach", "AI cold calling", "AI sales department", "AI sales pipeline",
+    "AI lead generation", "AI deal closing", "AI follow-up", "AI sales automation",
   ],
   alternates: {
     canonical: "https://www.quotahit.com/features",
   },
   openGraph: {
-    title: "QuotaHit Features — 12 AI-Powered Sales Tools",
-    description: "Voice practice, objection coaching, call analysis, and 9 more AI sales tools. All in one app.",
+    title: "7 AI Agents — Your Autonomous Sales Department | QuotaHit",
+    description: "From lead generation to payment collection — 7 AI agents that handle your entire sales pipeline. Every channel. 24/7. Zero manual work.",
     url: "https://www.quotahit.com/features",
   },
 };
 import {
   Sparkles,
   ArrowRight,
-  MessageSquare,
-  Mic,
-  PenLine,
   Phone,
-  Swords,
-  Globe,
-  FileText,
-  BookOpen,
-  UserSearch,
-  Trophy,
-  History,
-  FileDown,
   Zap,
   Brain,
-  Target,
-  TrendingUp,
   Shield,
   Clock,
-  Headphones,
-  BarChart3,
   Mail,
+  Search,
+  CheckCircle,
+  Handshake,
+  Send,
+  PhoneCall,
+  Mic,
+  RefreshCw,
+  GitBranch,
+  Settings,
+  BellRing,
+  Scale,
+  Plug,
+  Layers,
+  DollarSign,
+  Bot,
+  TrendingUp,
 } from "lucide-react";
 
 const coreFeatures = [
   {
-    icon: Mic,
-    title: "Real-time Voice Practice",
+    icon: Search,
+    title: "Autonomous Lead Discovery",
     description:
-      "Practice your sales pitch with AI using GPT-4o Realtime voice. Get scored on delivery, tone, objection handling, and closing ability. The closest thing to a live sales call — without the pressure.",
+      "AI finds leads matching your ICP 24/7 from LinkedIn, web, and imports. Auto-enriches every lead with company data, tech stack, funding signals, and pain points using Perplexity-powered research.",
     color: "neonblue",
-    tag: "Signature Feature",
+    tag: "Always-On Prospecting",
   },
   {
-    icon: MessageSquare,
-    title: "Objection Coach",
+    icon: CheckCircle,
+    title: "AI-Powered Qualification",
     description:
-      "Type any sales objection and get an instant, context-aware response. Backed by proven frameworks like LAER, Feel-Felt-Found, and more. Your always-on sales mentor.",
+      "Has intelligent BANT+ conversations to pre-qualify leads. Scores every lead 0-100 based on fit, engagement, budget, authority, need, and timeline. No human intervention required.",
     color: "automationgreen",
-    tag: "Most Used",
+    tag: "Zero Manual Work",
   },
   {
-    icon: Phone,
-    title: "Call Analysis & Scoring",
+    icon: Handshake,
+    title: "Autonomous Deal Closing",
     description:
-      "Upload any sales call recording and get a detailed AI analysis — talk ratio, filler words, objection handling score, engagement level, and personalized coaching tips.",
+      "Handles objections, negotiates terms, sends proposals, collects payment, and triggers onboarding. The first AI that goes from first touch to revenue collected.",
     color: "warningamber",
-    tag: "Data-Driven",
+    tag: "End-to-End",
   },
 ];
 
 const allFeatures = [
   {
-    icon: PenLine,
-    title: "Text Practice",
+    icon: Send,
+    title: "Multi-Channel Outreach",
     description:
-      "Role-play complete sales calls via chat. AI plays the buyer with realistic objections, questions, and pushback. Get scored after each session.",
+      "Personalized sequences across email, LinkedIn, WhatsApp, and cold calling. AI writes every message using prospect context.",
   },
   {
-    icon: Swords,
-    title: "12 Sales Tools",
+    icon: PhoneCall,
+    title: "Autonomous AI Calling",
     description:
-      "Email crafter, pitch scorer, battle cards, discovery question generator, value proposition builder, competitor analysis, and more — all AI-powered.",
+      "Outbound calls with AI voice. Books meetings, qualifies leads, and handles objections on the phone.",
   },
   {
-    icon: Globe,
-    title: "Research Mode",
+    icon: Mic,
+    title: "Voice-First Interface",
     description:
-      "Perplexity-powered company and prospect research. Get real-time intel on any company before your call — news, financials, tech stack, and key decision makers.",
+      "Speak to your CRM. Instruct AI with voice commands like 'send follow-up to Sarah' and AI does the rest.",
   },
   {
-    icon: FileText,
-    title: "Meeting Notes AI",
+    icon: RefreshCw,
+    title: "Self-Optimizing Templates",
     description:
-      "Paste or upload meeting transcripts. AI generates structured notes with action items, key decisions, follow-up tasks, and draft follow-up emails.",
+      "Templates, scoring weights, and timing auto-optimize from every interaction. AI gets smarter every day.",
   },
   {
-    icon: BookOpen,
-    title: "Objection Library",
+    icon: GitBranch,
+    title: "Intelligent Lead Routing",
     description:
-      "Save, search, and categorize your best objection responses. Build a personal playbook of winning rebuttals organized by category and scenario.",
+      "Route qualified leads to Mode A (fully autonomous), Mode B (hybrid with reps), or Mode C (self-service payment).",
   },
   {
-    icon: UserSearch,
-    title: "Custom Personas",
+    icon: Settings,
+    title: "Customizable Agent Loadouts",
     description:
-      "Create buyer personas at any difficulty level to practice against — skeptical CFO, technical CTO, busy VP of Sales, or friendly champion.",
+      "Configure each agent's behavior, channels, tone, and rules. Build custom loadouts or use pre-built templates.",
   },
   {
-    icon: Trophy,
-    title: "Progress & Achievements",
+    icon: BellRing,
+    title: "Automated Follow-Ups",
     description:
-      "18 achievement badges, daily streaks, and detailed progress dashboards. Track your improvement over time with AI-generated insights.",
+      "Multi-step sequences that never miss a beat. Email, WhatsApp, and SMS follow-ups triggered by lead behavior.",
   },
   {
-    icon: History,
-    title: "Session History",
+    icon: Scale,
+    title: "TCPA Compliant",
     description:
-      "Review all past practice sessions, coaching conversations, and tool outputs. Never lose a great response or coaching insight again.",
+      "AI call disclosure, DNC enforcement, consent tracking, and full audit trail. Enterprise-grade compliance from day one.",
   },
   {
-    icon: FileDown,
-    title: "PDF Export",
+    icon: Plug,
+    title: "MCP-Ready Architecture",
     description:
-      "Export any research report, meeting notes, call analysis, or practice session as a professionally styled PDF for sharing or archiving.",
+      "Connect any AI tool via Model Context Protocol. Your pipeline is extensible and future-proof.",
   },
 ];
 
 const aiModels = [
-  { name: "GPT-4o", provider: "OpenAI", use: "Voice practice, call analysis" },
-  { name: "Claude 4.6", provider: "Anthropic", use: "Objection coaching, research" },
-  { name: "Kimi K2.5", provider: "Moonshot", use: "Default chat, cost-efficient" },
-  { name: "Gemini", provider: "Google", use: "Research, multi-modal tasks" },
+  { name: "GPT-4o", provider: "OpenAI", use: "Voice calls, real-time conversations" },
+  { name: "Claude 4.6", provider: "Anthropic", use: "Qualification, research, proposals" },
+  { name: "Kimi K2.5", provider: "Moonshot", use: "High-volume tasks, cost-efficient" },
+  { name: "Gemini", provider: "Google", use: "Research, multi-modal analysis" },
+  { name: "ElevenLabs", provider: "ElevenLabs", use: "AI voice generation for calls" },
+  { name: "Deepgram", provider: "Deepgram", use: "Speech-to-text, voice commands" },
 ];
 
 const stats = [
-  { value: "12", label: "AI Sales Tools" },
-  { value: "4", label: "AI Models" },
-  { value: "18", label: "Achievement Badges" },
-  { value: "10-50x", label: "Cheaper than Gong" },
+  { value: "7", label: "AI Agents" },
+  { value: "5", label: "Channels" },
+  { value: "24/7", label: "Autonomous" },
+  { value: "100%", label: "Pipeline Coverage" },
 ];
 
 export default function FeaturesPage() {
@@ -218,21 +222,21 @@ export default function FeaturesPage() {
 
         <div className="max-w-5xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neonblue/10 border border-neonblue/20 mb-8 animate-fade-in-up">
-            <Zap className="h-4 w-4 text-neonblue" />
+            <Bot className="h-4 w-4 text-neonblue" />
             <span className="text-sm text-neonblue font-medium">
-              Everything you need to close more deals
+              Your AI Sales Team
             </span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold text-platinum mb-6 animate-fade-in-up leading-tight">
-            AI-Powered Features
+            7 AI Agents That
             <br />
-            <span className="text-neonblue">Built for Sales Reps</span>
+            <span className="text-neonblue">Close Deals For You</span>
           </h1>
 
           <p className="text-lg sm:text-xl text-silver max-w-3xl mx-auto mb-12 animate-fade-in-up">
-            Practice your pitch, handle any objection, analyze your calls, and track your progress —
-            all powered by the latest AI models. One tool to replace five.
+            From lead generation to payment collection — your entire sales pipeline, automated.
+            Every channel. 24/7. Zero manual work.
           </p>
 
           {/* Stats bar */}
@@ -254,10 +258,10 @@ export default function FeaturesPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-platinum mb-4">
-              3 Core <span className="text-neonblue">Superpowers</span>
+              3 Core <span className="text-neonblue">Agent Capabilities</span>
             </h2>
             <p className="text-lg text-silver max-w-2xl mx-auto">
-              The three features that make QuotaHit unlike any other sales tool.
+              The AI agents that power your autonomous sales pipeline from first touch to revenue.
             </p>
           </div>
 
@@ -309,15 +313,15 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      {/* All Features Grid */}
+      {/* All Agent Capabilities Grid */}
       <section className="py-20 px-4 bg-obsidian">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-platinum mb-4">
-              Every Tool You <span className="text-automationgreen">Need</span>
+              Every Capability Your <span className="text-automationgreen">AI Team</span> Has
             </h2>
             <p className="text-lg text-silver max-w-2xl mx-auto">
-              12 AI-powered tools built into one platform. No integrations, no setup, no enterprise contracts.
+              9 specialized capabilities across every channel. No integrations, no manual work, no gaps in your pipeline.
             </p>
           </div>
 
@@ -358,7 +362,7 @@ export default function FeaturesPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {aiModels.map((model) => (
               <div
                 key={model.name}
@@ -376,12 +380,12 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      {/* Why QuotaHit Section */}
+      {/* Why Teams Switch Section */}
       <section className="py-20 px-4 bg-obsidian">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-platinum mb-4">
-              Why Sales Reps <span className="text-automationgreen">Love Us</span>
+              Why Teams Switch to <span className="text-automationgreen">QuotaHit</span>
             </h2>
           </div>
 
@@ -389,33 +393,33 @@ export default function FeaturesPage() {
             {[
               {
                 icon: Clock,
-                title: "Ready in 30 Seconds",
-                description: "Sign up, pick a scenario, and start practicing. No onboarding calls, no team setup.",
+                title: "Setup in 5 Minutes",
+                description: "Import leads, connect channels, and AI starts selling. No onboarding calls or team setup needed.",
               },
               {
-                icon: Shield,
-                title: "No Enterprise Lock-In",
-                description: "Month-to-month billing. No annual contracts, no minimum seats, cancel anytime.",
+                icon: Layers,
+                title: "Replaces 5-7 Tools",
+                description: "Lead gen, CRM, outreach, calling, follow-ups, proposals, and payments — all in one platform.",
               },
               {
-                icon: Target,
-                title: "Built for Individual Reps",
-                description: "You don't need manager approval or a team plan. Start improving on your own.",
+                icon: Zap,
+                title: "Works While You Sleep",
+                description: "7 AI agents operate 24/7 across every channel. Wake up to qualified leads and closed deals.",
               },
               {
                 icon: TrendingUp,
-                title: "Get Better Every Day",
-                description: "Track streaks, earn badges, and see your scores improve session by session.",
+                title: "Self-Improving",
+                description: "AI optimizes its own templates, timing, and scoring from every interaction. Gets smarter every day.",
               },
               {
-                icon: Headphones,
-                title: "Real Voice Practice",
-                description: "The only tool with GPT-4o Realtime voice — practice like a real phone call.",
+                icon: Shield,
+                title: "Enterprise Compliance",
+                description: "TCPA, CAN-SPAM, DNC enforcement, and full audit trail built in. No compliance add-ons needed.",
               },
               {
-                icon: BarChart3,
-                title: "10-50x Cheaper",
-                description: "Gong costs $108-250/mo per user. QuotaHit Pro is $19/mo with more coaching features.",
+                icon: DollarSign,
+                title: "Fraction of the Cost",
+                description: "11x.ai charges $800-1500/mo for prospecting only. QuotaHit starts at $299/mo for the full pipeline.",
               },
             ].map((item) => (
               <div
@@ -443,22 +447,22 @@ export default function FeaturesPage() {
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-platinum mb-6">
-            Ready to <span className="text-neonblue">Close More Deals?</span>
+            Your Sales Team That <span className="text-neonblue">Never Sleeps</span>
           </h2>
           <p className="text-lg text-silver mb-10 max-w-xl mx-auto">
-            Join sales reps who are already practicing smarter and closing faster.
+            Set up in 5 minutes. Wake up to qualified leads, booked meetings, and closed deals.
           </p>
           <Link href="/signup">
             <Button
               size="lg"
               className="bg-neonblue hover:bg-electricblue text-white px-10 py-7 text-lg glow-blue animate-pulse-glow glow-ring-pulse cursor-pointer"
             >
-              Start Free — No Credit Card
+              Start Free Trial
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
           <p className="text-sm text-mist mt-6">
-            Free forever plan. No credit card required.
+            14-day free trial. No credit card required.
           </p>
         </div>
       </section>

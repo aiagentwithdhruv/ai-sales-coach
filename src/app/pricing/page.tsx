@@ -82,11 +82,11 @@ const FREE_TIER_ITEMS = [
 // ─── Competitor Comparison ────────────────────────────────────────────────────
 
 const COMPARISON_ITEMS = [
-  { label: "Gong.io", price: "$108-250/user/mo", note: "Plus $5K-50K platform fee" },
-  { label: "Salesloft", price: "$140-220/user/mo", note: "Annual contract required" },
-  { label: "Orum", price: "$250/user/mo", note: "3-seat minimum" },
-  { label: "Nooks", price: "$200-417/user/mo", note: "Annual contract required" },
-  { label: "Outreach", price: "$100-400/user/mo", note: "Plus setup fees" },
+  { label: "11x.ai (AI SDR)", price: "$800-1,500/mo", note: "Prospecting only" },
+  { label: "Artisan (AI BDR)", price: "$2,000+/mo", note: "Outreach only" },
+  { label: "Apollo.io", price: "$49-119/mo", note: "Database + basic outreach" },
+  { label: "Clay (Enrichment)", price: "$149-800/mo", note: "Data enrichment only" },
+  { label: "Gong.io", price: "$108-250/user/mo", note: "Call analytics only" },
 ];
 
 // ─── FAQ ──────────────────────────────────────────────────────────────────────
@@ -94,11 +94,11 @@ const COMPARISON_ITEMS = [
 const FAQ_ITEMS = [
   {
     q: "What are modules?",
-    a: "Modules are individual feature packages you can mix and match. Instead of paying for an all-or-nothing plan, pick only the tools you need -- AI Coaching, CRM, Calling, Follow-Ups, or Analytics -- and pay for each separately. Or grab the All-in-One Bundle for the best price.",
+    a: "Modules are AI agent capabilities you mix and match to build your ideal sales department. Each module — AI Coaching, CRM, Calling, Follow-Ups, or Analytics — is a specialized AI agent that works independently or together. Pick only what you need, or grab the All-in-One Bundle for the best price.",
   },
   {
     q: "What's included in the free tier?",
-    a: `The free tier gives you access to every module with usage limits: ${FREE_LIMITS.coaching_sessions} coaching sessions/month, ${FREE_LIMITS.contacts_created} contacts, ${FREE_LIMITS.ai_calls_made} AI calls/month, ${FREE_LIMITS.followups_sent} follow-ups/month, and ${FREE_LIMITS.analyses_run} analyses/month. It's free forever with no credit card required.`,
+    a: `The free tier includes limited access to all AI agents: ${FREE_LIMITS.coaching_sessions} coaching sessions/month, ${FREE_LIMITS.contacts_created} contacts, ${FREE_LIMITS.ai_calls_made} AI calls/month, ${FREE_LIMITS.followups_sent} follow-ups/month, and ${FREE_LIMITS.analyses_run} analyses/month. It's free forever with no credit card required.`,
   },
   {
     q: "What is BYOAPI?",
@@ -106,7 +106,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Do I need all modules?",
-    a: "Not at all. Each module works independently. You can start with just AI Coaching and add CRM or Calling later. If you want three or more modules, the All-in-One Bundle is usually cheaper.",
+    a: "Not at all. Each AI agent works independently. You can start with just AI Coaching and add other agents like CRM or Calling later as your needs grow. If you want three or more modules, the All-in-One Bundle is usually cheaper.",
   },
   {
     q: "Can I switch between module and bundle?",
@@ -270,13 +270,13 @@ export default function PricingPage() {
       <section className="pt-10 sm:pt-14 pb-8 sm:pb-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Badge className="bg-neonblue/10 text-neonblue border border-neonblue/20 mb-4 text-xs tracking-wide uppercase">
-            Module-based pricing
+            AI Sales Department Pricing
           </Badge>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-platinum mb-3 tracking-tight">
-            Simple, module-based pricing
+            Your AI Sales Department. One Price.
           </h1>
           <p className="text-lg text-silver max-w-2xl mx-auto mb-2">
-            Pick what you need. Bring your own AI keys. No hidden costs.
+            Pick the modules your AI team needs. Bring your own AI keys. Scale as you grow.
           </p>
           <p className="text-sm text-mist max-w-xl mx-auto mb-8">
             {TRIAL_DURATION_DAYS}-day trial with full access. No credit card required.
@@ -627,10 +627,10 @@ export default function PricingPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-platinum mb-3">
-              How we compare
+              Replaces 5-7 expensive tools
             </h2>
             <p className="text-lg text-silver">
-              QuotaHit combines coaching, CRM, and calling -- replacing multiple tools at a fraction of the cost
+              QuotaHit replaces your entire sales stack — lead gen, outreach, CRM, calling, follow-ups, and closing — at a fraction of the cost
             </p>
           </div>
 
@@ -715,10 +715,10 @@ export default function PricingPage() {
       <section className="py-20 bg-gradient-to-r from-neonblue/10 via-electricblue/5 to-neonblue/10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-platinum mb-4">
-            Ready to hit quota every month?
+            Your AI Sales Team Starts Today
           </h2>
           <p className="text-xl text-silver mb-8 max-w-2xl mx-auto">
-            Join sales teams using QuotaHit to coach reps, manage pipeline, and close deals faster with AI.
+            7 AI agents. Every channel. From lead to payment. Set up in 5 minutes.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/signup">
