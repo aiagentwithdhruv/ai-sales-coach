@@ -151,6 +151,66 @@ type Events = {
       priority?: "normal" | "high";
     };
   };
+
+  // ─── Phase 3: The Brain Events ──────────────────────────────────────────────
+
+  /** Fired when a deal is won */
+  "deal/won": {
+    data: {
+      contactId: string;
+      userId: string;
+      outcome: "won";
+      dealValue?: number;
+    };
+  };
+
+  /** Fired when a deal is lost */
+  "deal/lost": {
+    data: {
+      contactId: string;
+      userId: string;
+      outcome: "lost";
+      dealValue?: number;
+      lostReason?: string;
+    };
+  };
+
+  /** Fired to trigger scoring recalibration based on outcomes */
+  "feedback/recalibrate": {
+    data: {
+      userId: string;
+    };
+  };
+
+  /** Fired to initiate an autonomous call */
+  "call/initiated": {
+    data: {
+      contactId: string;
+      userId: string;
+      agentId: string;
+      priority?: "normal" | "high" | "urgent";
+    };
+  };
+
+  /** Fired to execute a composition chain step */
+  "chain/step.execute": {
+    data: {
+      userId: string;
+      contactId: string;
+      chainId: string;
+      stepIndex: number;
+      context: Record<string, unknown>;
+    };
+  };
+
+  /** Fired when a voice command is processed */
+  "voice/command.processed": {
+    data: {
+      userId: string;
+      action: string;
+      params: Record<string, unknown>;
+    };
+  };
 };
 
 // ─── Client Instance ────────────────────────────────────────────────────────

@@ -15,6 +15,13 @@ import {
   handleOutreachReply,
   outreachSequenceCompleted,
   autoEnrollAfterRouting,
+  // Phase 3: The Brain
+  orchestrateOnContactCreated,
+  handleStuckLeads,
+  handleEscalation,
+  recordDealOutcome,
+  recalibrateScoring,
+  trackAgentPerformance,
 } from "@/inngest/functions";
 
 export const { GET, POST, PUT } = serve({
@@ -35,5 +42,12 @@ export const { GET, POST, PUT } = serve({
     handleOutreachReply,
     outreachSequenceCompleted,
     autoEnrollAfterRouting,
+    // Phase 3: The Brain
+    orchestrateOnContactCreated,
+    handleStuckLeads,
+    handleEscalation,
+    recordDealOutcome,
+    recalibrateScoring,
+    trackAgentPerformance,
   ],
 });

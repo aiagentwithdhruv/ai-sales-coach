@@ -26,3 +26,16 @@ export {
   outreachSequenceCompleted,
   autoEnrollAfterRouting,
 } from "./outreach";
+
+// Phase 3: The Brain
+export {
+  orchestrateOnContactCreated,
+  handleStuckLeads,
+  handleEscalation,
+} from "./orchestrator";
+
+export {
+  recordDealOutcome,
+  recalibrateScoring,
+  trackAgentPerformance,
+} from "./feedback";
