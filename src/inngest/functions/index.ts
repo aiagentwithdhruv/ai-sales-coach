@@ -17,3 +17,12 @@ export {
 export { qualifyLead } from "./qualification";
 
 export { routeQualifiedLead } from "./routing";
+
+// Phase 2: Outreach Engine
+export {
+  enrollInOutreach,
+  executeOutreachStep,
+  handleOutreachReply,
+  outreachSequenceCompleted,
+  autoEnrollAfterRouting,
+} from "./outreach";

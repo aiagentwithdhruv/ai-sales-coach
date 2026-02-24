@@ -105,6 +105,52 @@ type Events = {
       agentName: string;
     };
   };
+
+  // ─── Phase 2: Outreach Engine Events ────────────────────────────────────────
+
+  /** Fired when a multi-channel outreach sequence step is due */
+  "outreach/step.due": {
+    data: {
+      sequenceId: string;
+      stepIndex: number;
+      contactId: string;
+      userId: string;
+      channel: "email" | "linkedin" | "whatsapp" | "call" | "sms";
+      templateId?: string;
+    };
+  };
+
+  /** Fired when a prospect replies to any outreach channel */
+  "outreach/reply.received": {
+    data: {
+      contactId: string;
+      userId: string;
+      channel: "email" | "linkedin" | "whatsapp" | "call" | "sms";
+      messageId?: string;
+      sentiment?: "positive" | "neutral" | "negative";
+      body?: string;
+    };
+  };
+
+  /** Fired when a full outreach sequence completes (all steps done or paused) */
+  "outreach/sequence.completed": {
+    data: {
+      sequenceId: string;
+      contactId: string;
+      userId: string;
+      outcome: "completed" | "replied" | "bounced" | "unsubscribed";
+    };
+  };
+
+  /** Fired to enroll a contact in a multi-channel outreach sequence */
+  "outreach/enroll": {
+    data: {
+      contactId: string;
+      userId: string;
+      sequenceTemplate: string; // preset name or custom sequence ID
+      priority?: "normal" | "high";
+    };
+  };
 };
 
 // ─── Client Instance ────────────────────────────────────────────────────────

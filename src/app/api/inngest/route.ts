@@ -9,11 +9,18 @@ import {
   processDueFollowUps,
   qualifyLead,
   routeQualifiedLead,
+  // Phase 2: Outreach Engine
+  enrollInOutreach,
+  executeOutreachStep,
+  handleOutreachReply,
+  outreachSequenceCompleted,
+  autoEnrollAfterRouting,
 } from "@/inngest/functions";
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [
+    // Phase 1: Lead Pipeline
     scoreLeadOnCreate,
     scoreLeadOnEnrich,
     routeAfterScoring,
@@ -22,5 +29,11 @@ export const { GET, POST, PUT } = serve({
     processDueFollowUps,
     qualifyLead,
     routeQualifiedLead,
+    // Phase 2: Outreach Engine
+    enrollInOutreach,
+    executeOutreachStep,
+    handleOutreachReply,
+    outreachSequenceCompleted,
+    autoEnrollAfterRouting,
   ],
 });
