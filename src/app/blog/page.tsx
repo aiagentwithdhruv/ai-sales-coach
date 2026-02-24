@@ -80,7 +80,8 @@ export default async function BlogPage({
               Quota<span className="text-neonblue">Hit</span>
             </span>
           </Link>
-          <div className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-6">
+            <Link href="/" className="text-sm text-silver hover:text-platinum transition-colors">Home</Link>
             <Link href="/features" className="text-sm text-silver hover:text-platinum transition-colors">Features</Link>
             <Link href="/pricing" className="text-sm text-silver hover:text-platinum transition-colors">Pricing</Link>
             <Link href="/blog" className="text-sm text-neonblue font-medium">Blog</Link>
@@ -90,8 +91,9 @@ export default async function BlogPage({
                 Start Free
               </button>
             </Link>
-          </div>
+          </nav>
           <MobileNav links={[
+            { href: "/", label: "Home" },
             { href: "/features", label: "Features" },
             { href: "/pricing", label: "Pricing" },
             { href: "/blog", label: "Blog" },
