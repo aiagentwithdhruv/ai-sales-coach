@@ -138,7 +138,7 @@ export function getYearlySavings(monthlyPrice: number, interval: BillingInterval
   return Math.round((fullYear - discountedYear) * 100) / 100;
 }
 
-// ─── Usage Limits (for usage.ts) ──────────────────────────────────────────
+// ─── Usage Limits (per tier) ──────────────────────────────────────────────
 
 export interface UsageLimits {
   coaching_sessions: number;
@@ -148,6 +148,7 @@ export interface UsageLimits {
   analyses_run: number;
 }
 
+/** Free tier / trial expired — tight limits */
 export const FREE_LIMITS: UsageLimits = {
   coaching_sessions: 10,
   contacts_created: 50,
@@ -156,7 +157,26 @@ export const FREE_LIMITS: UsageLimits = {
   analyses_run: 5,
 };
 
-export const PAID_LIMITS: UsageLimits = {
+/** Starter $297/mo — 500 contacts, 3 agents */
+export const STARTER_LIMITS: UsageLimits = {
+  coaching_sessions: -1,
+  contacts_created: 500,
+  ai_calls_made: 50,
+  followups_sent: 100,
+  analyses_run: -1,
+};
+
+/** Growth $697/mo — 5,000 contacts, all 7 agents */
+export const GROWTH_LIMITS: UsageLimits = {
+  coaching_sessions: -1,
+  contacts_created: 5000,
+  ai_calls_made: 500,
+  followups_sent: -1,
+  analyses_run: -1,
+};
+
+/** Enterprise $1,497/mo — unlimited everything */
+export const ENTERPRISE_LIMITS: UsageLimits = {
   coaching_sessions: -1,
   contacts_created: -1,
   ai_calls_made: -1,
@@ -164,90 +184,22 @@ export const PAID_LIMITS: UsageLimits = {
   analyses_run: -1,
 };
 
-// ─── @deprecated Legacy Module Pricing ─────────────────────────────────────
-// From the old per-module coaching pricing. Still imported by:
-// sales-agent-tools.ts, stripe.ts, stripe/checkout/route.ts
-// TODO: Migrate those files to TIERS and delete this section.
+/** Legacy alias — paid = enterprise-level (used during trial) */
+export const PAID_LIMITS: UsageLimits = ENTERPRISE_LIMITS;
 
-export type ModuleSlug = "coaching" | "crm" | "calling" | "followups" | "analytics";
-
-export interface ModuleConfig {
-  slug: ModuleSlug;
-  name: string;
-  description: string;
-  monthlyPrice: number;
-  marketPrice: number;
-  features: string[];
-  icon: string;
-}
-
-export const MODULES: Record<ModuleSlug, ModuleConfig> = {
-  coaching: {
-    slug: "coaching",
-    name: "AI Sales Coaching",
-    description: "AI-powered practice sessions, roleplay, and real-time feedback",
-    monthlyPrice: 39,
-    marketPrice: 50,
-    features: ["Unlimited AI coaching sessions", "Voice practice", "Custom personas", "Objection training", "Session analytics", "PDF reports"],
-    icon: "Brain",
-  },
-  crm: {
-    slug: "crm",
-    name: "CRM & Pipeline",
-    description: "Full CRM with pipeline management and deal tracking",
-    monthlyPrice: 25,
-    marketPrice: 30,
-    features: ["Unlimited contacts & deals", "Drag-and-drop pipeline", "AI enrichment", "Deal forecasting", "Activity timeline", "Webhooks"],
-    icon: "BarChart3",
-  },
-  calling: {
-    slug: "calling",
-    name: "AI Calling",
-    description: "Autonomous AI phone calls that qualify leads and book meetings",
-    monthlyPrice: 79,
-    marketPrice: 100,
-    features: ["Outbound AI campaigns", "Inbound call handling", "AI Agent Builder", "Call transcriptions", "Phone management", "CRM updates"],
-    icon: "Phone",
-  },
-  followups: {
-    slug: "followups",
-    name: "Follow-Up Automation",
-    description: "Automated email and SMS follow-ups triggered by call outcomes",
-    monthlyPrice: 29,
-    marketPrice: 40,
-    features: ["Unlimited sequences", "Email via Resend", "SMS via Twilio", "Outcome triggers", "Template variables", "Scheduling"],
-    icon: "Mail",
-  },
-  analytics: {
-    slug: "analytics",
-    name: "Analytics & Reporting",
-    description: "Advanced call analysis, scoring, and team analytics",
-    monthlyPrice: 19,
-    marketPrice: 30,
-    features: ["Advanced call scoring", "Sentiment analysis", "Leaderboards", "Manager dashboard", "Meeting notes AI", "Research mode"],
-    icon: "TrendingUp",
-  },
+/** Lookup limits by tier slug */
+export const TIER_LIMITS: Record<TierSlug, UsageLimits> = {
+  starter: STARTER_LIMITS,
+  growth: GROWTH_LIMITS,
+  enterprise: ENTERPRISE_LIMITS,
 };
 
-export const ALL_MODULE_SLUGS: ModuleSlug[] = ["coaching", "crm", "calling", "followups", "analytics"];
-
-const individualTotal = Object.values(MODULES).reduce((sum, m) => sum + m.monthlyPrice, 0);
-
-export const BUNDLE = {
-  name: "All-in-One Bundle",
-  description: "Every module at the best price",
-  monthlyPrice: 129,
-  individualTotal,
-  savings: Math.round((1 - 129 / individualTotal) * 100),
-};
-
-export function calculateModulesPrice(modules: ModuleSlug[], interval: BillingInterval): number {
-  const total = modules.reduce((sum, slug) => sum + MODULES[slug].monthlyPrice, 0);
-  return getDiscountedPrice(total, interval);
+/** Get available agents for a tier */
+export function getTierAgents(tier: TierSlug): string[] {
+  return TIERS[tier].agents;
 }
 
-export function isBundleCheaper(modules: ModuleSlug[]): boolean {
-  if (modules.length <= 2) return false;
-  const individualPrice = modules.reduce((sum, slug) => sum + MODULES[slug].monthlyPrice, 0);
-  return BUNDLE.monthlyPrice < individualPrice;
+/** Check if a specific agent is available on a tier */
+export function hasAgent(tier: TierSlug, agent: string): boolean {
+  return TIERS[tier].agents.includes(agent);
 }

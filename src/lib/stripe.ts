@@ -1,64 +1,55 @@
+/**
+ * Stripe Configuration — Tier-Based Pricing
+ *
+ * 3 tiers × 3 billing intervals = 9 Stripe Price IDs.
+ * Environment variables: STRIPE_{TIER}_{INTERVAL}_PRICE_ID
+ *
+ * Example:
+ *   STRIPE_STARTER_MONTHLY_PRICE_ID=price_xxx
+ *   STRIPE_GROWTH_QUARTERLY_PRICE_ID=price_yyy
+ *   STRIPE_ENTERPRISE_YEARLY_PRICE_ID=price_zzz
+ */
+
 import Stripe from "stripe";
+import type { TierSlug, BillingInterval } from "./pricing";
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder", {
   apiVersion: "2026-01-28.clover",
   typescript: true,
 });
 
-// ─── Module-Based Products ──────────────────────────────────────────────────
+// ─── Tier Price ID Lookup ────────────────────────────────────────────────────
 
-export const MODULE_PRICES = {
-  coaching: {
-    name: "AI Sales Coaching",
-    priceId: process.env.STRIPE_COACHING_PRICE_ID || null,
-    monthlyPrice: 39,
+const TIER_PRICE_IDS: Record<TierSlug, Record<BillingInterval, string | null>> = {
+  starter: {
+    monthly: process.env.STRIPE_STARTER_MONTHLY_PRICE_ID || null,
+    quarterly: process.env.STRIPE_STARTER_QUARTERLY_PRICE_ID || null,
+    yearly: process.env.STRIPE_STARTER_YEARLY_PRICE_ID || null,
   },
-  crm: {
-    name: "CRM & Pipeline",
-    priceId: process.env.STRIPE_CRM_PRICE_ID || null,
-    monthlyPrice: 25,
+  growth: {
+    monthly: process.env.STRIPE_GROWTH_MONTHLY_PRICE_ID || null,
+    quarterly: process.env.STRIPE_GROWTH_QUARTERLY_PRICE_ID || null,
+    yearly: process.env.STRIPE_GROWTH_YEARLY_PRICE_ID || null,
   },
-  calling: {
-    name: "AI Outbound Calling",
-    priceId: process.env.STRIPE_CALLING_PRICE_ID || null,
-    monthlyPrice: 79,
+  enterprise: {
+    monthly: process.env.STRIPE_ENTERPRISE_MONTHLY_PRICE_ID || null,
+    quarterly: process.env.STRIPE_ENTERPRISE_QUARTERLY_PRICE_ID || null,
+    yearly: process.env.STRIPE_ENTERPRISE_YEARLY_PRICE_ID || null,
   },
-  followups: {
-    name: "Follow-Up Automation",
-    priceId: process.env.STRIPE_FOLLOWUPS_PRICE_ID || null,
-    monthlyPrice: 29,
-  },
-  analytics: {
-    name: "Analytics & Reporting",
-    priceId: process.env.STRIPE_ANALYTICS_PRICE_ID || null,
-    monthlyPrice: 19,
-  },
-  bundle: {
-    name: "All-in-One Bundle",
-    priceId: process.env.STRIPE_BUNDLE_PRICE_ID || null,
-    monthlyPrice: 129,
-  },
-} as const;
+};
 
-export type ModuleId = keyof typeof MODULE_PRICES;
+/**
+ * Get the Stripe Price ID for a tier + interval combo.
+ * Returns null if the environment variable is not set.
+ */
+export function getTierPriceId(tier: TierSlug, interval: BillingInterval): string | null {
+  return TIER_PRICE_IDS[tier]?.[interval] || null;
+}
 
-// Legacy PLANS for backward compatibility
-export const PLANS = {
-  free: {
-    name: "Free",
-    priceId: null,
-    features: ["All features with usage limits", "Text-only practice", "Basic coaching"],
-  },
-  pro: {
-    name: "Pro",
-    priceId: process.env.STRIPE_PRO_PRICE_ID || null,
-    features: ["Unlimited usage", "Voice practice", "All AI models"],
-  },
-  team: {
-    name: "Team",
-    priceId: process.env.STRIPE_TEAM_PRICE_ID || null,
-    features: ["Everything in Pro", "Up to 5 users", "Team analytics"],
-  },
-} as const;
-
-export type PlanId = keyof typeof PLANS;
+/**
+ * Get the environment variable name for a tier + interval.
+ * Useful for error messages.
+ */
+export function getTierPriceEnvVar(tier: TierSlug, interval: BillingInterval): string {
+  return `STRIPE_${tier.toUpperCase()}_${interval.toUpperCase()}_PRICE_ID`;
+}

@@ -1,9 +1,9 @@
 /**
- * Sales Agent Tool Definitions
+ * Sales Agent Tool Definitions — Tier-Based
  *
  * 5 tools for the pricing page sales agent:
- * 1. get_pricing_info — module/bundle pricing lookup
- * 2. generate_checkout_link — Stripe checkout without auth
+ * 1. get_pricing_info — tier pricing lookup (Starter/Growth/Enterprise)
+ * 2. generate_checkout_link — Stripe checkout for a specific tier
  * 3. apply_discount — create Stripe promo codes
  * 4. notify_team — alert via n8n webhook
  * 5. get_visitor_context — load returning visitor memory
@@ -14,19 +14,18 @@ import { tool } from "ai";
 import { z as zv3 } from "zod/v3";
 const z = zv3 as any;
 import {
-  MODULES,
-  BUNDLE,
+  TIERS,
+  ALL_TIER_SLUGS,
+  AGENT_DESCRIPTIONS,
   BILLING_DISCOUNTS,
   FREE_LIMITS,
-  ALL_MODULE_SLUGS,
+  TRIAL_DURATION_DAYS,
   getDiscountedPrice,
-  calculateModulesPrice,
-  isBundleCheaper,
-  type ModuleSlug,
+  type TierSlug,
   type BillingInterval,
 } from "@/lib/pricing";
 import Stripe from "stripe";
-import { stripe, MODULE_PRICES } from "@/lib/stripe";
+import { stripe, getTierPriceId } from "@/lib/stripe";
 import { createDiscountCode, type DiscountType } from "@/lib/agent/discount-engine";
 import { buildVisitorContextString, upsertVisitorMemory } from "@/lib/agent/visitor-memory";
 import { updateConversation } from "@/lib/agent/conversation-tracker";
@@ -35,89 +34,98 @@ export function getSalesAgentTools(visitorId: string, conversationId?: string) {
   return {
     get_pricing_info: tool({
       description:
-        "Get pricing details for specific modules, the bundle, or billing intervals. Use when visitor asks about pricing.",
+        "Get pricing details for QuotaHit tiers (Starter, Growth, Enterprise), free trial info, or compare all plans. Use when visitor asks about pricing.",
       parameters: z.object({
         query_type: z
-          .enum(["module", "bundle", "all", "compare", "free_tier"])
+          .enum(["tier", "all", "compare", "free_trial", "agents"])
           .describe("What pricing info to retrieve"),
-        module_slug: z
-          .enum(["coaching", "crm", "calling", "followups", "analytics"])
+        tier_slug: z
+          .enum(["starter", "growth", "enterprise"])
           .optional()
-          .describe("Specific module to look up (for module query)"),
+          .describe("Specific tier to look up (for tier query)"),
         billing_interval: z
           .enum(["monthly", "quarterly", "yearly"])
           .optional()
           .describe("Billing interval for price calculation"),
       }),
-      execute: async ({ query_type, module_slug, billing_interval }) => {
+      execute: async ({ query_type, tier_slug, billing_interval }) => {
         const interval: BillingInterval = billing_interval || "monthly";
 
-        if (query_type === "module" && module_slug) {
-          const m = MODULES[module_slug as ModuleSlug];
-          const price = getDiscountedPrice(m.monthlyPrice, interval);
+        if (query_type === "tier" && tier_slug) {
+          const t = TIERS[tier_slug as TierSlug];
+          const price = getDiscountedPrice(t.monthlyPrice, interval);
           return {
-            name: m.name,
-            monthly_price: m.monthlyPrice,
+            name: t.name,
+            tagline: t.tagline,
+            monthly_price: t.monthlyPrice,
             discounted_price: price,
             interval,
-            features: m.features,
-            competitor_price: m.marketPrice,
-            savings_vs_competitor: `${Math.round((1 - m.monthlyPrice / m.marketPrice) * 100)}%`,
+            contact_limit: t.contactLimit,
+            agent_count: t.agentCount,
+            agents: t.agents,
+            features: t.features,
+            cta: t.cta,
+            popular: t.popular || false,
           };
         }
 
-        if (query_type === "bundle") {
-          const price = getDiscountedPrice(BUNDLE.monthlyPrice, interval);
+        if (query_type === "free_trial") {
           return {
-            name: BUNDLE.name,
-            monthly_price: BUNDLE.monthlyPrice,
-            discounted_price: price,
-            interval,
-            individual_total: BUNDLE.individualTotal,
-            savings: `${BUNDLE.savings}%`,
-            includes: ALL_MODULE_SLUGS.map((s) => MODULES[s].name),
+            price: "$0 for 14 days",
+            trial_days: TRIAL_DURATION_DAYS,
+            limits_after_trial: FREE_LIMITS,
+            note: "Full access to all features during trial. No credit card required to start.",
           };
         }
 
-        if (query_type === "free_tier") {
+        if (query_type === "agents") {
           return {
-            price: "$0/mo",
-            limits: FREE_LIMITS,
-            note: "All features accessible with usage limits. No credit card required.",
+            total_agents: 7,
+            agents: AGENT_DESCRIPTIONS,
+            starter_agents: TIERS.starter.agents,
+            growth_agents: TIERS.growth.agents,
           };
         }
 
         if (query_type === "compare") {
           return {
-            modules: ALL_MODULE_SLUGS.map((s) => ({
-              name: MODULES[s].name,
-              price: `$${getDiscountedPrice(MODULES[s].monthlyPrice, interval)}/mo`,
-              competitor: `$${MODULES[s].marketPrice}/mo`,
-            })),
-            bundle: {
-              price: `$${getDiscountedPrice(BUNDLE.monthlyPrice, interval)}/mo`,
-              savings: `${BUNDLE.savings}%`,
-            },
+            tiers: ALL_TIER_SLUGS.map((slug) => {
+              const t = TIERS[slug];
+              return {
+                name: t.name,
+                price: `$${getDiscountedPrice(t.monthlyPrice, interval)}/mo`,
+                contact_limit: t.contactLimit,
+                agents: `${t.agentCount} agents`,
+                popular: t.popular || false,
+              };
+            }),
             billing_discounts: {
               quarterly: `${BILLING_DISCOUNTS.quarterly.discount}% off`,
               yearly: `${BILLING_DISCOUNTS.yearly.discount}% off`,
+            },
+            competitor_comparison: {
+              "11x.ai": "$800-1,500/mo (prospecting only)",
+              "Artisan AI": "$2,000/mo (outreach only)",
+              QuotaHit: "$297-1,497/mo (full pipeline: find → qualify → close)",
             },
           };
         }
 
         // "all" — return everything
         return {
-          modules: ALL_MODULE_SLUGS.map((s) => ({
-            slug: s,
-            name: MODULES[s].name,
-            price: `$${MODULES[s].monthlyPrice}/mo`,
-            features: MODULES[s].features,
-          })),
-          bundle: {
-            price: `$${BUNDLE.monthlyPrice}/mo`,
-            savings: `${BUNDLE.savings}%`,
-          },
-          free_tier: FREE_LIMITS,
+          tiers: ALL_TIER_SLUGS.map((slug) => {
+            const t = TIERS[slug];
+            return {
+              slug,
+              name: t.name,
+              tagline: t.tagline,
+              price: `$${t.monthlyPrice}/mo`,
+              features: t.features,
+              agents: t.agents,
+              popular: t.popular || false,
+            };
+          }),
+          free_trial: { days: TRIAL_DURATION_DAYS, limits: FREE_LIMITS },
           billing: BILLING_DISCOUNTS,
         };
       },
@@ -125,11 +133,11 @@ export function getSalesAgentTools(visitorId: string, conversationId?: string) {
 
     generate_checkout_link: tool({
       description:
-        "Generate a Stripe checkout link for the visitor. Use when they're ready to buy. Always confirm modules and billing interval first.",
+        "Generate a Stripe checkout link for a specific tier. Use when the visitor is ready to buy. Always confirm tier and billing interval first.",
       parameters: z.object({
-        modules: z
-          .array(z.enum(["coaching", "crm", "calling", "followups", "analytics", "bundle"]))
-          .describe("Modules to include in checkout"),
+        tier: z
+          .enum(["starter", "growth"])
+          .describe("Tier to checkout (enterprise requires demo call)"),
         billing_interval: z
           .enum(["monthly", "quarterly", "yearly"])
           .default("monthly")
@@ -140,7 +148,7 @@ export function getSalesAgentTools(visitorId: string, conversationId?: string) {
           .describe("Optional promo/discount code to apply"),
         email: z.string().optional().describe("Visitor email for checkout"),
       }),
-      execute: async ({ modules, billing_interval, promo_code, email }) => {
+      execute: async ({ tier, billing_interval, promo_code, email }) => {
         try {
           if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === "sk_test_placeholder") {
             return {
@@ -150,33 +158,15 @@ export function getSalesAgentTools(visitorId: string, conversationId?: string) {
             };
           }
 
-          const lineItems: { price: string; quantity: number }[] = [];
+          const tierSlug = tier as TierSlug;
+          const interval = billing_interval as BillingInterval;
+          const priceId = getTierPriceId(tierSlug, interval);
 
-          if (modules.includes("bundle")) {
-            const bundlePrice = MODULE_PRICES.bundle.priceId;
-            if (!bundlePrice) {
-              return {
-                success: false,
-                error: "Bundle pricing is being set up. Contact us for a direct link.",
-              };
-            }
-            lineItems.push({ price: bundlePrice, quantity: 1 });
-          } else {
-            for (const mod of modules) {
-              if (mod === "bundle") continue;
-              const config = MODULE_PRICES[mod as keyof typeof MODULE_PRICES];
-              if (!config?.priceId) {
-                return {
-                  success: false,
-                  error: `${mod} module pricing is being set up. Contact us for a direct link.`,
-                };
-              }
-              lineItems.push({ price: config.priceId, quantity: 1 });
-            }
-          }
-
-          if (lineItems.length === 0) {
-            return { success: false, error: "No valid modules selected." };
+          if (!priceId) {
+            return {
+              success: false,
+              error: `${TIERS[tierSlug].name} pricing is being set up. Contact us for a direct link.`,
+            };
           }
 
           const origin = process.env.NEXT_PUBLIC_APP_URL || "https://www.quotahit.com";
@@ -184,12 +174,21 @@ export function getSalesAgentTools(visitorId: string, conversationId?: string) {
           const sessionParams: Stripe.Checkout.SessionCreateParams = {
             mode: "subscription",
             payment_method_types: ["card"],
-            line_items: lineItems,
+            line_items: [{ price: priceId, quantity: 1 }],
+            subscription_data: {
+              trial_period_days: TRIAL_DURATION_DAYS,
+              metadata: {
+                source: "sales_agent",
+                visitor_id: visitorId,
+                tier: tierSlug,
+                interval,
+              },
+            },
             metadata: {
               source: "sales_agent",
               visitor_id: visitorId,
-              modules: modules.join(","),
-              billing_interval,
+              tier: tierSlug,
+              interval,
             },
             success_url: `${origin}/dashboard?checkout=success&source=agent`,
             cancel_url: `${origin}/pricing?checkout=cancel`,
@@ -200,7 +199,6 @@ export function getSalesAgentTools(visitorId: string, conversationId?: string) {
           }
 
           if (promo_code) {
-            // Look up the promo code in Stripe
             const promos = await stripe.promotionCodes.list({
               code: promo_code,
               active: true,
@@ -221,20 +219,14 @@ export function getSalesAgentTools(visitorId: string, conversationId?: string) {
             });
           }
 
-          const total = modules.includes("bundle")
-            ? BUNDLE.monthlyPrice
-            : (modules as string[]).reduce(
-                (sum: number, m: string) =>
-                  sum + (MODULES[m as ModuleSlug]?.monthlyPrice || 0),
-                0
-              );
-
+          const t = TIERS[tierSlug];
           return {
             success: true,
             checkout_url: session.url,
-            total: `$${getDiscountedPrice(total, billing_interval as BillingInterval)}/mo`,
-            modules: modules.join(", "),
-            interval: billing_interval,
+            total: `$${getDiscountedPrice(t.monthlyPrice, interval)}/mo`,
+            tier: t.name,
+            interval,
+            trial: `${TRIAL_DURATION_DAYS}-day free trial included`,
           };
         } catch (error) {
           console.error("[SalesAgent] Checkout error:", error);
@@ -286,10 +278,10 @@ export function getSalesAgentTools(visitorId: string, conversationId?: string) {
         company: z.string().optional().describe("Company name if mentioned"),
         team_size: z.string().optional().describe("Team size if mentioned"),
         summary: z.string().describe("Brief summary of the conversation and what they need"),
-        modules_interested: z
-          .array(z.string())
+        tier_interested: z
+          .enum(["starter", "growth", "enterprise"])
           .optional()
-          .describe("Which modules they showed interest in"),
+          .describe("Which tier they showed interest in"),
       }),
       execute: async ({
         notification_type,
@@ -298,7 +290,7 @@ export function getSalesAgentTools(visitorId: string, conversationId?: string) {
         company,
         team_size,
         summary,
-        modules_interested,
+        tier_interested,
       }) => {
         // Update visitor memory with collected info
         await upsertVisitorMemory(visitorId, {
@@ -306,7 +298,7 @@ export function getSalesAgentTools(visitorId: string, conversationId?: string) {
           email: visitor_email,
           company,
           team_size,
-          modules_interested: modules_interested as ModuleSlug[],
+          tier_interested,
         });
 
         // Update conversation
@@ -316,7 +308,7 @@ export function getSalesAgentTools(visitorId: string, conversationId?: string) {
             name_collected: visitor_name,
             company_collected: company,
             team_size,
-            modules_interested: modules_interested as string[],
+            tier_interested,
             outcome: notification_type,
           });
         }
@@ -336,7 +328,7 @@ export function getSalesAgentTools(visitorId: string, conversationId?: string) {
                 company: company || "Not provided",
                 team_size: team_size || "Unknown",
                 summary,
-                modules_interested: modules_interested || [],
+                tier_interested: tier_interested || "unknown",
                 timestamp: new Date().toISOString(),
                 source: "quotahit_sales_agent",
               }),
@@ -374,7 +366,7 @@ export function getSalesAgentTools(visitorId: string, conversationId?: string) {
 
     save_visitor_info: tool({
       description:
-        "Save visitor details (name, phone, email, company, etc.) to memory for future conversations. Use IMMEDIATELY when the visitor shares any personal info — don't wait until the end. This helps remember them next time they visit.",
+        "Save visitor details (name, phone, email, company, etc.) to memory for future conversations. Use IMMEDIATELY when the visitor shares any personal info — don't wait until the end.",
       parameters: z.object({
         name: z.string().optional().describe("Visitor's name"),
         phone: z.string().optional().describe("Visitor's phone number"),
@@ -390,10 +382,10 @@ export function getSalesAgentTools(visitorId: string, conversationId?: string) {
           .array(z.string())
           .optional()
           .describe("Objections raised (e.g., ['too expensive', 'need to think'])"),
-        modules_interested: z
-          .array(z.string())
+        tier_interested: z
+          .enum(["starter", "growth", "enterprise"])
           .optional()
-          .describe("Modules they showed interest in"),
+          .describe("Which tier they showed interest in"),
         summary: z
           .string()
           .optional()
@@ -408,7 +400,7 @@ export function getSalesAgentTools(visitorId: string, conversationId?: string) {
         industry,
         current_tools,
         objections,
-        modules_interested,
+        tier_interested,
         summary,
       }: {
         name?: string;
@@ -419,7 +411,7 @@ export function getSalesAgentTools(visitorId: string, conversationId?: string) {
         industry?: string;
         current_tools?: string[];
         objections?: string[];
-        modules_interested?: string[];
+        tier_interested?: string;
         summary?: string;
       }) => {
         const updates: Record<string, unknown> = {};
@@ -431,7 +423,7 @@ export function getSalesAgentTools(visitorId: string, conversationId?: string) {
         if (industry) updates.industry = industry;
         if (current_tools) updates.current_tools = current_tools;
         if (objections) updates.all_objections = objections;
-        if (modules_interested) updates.modules_interested = modules_interested as ModuleSlug[];
+        if (tier_interested) updates.tier_interested = tier_interested;
         if (summary) updates.summary = summary;
 
         await upsertVisitorMemory(visitorId, updates as any);
@@ -443,7 +435,7 @@ export function getSalesAgentTools(visitorId: string, conversationId?: string) {
             email_collected: email,
             company_collected: company,
             team_size,
-            modules_interested: modules_interested as string[],
+            tier_interested,
           });
         }
 

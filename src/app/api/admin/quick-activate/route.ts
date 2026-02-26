@@ -78,15 +78,14 @@ export async function POST(req: Request) {
     const userId = targetUser.id;
     const periodEnd = valid_until || new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Upsert subscription with unlimited access
+    // Upsert subscription with enterprise-level access
     const { data, error } = await supabase
       .from("user_subscriptions")
       .upsert(
         {
           user_id: userId,
-          plan_type: "bundle",
+          plan_type: "enterprise",
           status: "active",
-          modules: ["coaching", "crm", "calling", "followups", "analytics"],
           current_period_start: new Date().toISOString(),
           current_period_end: periodEnd,
           trial_ends_at: null,

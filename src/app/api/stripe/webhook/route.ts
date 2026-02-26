@@ -1,5 +1,5 @@
 /**
- * Stripe Webhook Handler
+ * Stripe Webhook Handler — Tier-Based
  *
  * Receives and verifies Stripe webhook events for subscription lifecycle management.
  * Updates user_subscriptions table on checkout, subscription changes, and cancellations.
@@ -52,18 +52,15 @@ export async function POST(req: Request) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.userId;
-        const planType = session.metadata?.planType || "bundle";
-        const modulesStr = session.metadata?.modules || "";
+        const tier = session.metadata?.tier || "growth";
         const interval = session.metadata?.interval || "monthly";
 
         console.log(
-          `[Stripe] Checkout completed: userId=${userId}, planType=${planType}, ` +
-          `modules=${modulesStr}, customerId=${session.customer}, subscriptionId=${session.subscription}`
+          `[Stripe] Checkout completed: userId=${userId}, tier=${tier}, ` +
+          `interval=${interval}, customerId=${session.customer}, subscriptionId=${session.subscription}`
         );
 
         if (userId) {
-          const modules = modulesStr ? modulesStr.split(",") : ["coaching", "crm", "calling", "followups", "analytics"];
-
           await supabase
             .from("user_subscriptions")
             .upsert(
@@ -71,8 +68,7 @@ export async function POST(req: Request) {
                 user_id: userId,
                 stripe_customer_id: session.customer as string,
                 stripe_subscription_id: session.subscription as string,
-                plan_type: planType === "bundle" ? "bundle" : "module",
-                modules,
+                plan_type: tier,
                 billing_interval: interval,
                 status: "active",
                 current_period_start: new Date().toISOString(),
@@ -81,7 +77,7 @@ export async function POST(req: Request) {
               { onConflict: "user_id" }
             );
 
-          console.log(`[Stripe] User ${userId} subscription activated: ${planType} [${modules.join(",")}]`);
+          console.log(`[Stripe] User ${userId} subscription activated: ${tier} (${interval})`);
         }
         break;
       }
@@ -148,7 +144,6 @@ export async function POST(req: Request) {
             .update({
               status: "cancelled",
               plan_type: "free",
-              modules: [],
               stripe_subscription_id: null,
               updated_at: new Date().toISOString(),
             })

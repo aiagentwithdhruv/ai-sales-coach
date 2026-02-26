@@ -22,8 +22,10 @@ export function usePlan() {
   return {
     planId,
     plan,
-    isPro: planId === "pro" || planId === "team" || planId === "enterprise",
-    isTeam: planId === "team" || planId === "enterprise",
+    isPaid: planId !== "free",
+    isStarter: planId === "starter",
+    isGrowth: planId === "growth",
+    isEnterprise: planId === "enterprise",
     isFree: planId === "free",
     hasFeature: (feature: keyof PlanConfig["features"]) => hasFeature(feature),
   };

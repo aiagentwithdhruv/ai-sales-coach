@@ -18,6 +18,7 @@ export interface VisitorMemory {
   current_tools?: string[];
   total_visits: number;
   total_conversations: number;
+  tier_interested?: string;
   modules_interested?: string[];
   all_objections?: string[];
   best_discount_offered?: number;
@@ -103,6 +104,9 @@ export async function buildVisitorContextString(visitorId: string): Promise<stri
   if (memory.industry) parts.push(`Industry: ${memory.industry}.`);
   if (memory.current_tools?.length) {
     parts.push(`Currently uses: ${memory.current_tools.join(", ")}.`);
+  }
+  if (memory.tier_interested) {
+    parts.push(`Interested in: ${memory.tier_interested} tier.`);
   }
   if (memory.modules_interested?.length) {
     parts.push(`Previously interested in: ${memory.modules_interested.join(", ")}.`);

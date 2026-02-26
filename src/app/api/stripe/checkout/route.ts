@@ -1,12 +1,13 @@
 /**
- * Stripe Checkout Session API Route
+ * Stripe Checkout Session API Route — Tier-Based
  *
- * Creates a Stripe Checkout session for module-based subscription billing.
- * Supports: individual modules, bundle, and legacy pro/team plans.
+ * Creates a Stripe Checkout session for tier subscriptions.
+ * Accepts: { tier: "starter"|"growth"|"enterprise", interval: "monthly"|"quarterly"|"yearly" }
  */
 
 import { NextResponse } from "next/server";
-import { stripe, MODULE_PRICES, PLANS } from "@/lib/stripe";
+import { stripe, getTierPriceId, getTierPriceEnvVar } from "@/lib/stripe";
+import { TIERS, TRIAL_DURATION_DAYS, type TierSlug, type BillingInterval } from "@/lib/pricing";
 import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
@@ -41,104 +42,65 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { modules, planId, interval = "monthly" } = body as {
-      modules?: string[];  // New: array of module slugs
-      planId?: string;     // Legacy: 'pro' or 'team'
+    const { tier, interval = "monthly" } = body as {
+      tier: string;
       interval?: string;
     };
 
+    // Validate tier
+    if (!tier || !TIERS[tier as TierSlug]) {
+      return NextResponse.json(
+        { error: `Invalid tier "${tier}". Must be one of: starter, growth, enterprise.` },
+        { status: 400 }
+      );
+    }
+
+    const tierSlug = tier as TierSlug;
+    const billingInterval = (["monthly", "quarterly", "yearly"].includes(interval) ? interval : "monthly") as BillingInterval;
+
+    // Enterprise → contact sales (no self-serve checkout)
+    if (tierSlug === "enterprise") {
+      return NextResponse.json(
+        { error: "Enterprise plans require a consultation. Book a demo at quotahit.com." },
+        { status: 400 }
+      );
+    }
+
+    // Get Stripe price ID
+    const priceId = getTierPriceId(tierSlug, billingInterval);
+    if (!priceId) {
+      const envVar = getTierPriceEnvVar(tierSlug, billingInterval);
+      return NextResponse.json(
+        { error: `Price not configured for ${TIERS[tierSlug].name} (${billingInterval}). Set ${envVar}.` },
+        { status: 500 }
+      );
+    }
+
     const origin = req.headers.get("origin") || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-    // ─── Module-based checkout (new system) ─────────────────────────────
-    if (modules && modules.length > 0) {
-      const lineItems: { price: string; quantity: number }[] = [];
-      const validModules: string[] = [];
-
-      // Check if "bundle" is selected
-      if (modules.includes("bundle")) {
-        const bundlePrice = MODULE_PRICES.bundle.priceId;
-        if (!bundlePrice) {
-          return NextResponse.json(
-            { error: "Bundle price not configured. Set STRIPE_BUNDLE_PRICE_ID." },
-            { status: 500 }
-          );
-        }
-        lineItems.push({ price: bundlePrice, quantity: 1 });
-        validModules.push("coaching", "crm", "calling", "followups", "analytics");
-      } else {
-        // Individual modules
-        for (const mod of modules) {
-          const moduleConfig = MODULE_PRICES[mod as keyof typeof MODULE_PRICES];
-          if (!moduleConfig || mod === "bundle") continue;
-          if (!moduleConfig.priceId) {
-            return NextResponse.json(
-              { error: `Price not configured for ${moduleConfig.name}. Set STRIPE_${mod.toUpperCase()}_PRICE_ID.` },
-              { status: 500 }
-            );
-          }
-          lineItems.push({ price: moduleConfig.priceId, quantity: 1 });
-          validModules.push(mod);
-        }
-      }
-
-      if (lineItems.length === 0) {
-        return NextResponse.json({ error: "No valid modules selected." }, { status: 400 });
-      }
-
-      const session = await stripe.checkout.sessions.create({
-        mode: "subscription",
-        payment_method_types: ["card"],
-        customer_email: user.email,
-        line_items: lineItems,
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      payment_method_types: ["card"],
+      customer_email: user.email,
+      line_items: [{ price: priceId, quantity: 1 }],
+      subscription_data: {
+        trial_period_days: TRIAL_DURATION_DAYS,
         metadata: {
           userId: user.id,
-          planType: modules.includes("bundle") ? "bundle" : "module",
-          modules: validModules.join(","),
-          interval,
+          tier: tierSlug,
+          interval: billingInterval,
         },
-        success_url: `${origin}/dashboard?checkout=success`,
-        cancel_url: `${origin}/pricing?checkout=cancel`,
-      });
+      },
+      metadata: {
+        userId: user.id,
+        tier: tierSlug,
+        interval: billingInterval,
+      },
+      success_url: `${origin}/dashboard?checkout=success`,
+      cancel_url: `${origin}/pricing?checkout=cancel`,
+    });
 
-      return NextResponse.json({ url: session.url });
-    }
-
-    // ─── Legacy plan-based checkout ─────────────────────────────────────
-    if (planId) {
-      if (planId === "free") {
-        return NextResponse.json({ error: "Free plan does not require checkout." }, { status: 400 });
-      }
-
-      if (!(planId in PLANS)) {
-        return NextResponse.json({ error: "Invalid plan." }, { status: 400 });
-      }
-
-      const plan = PLANS[planId as keyof typeof PLANS];
-      if (!plan.priceId) {
-        return NextResponse.json(
-          { error: `Price not configured for ${plan.name} plan.` },
-          { status: 500 }
-        );
-      }
-
-      const session = await stripe.checkout.sessions.create({
-        mode: "subscription",
-        payment_method_types: ["card"],
-        customer_email: user.email,
-        line_items: [{ price: plan.priceId, quantity: 1 }],
-        metadata: {
-          userId: user.id,
-          planId,
-          planType: "legacy",
-        },
-        success_url: `${origin}/dashboard?checkout=success`,
-        cancel_url: `${origin}/pricing?checkout=cancel`,
-      });
-
-      return NextResponse.json({ url: session.url });
-    }
-
-    return NextResponse.json({ error: "Provide 'modules' array or 'planId'." }, { status: 400 });
+    return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error("Stripe Checkout Error:", error);
     return NextResponse.json(

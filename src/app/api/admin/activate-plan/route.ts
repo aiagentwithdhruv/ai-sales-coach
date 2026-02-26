@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
     // Parse request body
     const body = await req.json();
-    const { user_id, plan_type, modules, valid_until } = body;
+    const { user_id, tier, valid_until } = body;
 
     if (!user_id) {
       return new Response(
@@ -63,16 +63,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Default: bundle plan, valid for 6 months
-    const planType = plan_type || "bundle";
+    // Default: growth tier, valid for 6 months
+    const validTiers = ["starter", "growth", "enterprise"];
+    const planType = validTiers.includes(tier) ? tier : "growth";
     const periodEnd = valid_until || new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
-    const defaultModules = [
-      "coaching",
-      "crm",
-      "calling",
-      "followups",
-      "analytics",
-    ];
 
     // Upsert subscription
     const { data, error } = await supabase
@@ -82,7 +76,6 @@ export async function POST(req: NextRequest) {
           user_id,
           plan_type: planType,
           status: "active",
-          modules: modules || defaultModules,
           current_period_start: new Date().toISOString(),
           current_period_end: periodEnd,
           trial_ends_at: null,

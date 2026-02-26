@@ -12,6 +12,7 @@ export interface ConversationData {
   agent_type?: string;
   page_context?: string;
   messages?: unknown[];
+  tier_interested?: string;
   modules_interested?: string[];
   objections_raised?: string[];
   discount_offered?: number;

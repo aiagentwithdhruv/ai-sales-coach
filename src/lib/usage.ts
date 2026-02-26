@@ -7,7 +7,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import { FREE_LIMITS, PAID_LIMITS, type UsageLimits } from "./pricing";
+import { FREE_LIMITS, PAID_LIMITS, TIER_LIMITS, type UsageLimits, type TierSlug } from "./pricing";
 
 const getAdmin = () =>
   createClient(
@@ -61,7 +61,7 @@ export async function getUsageLimits(userId: string): Promise<UsageLimits & { is
 
   const { data: sub } = await supabase
     .from("user_subscriptions")
-    .select("plan_type, status, trial_ends_at, modules")
+    .select("plan_type, status, trial_ends_at")
     .eq("user_id", userId)
     .single();
 
@@ -74,10 +74,17 @@ export async function getUsageLimits(userId: string): Promise<UsageLimits & { is
   const isActive = sub.status === "active";
 
   if (isOnTrial) {
-    // Trial users get paid-level limits
-    return { ...PAID_LIMITS, is_trial: true, trial_ends_at: sub.trial_ends_at, plan_type: "free" };
+    // Trial users get full access (enterprise-level limits)
+    return { ...PAID_LIMITS, is_trial: true, trial_ends_at: sub.trial_ends_at, plan_type: sub.plan_type || "free" };
   }
 
+  // Check tier-specific limits (starter, growth, enterprise)
+  const tierSlug = sub.plan_type as TierSlug;
+  if (isActive && TIER_LIMITS[tierSlug]) {
+    return { ...TIER_LIMITS[tierSlug], is_trial: false, trial_ends_at: null, plan_type: tierSlug };
+  }
+
+  // Legacy: module/bundle plans get enterprise-level limits
   if (isActive && (sub.plan_type === "module" || sub.plan_type === "bundle")) {
     return { ...PAID_LIMITS, is_trial: false, trial_ends_at: null, plan_type: sub.plan_type };
   }

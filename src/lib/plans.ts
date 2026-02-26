@@ -1,15 +1,16 @@
 /**
- * Plan & Feature Gate System
+ * Plan & Feature Gate System — Tier-Based
  *
  * Now backed by user_subscriptions table (via /api/usage endpoint).
  * Free tier: all features accessible, just with usage limits.
- * Paid (module/bundle): unlimited usage for subscribed modules.
+ * Paid tiers (starter/growth/enterprise): tier-specific usage limits.
  *
- * Legacy PLANS config kept for backward compatibility with
- * existing feature-gate components.
+ * All features are accessible to all users — gating is done via usage limits.
  */
 
-export type PlanId = "free" | "pro" | "team" | "enterprise";
+import type { TierSlug } from "./pricing";
+
+export type PlanId = "free" | TierSlug;
 
 export interface PlanConfig {
   id: PlanId;
@@ -27,8 +28,7 @@ export interface PlanConfig {
   };
 }
 
-// In the new system, free users get ALL features (with usage limits).
-// Feature gates are kept for backward compatibility but all return true.
+// All features enabled for all users — gating is via usage limits, not feature flags
 const ALL_FEATURES_ENABLED = {
   voicePractice: true,
   callAnalysis: true,
@@ -47,15 +47,15 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     maxSessionHistory: -1,
     features: ALL_FEATURES_ENABLED,
   },
-  pro: {
-    id: "pro",
-    name: "Pro",
+  starter: {
+    id: "starter",
+    name: "Starter",
     maxSessionHistory: -1,
     features: ALL_FEATURES_ENABLED,
   },
-  team: {
-    id: "team",
-    name: "Team",
+  growth: {
+    id: "growth",
+    name: "Growth",
     maxSessionHistory: -1,
     features: ALL_FEATURES_ENABLED,
   },
@@ -68,7 +68,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
 };
 
 /**
- * Get the user's current plan from localStorage (legacy, kept for compatibility)
+ * Get the user's current plan from localStorage (client-side cache)
  * In the new system, use /api/usage to get actual subscription status.
  */
 export function getUserPlan(): PlanId {
@@ -88,21 +88,21 @@ export function setUserPlan(planId: PlanId): void {
  * Get the plan config for a given plan ID
  */
 export function getPlanConfig(planId?: PlanId): PlanConfig {
-  return PLANS[planId || getUserPlan()];
+  const id = planId || getUserPlan();
+  return PLANS[id] || PLANS.free;
 }
 
 /**
  * Check if a specific feature is available.
- * In the new module-based system, all features are available to everyone.
- * Usage limits are enforced server-side via checkUsage().
+ * All features are available — usage limits are enforced server-side.
  */
 export function hasFeature(_feature: keyof PlanConfig["features"]): boolean {
-  return true; // All features accessible in new model
+  return true;
 }
 
 /**
  * Get upgrade message for approaching usage limits
  */
 export function getUpgradeMessage(_feature: keyof PlanConfig["features"]): string {
-  return "Upgrade your plan for unlimited access";
+  return "Upgrade your plan for higher limits";
 }
