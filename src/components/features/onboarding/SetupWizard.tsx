@@ -14,6 +14,8 @@ import {
   MessageSquare,
   Loader2,
   Check,
+  UserSearch,
+  CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -53,6 +55,8 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [selectedChannels, setSelectedChannels] = useState<string[]>(["email"]);
   const [isLoading, setIsLoading] = useState(false);
+  const [scoutStatus, setScoutStatus] = useState<"idle" | "searching" | "done" | "error">("idle");
+  const [leadsFound, setLeadsFound] = useState(0);
   const supabase = getSupabaseClient();
 
   const toggleChannel = (id: string) => {
@@ -64,6 +68,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
   const handleComplete = async () => {
     setIsLoading(true);
     try {
+      // Save ICP to user metadata
       await supabase.auth.updateUser({
         data: {
           product_description: productDescription || undefined,
@@ -78,7 +83,39 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
       // Non-critical — continue even if save fails
     }
     setIsLoading(false);
-    onComplete();
+
+    // If user provided ICP data, trigger Scout to find initial leads
+    if (productDescription || targetCustomer) {
+      setStep(4); // Show Scout discovery step
+      setScoutStatus("searching");
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const res = await fetch("/api/scout/discover", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ count: 10 }),
+          });
+          const data = await res.json();
+          if (data.success) {
+            setLeadsFound(data.count);
+            setScoutStatus("done");
+          } else {
+            setScoutStatus("done");
+            setLeadsFound(0);
+          }
+        } else {
+          setScoutStatus("done");
+        }
+      } catch {
+        setScoutStatus("error");
+      }
+    } else {
+      onComplete();
+    }
   };
 
   const handleSkip = () => {
@@ -90,7 +127,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
     <div className="max-w-xl mx-auto py-8">
       {/* Progress dots */}
       <div className="flex items-center justify-center gap-2 mb-8">
-        {[1, 2, 3].map((s) => (
+        {[1, 2, 3, 4].map((s) => (
           <div
             key={s}
             className={cn(
@@ -179,6 +216,69 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 4: Scout Discovery */}
+      {step === 4 && (
+        <Card className="glow-card bg-graphite border-gunmetal">
+          <CardContent className="p-8 space-y-6">
+            <div className="text-center space-y-2">
+              <div className={cn(
+                "inline-flex items-center justify-center w-12 h-12 rounded-xl mb-2",
+                scoutStatus === "done" ? "bg-automationgreen/10" : "bg-neonblue/10"
+              )}>
+                {scoutStatus === "searching" ? (
+                  <Loader2 className="h-6 w-6 text-neonblue animate-spin" />
+                ) : scoutStatus === "done" ? (
+                  <CheckCircle2 className="h-6 w-6 text-automationgreen" />
+                ) : (
+                  <UserSearch className="h-6 w-6 text-neonblue" />
+                )}
+              </div>
+              <h2 className="text-2xl font-bold text-platinum">
+                {scoutStatus === "searching"
+                  ? "Your AI is finding leads..."
+                  : scoutStatus === "done" && leadsFound > 0
+                  ? `Found ${leadsFound} leads!`
+                  : "Setup Complete!"}
+              </h2>
+              <p className="text-sm text-silver">
+                {scoutStatus === "searching"
+                  ? "Scout AI is analyzing your ICP and discovering matching companies. This takes about 30 seconds."
+                  : scoutStatus === "done" && leadsFound > 0
+                  ? "Your AI sales department discovered its first leads. View them in your CRM."
+                  : "Your AI sales department is ready. Start by exploring the dashboard."}
+              </p>
+            </div>
+
+            {scoutStatus === "searching" && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-onyx">
+                  <div className="w-2 h-2 rounded-full bg-neonblue animate-pulse" />
+                  <p className="text-sm text-silver">Analyzing your ideal customer profile...</p>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-onyx">
+                  <div className="w-2 h-2 rounded-full bg-neonblue animate-pulse" style={{ animationDelay: "0.5s" }} />
+                  <p className="text-sm text-silver">Matching companies and decision-makers...</p>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-onyx">
+                  <div className="w-2 h-2 rounded-full bg-neonblue animate-pulse" style={{ animationDelay: "1s" }} />
+                  <p className="text-sm text-silver">Generating outreach-ready lead profiles...</p>
+                </div>
+              </div>
+            )}
+
+            {(scoutStatus === "done" || scoutStatus === "error") && (
+              <Button
+                onClick={onComplete}
+                className="w-full bg-neonblue hover:bg-electricblue text-white gap-2"
+              >
+                {leadsFound > 0 ? "View Your Leads" : "Go to Dashboard"}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            )}
           </CardContent>
         </Card>
       )}
