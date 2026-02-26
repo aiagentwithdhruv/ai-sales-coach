@@ -422,7 +422,7 @@ export default function SettingsPage() {
 
   // Subscription state
   const [loadingPortal, setLoadingPortal] = useState(false);
-  const currentPlan = typeof window !== "undefined" ? localStorage.getItem("user_plan") || "free" : "free";
+  const [currentPlan, setCurrentPlan] = useState("free");
 
   // API Keys state
   const [userKeys, setUserKeys] = useState<UserKeyInfo[]>([]);
@@ -474,7 +474,12 @@ export default function SettingsPage() {
   const fetchUserKeys = async () => {
     setKeysLoading(true);
     try {
-      const res = await fetch("/api/user-keys");
+      const supabase = getSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { setKeysLoading(false); return; }
+      const res = await fetch("/api/user-keys", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
       if (res.ok) {
         const data = await res.json();
         setUserKeys(data.keys || []);
@@ -499,9 +504,15 @@ export default function SettingsPage() {
     setKeyError(null);
     setKeySuccess(null);
     try {
+      const supabase = getSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { setKeyError("Not authenticated. Please log in again."); setKeyValidating(false); return; }
       const res = await fetch("/api/user-keys", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({ provider, key: keyInput.trim() }),
       });
       if (res.ok) {
@@ -525,8 +536,12 @@ export default function SettingsPage() {
   const handleDeleteKey = async (provider: string) => {
     setDeletingKey(provider);
     try {
+      const supabase = getSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { setDeletingKey(null); return; }
       const res = await fetch(`/api/user-keys?provider=${provider}`, {
         method: "DELETE",
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (res.ok) {
         fetchUserKeys();
@@ -538,37 +553,50 @@ export default function SettingsPage() {
     }
   };
 
-  // Fetch usage data
+  // Fetch usage data (also sets plan + trial info from database)
+  const USAGE_LABELS: Record<string, string> = {
+    coaching_sessions: "Coaching Sessions",
+    contacts_created: "Contacts",
+    ai_calls_made: "AI Calls",
+    followups_sent: "Follow-ups",
+    analyses_run: "Analyses",
+  };
+
   const fetchUsageData = async () => {
     setUsageLoading(true);
     try {
-      const res = await fetch("/api/usage");
+      const supabase = getSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { setUsageLoading(false); return; }
+      const res = await fetch("/api/usage", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
       if (res.ok) {
         const data = await res.json();
-        setUsageData(data);
-      } else {
-        // API not implemented yet, use mock data
-        setUsageData({
-          modules: {
-            coaching_sessions: { used: 3, limit: 10, label: "Coaching Sessions" },
-            ai_calls_made: { used: 2, limit: 5, label: "AI Calls" },
-            contacts_created: { used: 25, limit: 50, label: "Contacts" },
-            followups_sent: { used: 4, limit: 10, label: "Follow-ups" },
-            analyses_run: { used: 1, limit: 5, label: "Analyses" },
-          },
-        });
+        // Update plan from database
+        if (data.plan_type) setCurrentPlan(data.plan_type);
+        // Update trial days from database
+        if (data.is_trial && data.trial_ends_at) {
+          const remaining = Math.max(0, Math.ceil((new Date(data.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+          setTrialDaysRemaining(remaining);
+        } else {
+          setTrialDaysRemaining(null);
+        }
+        // Transform flat API response to { modules: { key: { used, limit, label } } }
+        const modules: Record<string, UsageModule> = {};
+        for (const key of Object.keys(USAGE_LABELS)) {
+          if (data[key] && typeof data[key] === "object") {
+            modules[key] = {
+              used: data[key].used ?? 0,
+              limit: data[key].limit ?? -1,
+              label: USAGE_LABELS[key],
+            };
+          }
+        }
+        setUsageData({ modules });
       }
     } catch {
-      // Fallback to mock
-      setUsageData({
-        modules: {
-          coaching_sessions: { used: 3, limit: 10, label: "Coaching Sessions" },
-          ai_calls_made: { used: 2, limit: 5, label: "AI Calls" },
-          contacts_created: { used: 25, limit: 50, label: "Contacts" },
-          followups_sent: { used: 4, limit: 10, label: "Follow-ups" },
-          analyses_run: { used: 1, limit: 5, label: "Analyses" },
-        },
-      });
+      // silent fail — usage display not critical
     } finally {
       setUsageLoading(false);
     }
@@ -587,20 +615,7 @@ export default function SettingsPage() {
     if (savedName) setProfileName(savedName);
     if (savedEmail) setProfileEmail(savedEmail);
 
-    // Load trial info
-    const trialStart = localStorage.getItem("trial_start");
-    if (trialStart) {
-      const start = new Date(trialStart).getTime();
-      const now = Date.now();
-      const elapsed = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-      const remaining = Math.max(0, 15 - elapsed);
-      setTrialDaysRemaining(remaining);
-    } else if (currentPlan === "free") {
-      // Default trial: assume 8 days remaining if no trial_start stored
-      setTrialDaysRemaining(8);
-    }
-
-    // Fetch API keys and usage
+    // Fetch API keys and usage (trial + plan info loaded from DB via fetchUsageData)
     fetchUserKeys();
     fetchUsageData();
   }, []);
@@ -666,8 +681,11 @@ export default function SettingsPage() {
 
   // Helper: get subscription label
   const getSubscriptionLabel = () => {
-    if (currentPlan === "pro") return "Module: Coaching + CRM";
-    if (currentPlan === "team") return "All-in-One Bundle";
+    if (currentPlan === "module") return "Active Subscription";
+    if (currentPlan === "bundle") return "All-in-One Bundle";
+    if (currentPlan === "starter") return "Starter";
+    if (currentPlan === "growth") return "Growth";
+    if (currentPlan === "enterprise") return "Enterprise";
     return "Free";
   };
 
@@ -1360,8 +1378,7 @@ export default function SettingsPage() {
                   <span className="text-sm text-silver">Current Plan</span>
                   <Badge className={cn(
                     "text-xs",
-                    currentPlan === "pro" ? "bg-neonblue/20 text-neonblue" :
-                    currentPlan === "team" ? "bg-warningamber/20 text-warningamber" :
+                    currentPlan !== "free" ? "bg-neonblue/20 text-neonblue" :
                     "bg-steel/20 text-silver"
                   )}>
                     {getSubscriptionLabel()}
@@ -1382,7 +1399,7 @@ export default function SettingsPage() {
                   <Link href="/pricing">
                     <Button className="w-full bg-neonblue hover:bg-electricblue text-white gap-2">
                       <Crown className="h-4 w-4" />
-                      Upgrade to Pro
+                      Upgrade Plan
                     </Button>
                   </Link>
                 ) : (
