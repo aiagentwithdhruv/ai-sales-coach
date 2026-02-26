@@ -2,66 +2,86 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MobileNav } from "@/components/ui/mobile-nav";
 import {
   Check,
   Sparkles,
   ArrowRight,
-  Loader2,
-  PhoneCall,
   Phone,
-  Brain,
-  BarChart3,
-  Mail,
-  TrendingUp,
-  Gift,
-  Key,
-  Package,
+  Users,
+  Zap,
+  Crown,
   ChevronDown,
   ChevronUp,
-  X,
+  Bot,
+  Search,
+  FileSearch,
+  MessageSquare,
+  PhoneCall,
+  FileText,
+  UserCheck,
+  Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { getSupabaseClient } from "@/lib/supabase/client";
-import { SalesAgentWidget } from "@/components/agent/SalesAgentWidget";
 import {
-  MODULES,
-  ALL_MODULE_SLUGS,
-  BUNDLE,
+  TIERS,
+  ALL_TIER_SLUGS,
+  AGENT_DESCRIPTIONS,
   BILLING_DISCOUNTS,
-  getDiscountedPrice,
-  getBillingTotal,
-  getYearlySavings,
-  calculateModulesPrice,
-  isBundleCheaper,
-  type ModuleSlug,
-  type BillingInterval,
-  FREE_LIMITS,
   TRIAL_DURATION_DAYS,
+  getDiscountedPrice,
+  getYearlySavings,
+  type TierSlug,
+  type BillingInterval,
 } from "@/lib/pricing";
+import { SalesAgentWidget } from "@/components/agent/SalesAgentWidget";
 
-// ─── Icon Map ─────────────────────────────────────────────────────────────────
+// ─── Tier visual config ──────────────────────────────────────────────────────
 
-const MODULE_ICONS: Record<ModuleSlug, typeof Brain> = {
-  coaching: Brain,
-  crm: BarChart3,
-  calling: PhoneCall,
-  followups: Mail,
-  analytics: TrendingUp,
+const TIER_STYLE: Record<TierSlug, {
+  icon: typeof Users;
+  gradient: string;
+  border: string;
+  glow: string;
+  badge?: string;
+}> = {
+  starter: {
+    icon: Zap,
+    gradient: "from-blue-500/20 to-cyan-500/10",
+    border: "border-gunmetal/60",
+    glow: "",
+  },
+  growth: {
+    icon: Users,
+    gradient: "from-neonblue/20 to-electricblue/10",
+    border: "border-neonblue ring-1 ring-neonblue/20",
+    glow: "shadow-lg shadow-neonblue/10",
+    badge: "Most Popular",
+  },
+  enterprise: {
+    icon: Crown,
+    gradient: "from-purple-500/20 to-violet-500/10",
+    border: "border-gunmetal/60",
+    glow: "",
+  },
 };
 
-const MODULE_COLORS: Record<ModuleSlug, { text: string; bg: string; glow: string; border: string; shadow: string }> = {
-  coaching: { text: "text-neonblue", bg: "bg-neonblue/20", glow: "rgba(0,153,255,0.15)", border: "rgba(0,153,255,0.4)", shadow: "0 0 30px rgba(0,153,255,0.08)" },
-  crm: { text: "text-warningamber", bg: "bg-warningamber/20", glow: "rgba(255,170,0,0.12)", border: "rgba(255,170,0,0.35)", shadow: "0 0 30px rgba(255,170,0,0.06)" },
-  calling: { text: "text-automationgreen", bg: "bg-automationgreen/20", glow: "rgba(0,230,118,0.12)", border: "rgba(0,230,118,0.35)", shadow: "0 0 30px rgba(0,230,118,0.06)" },
-  followups: { text: "text-purple-400", bg: "bg-purple-500/20", glow: "rgba(168,85,247,0.12)", border: "rgba(168,85,247,0.35)", shadow: "0 0 30px rgba(168,85,247,0.06)" },
-  analytics: { text: "text-cyan-400", bg: "bg-cyan-500/20", glow: "rgba(34,211,238,0.12)", border: "rgba(34,211,238,0.35)", shadow: "0 0 30px rgba(34,211,238,0.06)" },
+// ─── Agent Icons ─────────────────────────────────────────────────────────────
+
+const AGENT_ICONS: Record<string, typeof Bot> = {
+  Scout: Search,
+  Researcher: FileSearch,
+  Qualifier: UserCheck,
+  Outreach: MessageSquare,
+  Caller: PhoneCall,
+  Closer: FileText,
+  Ops: Mail,
 };
 
-// ─── Billing Options ──────────────────────────────────────────────────────────
+// ─── Billing Options ─────────────────────────────────────────────────────────
 
 const BILLING_OPTIONS: { id: BillingInterval; label: string; badge: string | null }[] = [
   { id: "monthly", label: "Monthly", badge: null },
@@ -69,154 +89,76 @@ const BILLING_OPTIONS: { id: BillingInterval; label: string; badge: string | nul
   { id: "yearly", label: "Yearly", badge: BILLING_DISCOUNTS.yearly.badge },
 ];
 
-// ─── Free Tier Display ────────────────────────────────────────────────────────
-
-const FREE_TIER_ITEMS = [
-  { label: "AI coaching sessions", limit: FREE_LIMITS.coaching_sessions, unit: "/month" },
-  { label: "Contacts", limit: FREE_LIMITS.contacts_created, unit: " total" },
-  { label: "AI calls", limit: FREE_LIMITS.ai_calls_made, unit: "/month" },
-  { label: "Follow-ups sent", limit: FREE_LIMITS.followups_sent, unit: "/month" },
-  { label: "Analyses run", limit: FREE_LIMITS.analyses_run, unit: "/month" },
-];
-
-// ─── Competitor Comparison ────────────────────────────────────────────────────
+// ─── Competitor Comparison ───────────────────────────────────────────────────
 
 const COMPARISON_ITEMS = [
+  { label: "Hiring 1 SDR", price: "$5,000+/mo", note: "Salary + benefits + training" },
   { label: "11x.ai (AI SDR)", price: "$800-1,500/mo", note: "Prospecting only" },
   { label: "Artisan (AI BDR)", price: "$2,000+/mo", note: "Outreach only" },
-  { label: "Apollo.io", price: "$49-119/mo", note: "Database + basic outreach" },
+  { label: "Apollo + Outreach + Gong", price: "$500-1,000+/mo", note: "3 separate tools" },
   { label: "Clay (Enrichment)", price: "$149-800/mo", note: "Data enrichment only" },
-  { label: "Gong.io", price: "$108-250/user/mo", note: "Call analytics only" },
 ];
 
-// ─── FAQ ──────────────────────────────────────────────────────────────────────
+// ─── FAQ ─────────────────────────────────────────────────────────────────────
 
 const FAQ_ITEMS = [
   {
-    q: "What are modules?",
-    a: "Modules are AI agent capabilities you mix and match to build your ideal sales department. Each module — AI Coaching, CRM, Calling, Follow-Ups, or Analytics — is a specialized AI agent that works independently or together. Pick only what you need, or grab the All-in-One Bundle for the best price.",
+    q: "What are the 7 AI agents?",
+    a: "Scout finds leads, Researcher enriches them, Qualifier scores them with BANT+ conversations, Outreach runs multi-channel sequences, Caller makes autonomous phone calls, Closer generates proposals and collects payments, and Ops handles post-sale onboarding. Each agent works autonomously or in coordination.",
   },
   {
-    q: "What's included in the free tier?",
-    a: `The free tier includes limited access to all AI agents: ${FREE_LIMITS.coaching_sessions} coaching sessions/month, ${FREE_LIMITS.contacts_created} contacts, ${FREE_LIMITS.ai_calls_made} AI calls/month, ${FREE_LIMITS.followups_sent} follow-ups/month, and ${FREE_LIMITS.analyses_run} analyses/month. It's free forever with no credit card required.`,
+    q: "What's the difference between Starter and Growth?",
+    a: "Starter gives you 3 agents (Scout, Researcher, Qualifier) — great for lead discovery and scoring. Growth unlocks all 7 agents including Outreach, Caller, Closer, and Ops — giving you a fully automated pipeline from lead to closed deal.",
   },
   {
     q: "What is BYOAPI?",
-    a: "BYOAPI stands for Bring Your Own API Keys. You provide your own AI provider keys (OpenAI, Anthropic, etc.) and connect them in settings. We handle all the infrastructure, orchestration, and tooling -- but you pay the AI providers directly at their rates. No markup from us.",
+    a: "Bring Your Own API Keys. You connect your own OpenAI, Anthropic, or Google AI keys in settings. We handle all infrastructure and orchestration — you pay AI providers directly at their rates. Zero markup from us.",
   },
   {
-    q: "Do I need all modules?",
-    a: "Not at all. Each AI agent works independently. You can start with just AI Coaching and add other agents like CRM or Calling later as your needs grow. If you want three or more modules, the All-in-One Bundle is usually cheaper.",
+    q: "How does QuotaHit replace hiring SDRs?",
+    a: "A single SDR costs $5,000+/month in salary, benefits, and training — and works 8 hours a day. QuotaHit's 7 AI agents work 24/7, handle every channel, and get smarter over time with self-improving templates. Starting at $297/month, it's 10-17x cheaper.",
   },
   {
-    q: "Can I switch between module and bundle?",
-    a: "Yes. You can switch from individual modules to the bundle (or vice versa) at any time. Changes take effect immediately and any billing differences are prorated.",
+    q: "Can I start with Starter and upgrade later?",
+    a: "Absolutely. Start with Starter to build your lead pipeline, then upgrade to Growth when you're ready to automate outreach and calling. Upgrades are instant with no data loss.",
   },
   {
     q: `What happens after the ${TRIAL_DURATION_DAYS}-day trial?`,
-    a: `After your ${TRIAL_DURATION_DAYS}-day trial ends, you'll automatically move to the free tier with usage limits. No charge unless you subscribe to a paid module or bundle. You keep all your data.`,
+    a: `After your ${TRIAL_DURATION_DAYS}-day free trial, you choose a plan. No automatic charges — you pick the tier that fits. If you don't subscribe, you'll move to a limited free tier. You keep all your data.`,
   },
   {
-    q: "What payment methods do you accept?",
-    a: "We accept all major credit cards via Stripe. Enterprise customers can pay via wire transfer, ACH, or invoice with NET-30 terms.",
+    q: "Do you offer annual discounts?",
+    a: `Yes. Quarterly billing saves 10%, and annual billing saves 20%. For example, Growth drops from $697/mo to $558/mo on an annual plan — that's over $1,600 saved per year.`,
   },
   {
     q: "Can I cancel anytime?",
-    a: "Absolutely. No lock-in contracts. Cancel your subscription anytime and you'll retain access until the end of your current billing period. You can always come back to the free tier.",
+    a: "Yes. No lock-in contracts. Cancel anytime and retain access until the end of your billing period.",
   },
 ];
 
-// ─── Page Component ───────────────────────────────────────────────────────────
+// ─── Page Component ──────────────────────────────────────────────────────────
 
 export default function PricingPage() {
   const [billingInterval, setBillingInterval] = useState<BillingInterval>("monthly");
-  const [selectedModules, setSelectedModules] = useState<ModuleSlug[]>([]);
-  const [loadingCheckout, setLoadingCheckout] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
-
-  // ─── Module selection helpers ──────────────────────────────────────────────
-
-  const toggleModule = (slug: ModuleSlug) => {
-    setSelectedModules((prev) =>
-      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
-    );
-  };
-
-  const isModuleSelected = (slug: ModuleSlug) => selectedModules.includes(slug);
-
-  // ─── Price calculations ────────────────────────────────────────────────────
-
-  const selectedTotal = selectedModules.length > 0
-    ? calculateModulesPrice(selectedModules, billingInterval)
-    : 0;
-
-  const bundleDiscounted = getDiscountedPrice(BUNDLE.monthlyPrice, billingInterval);
-  const bundleSuggested = selectedModules.length >= 3 && isBundleCheaper(selectedModules);
-  const bundleSavingsVsSelected = bundleSuggested
-    ? Math.round(selectedTotal - bundleDiscounted)
-    : 0;
-
-  // ─── Checkout handler ─────────────────────────────────────────────────────
-
-  const handleCheckout = async (type: "modules" | "bundle") => {
-    setLoadingCheckout(true);
-    try {
-      const supabase = getSupabaseClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        window.location.href = "/login?redirect=/pricing";
-        return;
-      }
-
-      const body =
-        type === "bundle"
-          ? { bundle: true, interval: billingInterval }
-          : { modules: selectedModules, interval: billingInterval };
-
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify(body),
-      });
-
-      const data = await res.json();
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert(data.error || "Failed to start checkout. Please try again.");
-      }
-    } catch {
-      alert("Something went wrong. Please try again.");
-    } finally {
-      setLoadingCheckout(false);
-    }
-  };
-
-  // ─── Render ────────────────────────────────────────────────────────────────
-
-  const faqJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: FAQ_ITEMS.map((faq) => ({
-      "@type": "Question",
-      name: faq.q,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: faq.a,
-      },
-    })),
-  };
 
   return (
     <div className="min-h-screen bg-obsidian">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      {/* FAQ Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: FAQ_ITEMS.map((faq) => ({
+              "@type": "Question",
+              name: faq.q,
+              acceptedAnswer: { "@type": "Answer", text: faq.a },
+            })),
+          }),
+        }}
+      />
 
       {/* Header */}
       <header className="border-b border-gunmetal bg-graphite/50 backdrop-blur-sm sticky top-0 z-50">
@@ -230,7 +172,6 @@ export default function PricingPage() {
                 Quota<span className="text-neonblue">Hit</span>
               </span>
             </Link>
-            {/* Desktop Nav Links */}
             <nav className="hidden md:flex items-center gap-6">
               <Link href="/" className="text-sm text-silver hover:text-platinum transition-colors">Home</Link>
               <Link href="/features" className="text-sm text-silver hover:text-platinum transition-colors">Features</Link>
@@ -238,7 +179,6 @@ export default function PricingPage() {
               <Link href="/blog" className="text-sm text-silver hover:text-platinum transition-colors">Blog</Link>
               <Link href="/login" className="text-sm text-silver hover:text-platinum transition-colors">Login</Link>
             </nav>
-
             <div className="flex items-center gap-2">
               <a
                 href="https://wa.me/919827853940?text=Hi%20Dhruv%2C%20I%27m%20interested%20in%20QuotaHit"
@@ -276,23 +216,24 @@ export default function PricingPage() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="pt-10 sm:pt-14 pb-8 sm:pb-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <Badge className="bg-neonblue/10 text-neonblue border border-neonblue/20 mb-4 text-xs tracking-wide uppercase">
-            AI Sales Department Pricing
+      {/* Hero */}
+      <section className="pt-16 sm:pt-20 pb-10 sm:pb-14">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <Badge className="bg-neonblue/10 text-neonblue border border-neonblue/20 mb-5 text-xs tracking-wide uppercase">
+            Simple, transparent pricing
           </Badge>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-platinum mb-3 tracking-tight">
-            Your AI Sales Department. One Price.
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-platinum mb-4 tracking-tight leading-tight">
+            Hire an AI Sales Team<br className="hidden sm:block" /> for less than one SDR
           </h1>
-          <p className="text-lg text-silver max-w-2xl mx-auto mb-2">
-            Pick the modules your AI team needs. Bring your own AI keys. Scale as you grow.
+          <p className="text-lg sm:text-xl text-silver max-w-2xl mx-auto mb-3">
+            7 AI agents that find, qualify, reach, call, close, and onboard your customers.
+            Starting at <span className="text-platinum font-semibold">$297/month</span>.
           </p>
-          <p className="text-sm text-mist max-w-xl mx-auto mb-8">
-            {TRIAL_DURATION_DAYS}-day trial with full access. No credit card required.
+          <p className="text-sm text-mist max-w-xl mx-auto mb-10">
+            {TRIAL_DURATION_DAYS}-day free trial. No credit card required. Cancel anytime.
           </p>
 
-          {/* Billing Interval Selector */}
+          {/* Billing Toggle */}
           <div className="inline-flex items-center bg-onyx/80 border border-gunmetal rounded-lg p-1">
             {BILLING_OPTIONS.map((option) => (
               <button
@@ -307,7 +248,7 @@ export default function PricingPage() {
               >
                 {option.label}
                 {option.badge && billingInterval === option.id && (
-                  <span className="absolute -top-2 -right-1.5 bg-automationgreen text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                  <span className="absolute -top-2.5 -right-2 bg-automationgreen text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap">
                     {option.badge}
                   </span>
                 )}
@@ -317,158 +258,130 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Free Tier Card */}
-      <section className="pb-8">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Card className="bg-onyx/80 border-gunmetal/60 glow-card">
-            <CardContent className="p-5 sm:p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                {/* Left: Title + limits */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2.5 mb-3">
-                    <div className="w-8 h-8 rounded-lg bg-automationgreen/15 flex items-center justify-center flex-shrink-0">
-                      <Gift className="w-4 h-4 text-automationgreen" />
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-semibold text-platinum leading-tight">Free Forever</h2>
-                      <p className="text-xs text-mist">All modules with usage limits</p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {FREE_TIER_ITEMS.map((item) => (
-                      <div
-                        key={item.label}
-                        className="bg-graphite/40 border border-gunmetal/50 rounded-md px-3 py-1.5 text-center"
-                      >
-                        <span className="text-sm font-semibold text-platinum">{item.limit}</span>
-                        <span className="text-[11px] text-mist ml-1.5">{item.label}{item.unit}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Right: Price + CTA */}
-                <div className="flex items-center sm:flex-col sm:items-end gap-3 flex-shrink-0">
-                  <div className="text-right">
-                    <span className="text-3xl font-bold text-platinum">$0</span>
-                    <span className="text-sm text-mist ml-0.5">/mo</span>
-                  </div>
-                  <Link href="/signup">
-                    <Button size="sm" className="bg-automationgreen/90 hover:bg-automationgreen text-black font-semibold px-5 text-xs">
-                      Get Started Free
-                      <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* Module Cards */}
-      <section className="pb-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-6">
-            <h2 className="text-xl sm:text-2xl font-semibold text-platinum mb-1 tracking-tight">
-              Pick your modules
-            </h2>
-            <p className="text-sm text-mist">
-              Select individual modules or grab the bundle below
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-            {ALL_MODULE_SLUGS.map((slug) => {
-              const mod = MODULES[slug];
-              const Icon = MODULE_ICONS[slug];
-              const colors = MODULE_COLORS[slug];
-              const selected = isModuleSelected(slug);
-              const discounted = getDiscountedPrice(mod.monthlyPrice, billingInterval);
-              const showStrikethrough = billingInterval !== "monthly";
+      {/* Pricing Cards */}
+      <section className="pb-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-5">
+            {ALL_TIER_SLUGS.map((slug) => {
+              const tier = TIERS[slug];
+              const style = TIER_STYLE[slug];
+              const Icon = style.icon;
+              const discounted = getDiscountedPrice(tier.monthlyPrice, billingInterval);
+              const showDiscount = billingInterval !== "monthly";
 
               return (
                 <Card
                   key={slug}
-                  onClick={() => toggleModule(slug)}
                   className={cn(
-                    "relative bg-onyx/90 border transition-all duration-200 cursor-pointer flex flex-col group/card hover:translate-y-[-2px]",
-                    selected
-                      ? "border-neonblue ring-1 ring-neonblue/20 shadow-md shadow-neonblue/10"
-                      : "border-gunmetal/60 hover:border-gunmetal"
+                    "relative bg-onyx/90 flex flex-col transition-all duration-200",
+                    style.border,
+                    style.glow,
+                    tier.popular && "lg:-mt-4 lg:mb-0 lg:pb-4"
                   )}
-                  style={{
-                    "--module-glow": colors.glow,
-                    "--module-border": colors.border,
-                    boxShadow: selected ? undefined : colors.shadow,
-                    backgroundImage: selected ? undefined : `radial-gradient(ellipse at 50% 0%, ${colors.glow}, transparent 60%)`,
-                  } as React.CSSProperties}
                 >
-                  {/* Top glow line */}
-                  {!selected && (
-                    <div
-                      className="absolute top-0 left-[15%] right-[15%] h-[1px] opacity-40"
-                      style={{ background: `linear-gradient(90deg, transparent, ${colors.border}, transparent)` }}
-                    />
+                  {/* Popular badge */}
+                  {style.badge && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                      <Badge className="bg-neonblue text-white border-none shadow-lg shadow-neonblue/30 text-xs px-3 py-1">
+                        {style.badge}
+                      </Badge>
+                    </div>
                   )}
 
-                  {/* Selection indicator */}
-                  <div
-                    className={cn(
-                      "absolute top-2.5 right-2.5 w-5 h-5 rounded border-[1.5px] flex items-center justify-center transition-all",
-                      selected
-                        ? "bg-neonblue border-neonblue"
-                        : "border-steel/60 bg-transparent"
-                    )}
-                  >
-                    {selected && <Check className="w-3 h-3 text-white" />}
-                  </div>
-
-                  <CardHeader className="pb-2 pr-9 pt-4 px-4">
-                    <div
-                      className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center mb-2",
-                        colors.bg
-                      )}
-                    >
-                      <Icon className={cn("w-4 h-4", colors.text)} />
-                    </div>
-                    <CardTitle className="text-[15px] font-semibold text-platinum leading-tight">
-                      {mod.name}
-                    </CardTitle>
-                    <p className="text-[11px] text-mist leading-snug mt-0.5">{mod.description}</p>
-                  </CardHeader>
-
-                  <CardContent className="space-y-3 flex flex-col flex-1 px-4 pb-4">
-                    {/* Pricing */}
-                    <div>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-bold text-platinum">
-                          ${discounted % 1 === 0 ? discounted : discounted.toFixed(2)}
-                        </span>
-                        <span className="text-xs text-mist">/mo</span>
+                  <CardContent className="p-6 sm:p-8 flex flex-col flex-1">
+                    {/* Tier header */}
+                    <div className="mb-6">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br", style.gradient)}>
+                          <Icon className="w-5 h-5 text-platinum" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-platinum">{tier.name}</h3>
+                        </div>
                       </div>
-                      {showStrikethrough && (
-                        <p className="text-xs text-mist mt-0.5">
-                          <span className="line-through">${mod.monthlyPrice}/mo</span>
-                        </p>
+                      <p className="text-sm text-mist leading-relaxed">{tier.tagline}</p>
+                    </div>
+
+                    {/* Price */}
+                    <div className="mb-6">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-bold text-platinum">
+                          ${discounted % 1 === 0 ? discounted : discounted.toFixed(0)}
+                        </span>
+                        <span className="text-silver">/mo</span>
+                      </div>
+                      {showDiscount && (
+                        <div className="mt-1 space-y-0.5">
+                          <p className="text-xs text-mist">
+                            <span className="line-through">${tier.monthlyPrice}/mo</span>
+                          </p>
+                          <p className="text-xs text-automationgreen font-medium">
+                            Save ${getYearlySavings(tier.monthlyPrice, billingInterval).toFixed(0)}/year
+                          </p>
+                        </div>
                       )}
-                      <p className="text-[10px] text-mist/50 mt-0.5">
-                        Was <span className="line-through">${mod.marketPrice}/mo</span>{" "}
-                        elsewhere
+                    </div>
+
+                    {/* Agents */}
+                    <div className="mb-5">
+                      <p className="text-xs text-mist uppercase tracking-wider font-medium mb-2">
+                        {tier.agentCount} AI Agent{tier.agentCount > 1 ? "s" : ""} Included
                       </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {tier.agents.map((agent) => {
+                          const AgentIcon = AGENT_ICONS[agent] || Bot;
+                          return (
+                            <div
+                              key={agent}
+                              className="flex items-center gap-1.5 bg-graphite/60 border border-gunmetal/50 rounded-md px-2 py-1"
+                              title={AGENT_DESCRIPTIONS[agent]}
+                            >
+                              <AgentIcon className="w-3 h-3 text-neonblue" />
+                              <span className="text-[11px] text-silver font-medium">{agent}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
 
                     {/* Features */}
-                    <ul className="space-y-1.5 flex-1">
-                      {mod.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-start gap-1.5">
-                          <Check className="w-3 h-3 text-automationgreen/80 flex-shrink-0 mt-0.5" />
-                          <span className="text-[11px] text-silver/90 leading-snug">{feature}</span>
+                    <ul className="space-y-2.5 flex-1 mb-6">
+                      {tier.features.map((feature, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <Check className="w-4 h-4 text-automationgreen flex-shrink-0 mt-0.5" />
+                          <span className="text-sm text-silver leading-snug">{feature}</span>
                         </li>
                       ))}
                     </ul>
+
+                    {/* CTA */}
+                    {slug === "enterprise" ? (
+                      <a href="mailto:aiwithdhruv@gmail.com?subject=QuotaHit Enterprise Inquiry">
+                        <Button
+                          className="w-full border-steel text-silver hover:text-platinum hover:bg-graphite"
+                          variant="outline"
+                          size="lg"
+                        >
+                          {tier.cta}
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                      </a>
+                    ) : (
+                      <Link href="/signup">
+                        <Button
+                          className={cn(
+                            "w-full",
+                            tier.popular
+                              ? "bg-neonblue hover:bg-electricblue"
+                              : "bg-graphite hover:bg-gunmetal border border-gunmetal text-platinum"
+                          )}
+                          size="lg"
+                        >
+                          {tier.cta}
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                      </Link>
+                    )}
                   </CardContent>
                 </Card>
               );
@@ -477,191 +390,35 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Bundle Card */}
-      <section className="pb-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Card className="relative bg-onyx border-2 border-neonblue glow-card-visible ring-2 ring-neonblue/20">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-              <Badge className="bg-neonblue text-white border-none shadow-lg shadow-neonblue/30 text-sm px-3 py-1">
-                Best Value
-              </Badge>
-            </div>
-
-            <CardContent className="p-6 sm:p-8">
-              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
-                {/* Left: info */}
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-xl bg-neonblue/20 flex items-center justify-center">
-                      <Package className="w-5 h-5 text-neonblue" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-platinum">
-                      {BUNDLE.name}
-                    </h2>
-                  </div>
-                  <p className="text-silver mb-6">{BUNDLE.description}</p>
-
-                  {/* All features grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-1.5">
-                    {ALL_MODULE_SLUGS.map((slug) => {
-                      const mod = MODULES[slug];
-                      const Icon = MODULE_ICONS[slug];
-                      const colors = MODULE_COLORS[slug];
-                      return (
-                        <div key={slug}>
-                          <div className="flex items-center gap-2 mt-3 mb-1.5">
-                            <Icon className={cn("w-4 h-4", colors.text)} />
-                            <span className="text-sm font-semibold text-platinum">
-                              {mod.name}
-                            </span>
-                          </div>
-                          {mod.features.map((f, i) => (
-                            <div
-                              key={i}
-                              className="flex items-start gap-2 py-0.5"
-                            >
-                              <Check className="w-3 h-3 text-automationgreen flex-shrink-0 mt-0.5" />
-                              <span className="text-xs text-silver">{f}</span>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Right: price + CTA */}
-                <div className="flex flex-col items-center lg:items-end gap-4 lg:min-w-[200px]">
-                  <div className="text-center lg:text-right">
-                    <p className="text-sm text-mist mb-1">
-                      <span className="line-through">
-                        ${BUNDLE.individualTotal}/mo
-                      </span>
-                      <span className="ml-2 text-automationgreen font-semibold">
-                        Save {BUNDLE.savings}%
-                      </span>
-                    </p>
-                    <div className="flex items-baseline gap-1.5 justify-center lg:justify-end">
-                      <span className="text-4xl font-bold text-platinum">
-                        ${getDiscountedPrice(BUNDLE.monthlyPrice, billingInterval) % 1 === 0
-                          ? getDiscountedPrice(BUNDLE.monthlyPrice, billingInterval)
-                          : getDiscountedPrice(BUNDLE.monthlyPrice, billingInterval).toFixed(2)}
-                      </span>
-                      <span className="text-silver">/mo</span>
-                    </div>
-                    {billingInterval !== "monthly" && (
-                      <p className="text-xs text-mist mt-1">
-                        Was ${BUNDLE.monthlyPrice}/mo at monthly rate
-                      </p>
-                    )}
-                    {billingInterval !== "monthly" && (
-                      <p className="text-xs text-automationgreen font-semibold mt-0.5">
-                        Save ${getYearlySavings(BUNDLE.monthlyPrice, billingInterval).toFixed(0)}/year
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    onClick={() => handleCheckout("bundle")}
-                    disabled={loadingCheckout}
-                    className="bg-neonblue hover:bg-electricblue px-8 w-full lg:w-auto"
-                    size="lg"
-                  >
-                    {loadingCheckout ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Loading...
-                      </>
-                    ) : (
-                      <>
-                        Get Bundle
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* BYOAPI Section */}
-      <section className="py-20 border-t border-gunmetal">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <div className="w-14 h-14 rounded-2xl bg-warningamber/20 flex items-center justify-center mx-auto mb-4">
-              <Key className="w-7 h-7 text-warningamber" />
-            </div>
-            <h2 className="text-3xl font-bold text-platinum mb-3">
-              Bring Your Own API Keys
-            </h2>
-            <p className="text-lg text-silver max-w-2xl mx-auto">
-              You provide AI keys (OpenAI, Anthropic). We handle infrastructure.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="bg-onyx border border-gunmetal rounded-xl p-6 text-center">
-              <div className="w-10 h-10 rounded-lg bg-neonblue/20 flex items-center justify-center mx-auto mb-3">
-                <Key className="w-5 h-5 text-neonblue" />
-              </div>
-              <h3 className="text-lg font-semibold text-platinum mb-2">Your Keys</h3>
-              <p className="text-sm text-silver">
-                Connect your OpenAI, Anthropic, or Google API keys in settings. Use your own accounts.
-              </p>
-            </div>
-            <div className="bg-onyx border border-gunmetal rounded-xl p-6 text-center">
-              <div className="w-10 h-10 rounded-lg bg-automationgreen/20 flex items-center justify-center mx-auto mb-3">
-                <Sparkles className="w-5 h-5 text-automationgreen" />
-              </div>
-              <h3 className="text-lg font-semibold text-platinum mb-2">Our Platform</h3>
-              <p className="text-sm text-silver">
-                We orchestrate AI calls, manage agents, handle CRM, analytics, and all infrastructure.
-              </p>
-            </div>
-            <div className="bg-onyx border border-gunmetal rounded-xl p-6 text-center">
-              <div className="w-10 h-10 rounded-lg bg-warningamber/20 flex items-center justify-center mx-auto mb-3">
-                <Check className="w-5 h-5 text-warningamber" />
-              </div>
-              <h3 className="text-lg font-semibold text-platinum mb-2">No Markup</h3>
-              <p className="text-sm text-silver">
-                Zero markup on AI usage. You pay providers directly at their published rates.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Competitor Comparison */}
+      {/* ROI Comparison */}
       <section className="py-20 border-t border-gunmetal">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-platinum mb-3">
-              Replaces 5-7 expensive tools
+              10x cheaper than hiring. 10x more productive.
             </h2>
-            <p className="text-lg text-silver">
-              QuotaHit replaces your entire sales stack — lead gen, outreach, CRM, calling, follow-ups, and closing — at a fraction of the cost
+            <p className="text-lg text-silver max-w-2xl mx-auto">
+              One SDR costs $5,000+/month and works 8 hours. QuotaHit runs 24/7, handles every channel, and never needs training.
             </p>
           </div>
 
           <div className="bg-onyx border border-gunmetal rounded-xl overflow-hidden">
-            {/* QuotaHit row (highlighted) */}
-            <div className="flex items-center justify-between p-4 bg-neonblue/10 border-b border-neonblue/30">
+            {/* QuotaHit row */}
+            <div className="flex items-center justify-between p-5 bg-neonblue/10 border-b border-neonblue/30">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-neonblue to-electricblue flex items-center justify-center">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-neonblue to-electricblue flex items-center justify-center">
                   <Sparkles className="w-4 h-4 text-white" />
                 </div>
-                <span className="font-semibold text-platinum">QuotaHit Bundle</span>
+                <div>
+                  <span className="font-semibold text-platinum">QuotaHit Growth</span>
+                  <p className="text-xs text-silver">7 AI agents, every channel</p>
+                </div>
               </div>
               <div className="text-right">
-                <span className="text-lg font-bold text-neonblue">
-                  ${BUNDLE.monthlyPrice}/mo
-                </span>
-                <p className="text-xs text-silver">All 5 modules included</p>
+                <span className="text-xl font-bold text-neonblue">$697/mo</span>
               </div>
             </div>
 
-            {/* Competitor rows */}
             {COMPARISON_ITEMS.map((item, idx) => (
               <div
                 key={idx}
@@ -680,12 +437,88 @@ export default function PricingPage() {
           </div>
 
           <p className="text-center text-xs text-mist mt-4">
-            Competitor pricing sourced from public data and industry reports (2026). Actual pricing may vary.
+            Competitor pricing sourced from public data (2026). Actual pricing may vary.
           </p>
         </div>
       </section>
 
-      {/* FAQ Section */}
+      {/* Agent Breakdown */}
+      <section className="py-20 border-t border-gunmetal">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-platinum mb-3">
+              7 AI agents. One platform.
+            </h2>
+            <p className="text-lg text-silver">
+              Each agent handles a specific stage of your sales process autonomously.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Object.entries(AGENT_DESCRIPTIONS).map(([name, desc]) => {
+              const AgentIcon = AGENT_ICONS[name] || Bot;
+              const isStarterAgent = TIERS.starter.agents.includes(name);
+              return (
+                <div
+                  key={name}
+                  className="bg-onyx border border-gunmetal rounded-xl p-5 group hover:border-gunmetal/80 transition-colors"
+                >
+                  <div className="flex items-center gap-2.5 mb-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-neonblue/15 flex items-center justify-center">
+                      <AgentIcon className="w-4 h-4 text-neonblue" />
+                    </div>
+                    <h3 className="text-base font-semibold text-platinum">{name}</h3>
+                  </div>
+                  <p className="text-sm text-silver leading-relaxed mb-2">{desc}</p>
+                  <span className={cn(
+                    "text-[10px] font-medium uppercase tracking-wider",
+                    isStarterAgent ? "text-automationgreen" : "text-mist"
+                  )}>
+                    {isStarterAgent ? "All plans" : "Growth & Enterprise"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* BYOAPI Section */}
+      <section className="py-20 border-t border-gunmetal">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-onyx border border-gunmetal rounded-2xl p-8 sm:p-10">
+            <div className="flex flex-col sm:flex-row items-start gap-6">
+              <div className="w-14 h-14 rounded-2xl bg-warningamber/15 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-7 h-7 text-warningamber" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-platinum mb-2">
+                  Bring Your Own API Keys
+                </h2>
+                <p className="text-silver mb-4">
+                  You provide AI keys (OpenAI, Anthropic, Google). We handle all the infrastructure, orchestration, and agent management.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <div className="flex items-center gap-2 text-sm text-silver">
+                    <Check className="w-4 h-4 text-automationgreen" />
+                    Zero markup on AI usage
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-silver">
+                    <Check className="w-4 h-4 text-automationgreen" />
+                    Your keys, your accounts
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-silver">
+                    <Check className="w-4 h-4 text-automationgreen" />
+                    Full cost transparency
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
       <section className="py-20 border-t border-gunmetal">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-platinum text-center mb-12">
@@ -701,9 +534,7 @@ export default function PricingPage() {
                   onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
                   className="w-full flex items-center justify-between p-5 text-left"
                 >
-                  <h3 className="text-lg font-semibold text-platinum pr-4">
-                    {faq.q}
-                  </h3>
+                  <h3 className="text-lg font-semibold text-platinum pr-4">{faq.q}</h3>
                   {expandedFaq === idx ? (
                     <ChevronUp className="w-5 h-5 text-mist flex-shrink-0" />
                   ) : (
@@ -721,37 +552,30 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* CTA */}
       <section className="py-20 bg-gradient-to-r from-neonblue/10 via-electricblue/5 to-neonblue/10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-platinum mb-4">
-            Your AI Sales Team Starts Today
+            Ready to replace your SDR team?
           </h2>
           <p className="text-xl text-silver mb-8 max-w-2xl mx-auto">
             7 AI agents. Every channel. From lead to payment. Set up in 5 minutes.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/signup">
-              <Button
-                size="lg"
-                className="bg-neonblue hover:bg-electricblue text-lg px-8"
-              >
-                Start Free Trial
+              <Button size="lg" className="bg-neonblue hover:bg-electricblue text-lg px-8">
+                Start {TRIAL_DURATION_DAYS}-Day Free Trial
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
             <a href="mailto:aiwithdhruv@gmail.com?subject=QuotaHit Demo Request">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-steel text-silver hover:text-platinum text-lg px-8"
-              >
-                Schedule Demo
+              <Button size="lg" variant="outline" className="border-steel text-silver hover:text-platinum text-lg px-8">
+                Talk to Founder
               </Button>
             </a>
           </div>
           <p className="text-sm text-mist mt-6">
-            {TRIAL_DURATION_DAYS}-day free trial. No credit card required. Cancel anytime.
+            No credit card required. Cancel anytime.
           </p>
         </div>
       </section>
@@ -759,7 +583,6 @@ export default function PricingPage() {
       {/* Footer */}
       <footer className="border-t border-gunmetal py-10 bg-obsidian">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-          {/* Row 1: Brand + Nav */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded bg-gradient-to-br from-neonblue to-electricblue flex items-center justify-center">
@@ -775,7 +598,6 @@ export default function PricingPage() {
             </div>
           </div>
           <div className="border-t border-gunmetal/50" />
-          {/* Row 2: Contact + Socials + Copyright */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex flex-wrap items-center justify-center gap-5">
               <a href="tel:+919827853940" className="flex items-center gap-1.5 text-sm text-silver hover:text-neonblue transition-colors">
@@ -806,104 +628,7 @@ export default function PricingPage() {
         </div>
       </footer>
 
-      {/* Sticky Cart Bar */}
-      {selectedModules.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-graphite/95 backdrop-blur-md border-t border-gunmetal shadow-2xl shadow-black/50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16 sm:h-18 gap-4">
-              {/* Left: selection info */}
-              <div className="flex items-center gap-4 min-w-0">
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <div className="w-8 h-8 rounded-lg bg-neonblue/20 flex items-center justify-center">
-                    <span className="text-sm font-bold text-neonblue">
-                      {selectedModules.length}
-                    </span>
-                  </div>
-                  <span className="text-sm text-silver hidden sm:inline">
-                    module{selectedModules.length !== 1 ? "s" : ""} selected
-                  </span>
-                </div>
-
-                {/* Selected module pills */}
-                <div className="hidden md:flex items-center gap-1.5 min-w-0 overflow-x-auto">
-                  {selectedModules.map((slug) => {
-                    const Icon = MODULE_ICONS[slug];
-                    const colors = MODULE_COLORS[slug];
-                    return (
-                      <button
-                        key={slug}
-                        onClick={() => toggleModule(slug)}
-                        className="flex items-center gap-1.5 bg-onyx border border-gunmetal rounded-full px-2.5 py-1 text-xs text-silver hover:border-red-500/50 hover:text-red-400 transition-colors flex-shrink-0 group"
-                      >
-                        <Icon className={cn("w-3 h-3", colors.text)} />
-                        <span>{MODULES[slug].name}</span>
-                        <X className="w-3 h-3 text-mist group-hover:text-red-400" />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Right: price + actions */}
-              <div className="flex items-center gap-4 flex-shrink-0">
-                {/* Bundle suggestion */}
-                {bundleSuggested && (
-                  <button
-                    onClick={() => handleCheckout("bundle")}
-                    className="hidden lg:flex items-center gap-2 bg-automationgreen/10 border border-automationgreen/30 rounded-lg px-3 py-1.5 text-xs text-automationgreen hover:bg-automationgreen/20 transition-colors"
-                  >
-                    <Package className="w-3.5 h-3.5" />
-                    <span>
-                      Switch to bundle and save ${bundleSavingsVsSelected}/mo
-                    </span>
-                  </button>
-                )}
-
-                {/* Total price */}
-                <div className="text-right">
-                  <span className="text-xl sm:text-2xl font-bold text-platinum">
-                    ${selectedTotal % 1 === 0 ? selectedTotal : selectedTotal.toFixed(2)}
-                  </span>
-                  <span className="text-sm text-silver">/mo</span>
-                </div>
-
-                {/* Subscribe button */}
-                <Button
-                  onClick={() => handleCheckout("modules")}
-                  disabled={loadingCheckout}
-                  className="bg-neonblue hover:bg-electricblue px-6"
-                >
-                  {loadingCheckout ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    "Subscribe"
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            {/* Bundle suggestion on mobile when applicable */}
-            {bundleSuggested && (
-              <div className="lg:hidden pb-3 -mt-1">
-                <button
-                  onClick={() => handleCheckout("bundle")}
-                  className="w-full flex items-center justify-center gap-2 bg-automationgreen/10 border border-automationgreen/30 rounded-lg px-3 py-2 text-xs text-automationgreen hover:bg-automationgreen/20 transition-colors"
-                >
-                  <Package className="w-3.5 h-3.5" />
-                  <span>
-                    Switch to bundle and save ${bundleSavingsVsSelected}/mo
-                  </span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Sales Agent Chat Widget */}
+      {/* Sales Agent Widget */}
       <SalesAgentWidget pageContext="pricing" />
     </div>
   );

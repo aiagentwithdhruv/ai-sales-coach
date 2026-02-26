@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Pricing — AI Sales Coach Modules | QuotaHit",
+  title: "Pricing — Autonomous AI Sales Department | QuotaHit",
   description:
-    "Simple module-based pricing for AI sales coaching. Start free, pick individual modules (coaching, CRM, calling, follow-ups, analytics) or get the all-in-one bundle. BYOAPI — no markup on AI usage.",
+    "Hire an AI sales team for less than one SDR. 7 AI agents handle lead gen, qualification, outreach, calling, closing, and onboarding. Starting at $297/mo. 14-day free trial.",
   keywords: [
-    "AI sales coach pricing", "sales coaching software cost", "Gong alternative pricing",
-    "cheap sales training tool", "BYOAPI sales tool", "sales AI pricing",
+    "AI sales team pricing", "AI SDR pricing", "autonomous sales agents",
+    "AI sales department cost", "QuotaHit pricing", "AI cold calling pricing",
+    "sales automation pricing", "AI lead generation cost",
   ],
   alternates: {
     canonical: "https://www.quotahit.com/pricing",
   },
   openGraph: {
-    title: "QuotaHit Pricing — AI Sales Coaching Modules",
-    description: "Start free. Pick modules you need. BYOAPI — no markup on AI usage. 10-50x cheaper than Gong.",
+    title: "QuotaHit Pricing — 7 AI Sales Agents from $297/mo",
+    description: "Replace your SDR team with 7 AI agents. Find, qualify, reach, call, close, and onboard customers autonomously. 14-day free trial.",
     url: "https://www.quotahit.com/pricing",
   },
 };
