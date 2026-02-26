@@ -27,8 +27,8 @@ interface AgentStatus {
 const agentStatuses: AgentStatus[] = [
   {
     icon: UserSearch,
-    title: "Scout Agent",
-    status: "Finding leads matching your ICP",
+    title: "Lead Finder",
+    status: "Your AI prospector discovers leads 24/7",
     metric: "Configure your ICP to start",
     href: "/dashboard/crm",
     cta: "View Leads",
@@ -38,8 +38,8 @@ const agentStatuses: AgentStatus[] = [
   },
   {
     icon: PhoneOutgoing,
-    title: "AI Calling",
-    status: "Ready to make calls",
+    title: "AI Caller",
+    status: "Makes calls and books meetings for you",
     metric: "Set up your first campaign",
     href: "/dashboard/ai-calling",
     cta: "Start Campaign",
@@ -49,8 +49,8 @@ const agentStatuses: AgentStatus[] = [
   },
   {
     icon: Mail,
-    title: "Follow-ups",
-    status: "Automated sequences ready",
+    title: "Follow-up Manager",
+    status: "Never lets a lead go cold",
     metric: "Create your first sequence",
     href: "/dashboard/follow-ups",
     cta: "Set Up Sequences",
@@ -60,8 +60,8 @@ const agentStatuses: AgentStatus[] = [
   },
   {
     icon: Contact,
-    title: "CRM Pipeline",
-    status: "Track deals from lead to close",
+    title: "Deal Tracker",
+    status: "Monitors every deal from lead to close",
     metric: "Import or add contacts",
     href: "/dashboard/crm",
     cta: "View Pipeline",

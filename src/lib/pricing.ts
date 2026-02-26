@@ -96,13 +96,13 @@ export const ALL_TIER_SLUGS: TierSlug[] = ["starter", "growth", "enterprise"];
 // ─── Agent Descriptions ──────────────────────────────────────────────────
 
 export const AGENT_DESCRIPTIONS: Record<string, string> = {
-  Scout: "Finds leads from LinkedIn, web, and databases",
-  Researcher: "Enriches leads with company data, funding, and tech stack",
-  Qualifier: "Scores leads with AI-powered BANT+ conversations",
-  Outreach: "Multi-channel sequences: email, LinkedIn, WhatsApp, SMS",
-  Caller: "Autonomous AI phone calls that handle objections",
-  Closer: "Auto-generates proposals, sends invoices, collects payments",
-  Ops: "Post-sale onboarding, welcome sequences, success check-ins",
+  Scout: "Your Lead Finder — discovers prospects from LinkedIn, web, and databases",
+  Researcher: "Your Intel Analyst — enriches leads with company data, funding, and tech stack",
+  Qualifier: "Your Gatekeeper — scores leads with AI-powered BANT+ conversations",
+  Outreach: "Your Outreach Rep — multi-channel sequences via email, LinkedIn, WhatsApp, SMS",
+  Caller: "Your AI Caller — makes autonomous phone calls and handles objections",
+  Closer: "Your Deal Closer — auto-generates proposals, sends invoices, collects payments",
+  Ops: "Your Ops Manager — post-sale onboarding, welcome sequences, success check-ins",
 };
 
 // ─── Billing Discounts ──────────────────────────────────────────────────
