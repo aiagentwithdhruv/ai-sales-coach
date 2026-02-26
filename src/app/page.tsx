@@ -2,13 +2,13 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { MobileNav } from "@/components/ui/mobile-nav";
 import { GeminiVoiceWidget } from "@/components/landing/GeminiVoiceWidget";
+import { TIERS, ALL_TIER_SLUGS } from "@/lib/pricing";
 import {
   Sparkles,
   ArrowRight,
   Check,
   X,
   MessageSquare,
-  Mic,
   Phone,
   Swords,
   Globe,
@@ -52,32 +52,25 @@ const agents = [
     color: "text-neonblue",
   },
   {
+    icon: Phone,
+    title: "Caller Agent",
+    description:
+      "Autonomous outbound calls with AI voice. Books meetings while you sleep.",
+    color: "text-automationgreen",
+  },
+  {
     icon: Swords,
     title: "Closer Agent",
     description:
       "Handles objections, negotiates, sends proposals, and collects payment.",
-    color: "text-automationgreen",
-  },
-  {
-    icon: Phone,
-    title: "AI Calling Engine",
-    description:
-      "Autonomous outbound calls with AI voice. Books meetings while you sleep.",
     color: "text-warningamber",
   },
   {
-    icon: Mic,
-    title: "Voice-First CRM",
-    description:
-      "Speak to your CRM. Instruct AI with voice. Zero typing needed.",
-    color: "text-neonblue",
-  },
-  {
     icon: Zap,
-    title: "Self-Improving AI",
+    title: "Ops Agent",
     description:
-      "Templates, scoring, and timing auto-optimize from every interaction.",
-    color: "text-automationgreen",
+      "Invoicing, onboarding, follow-ups, and self-improving templates. Auto-optimizes everything.",
+    color: "text-neonblue",
   },
 ];
 
@@ -171,58 +164,18 @@ const comparisonRows = [
   },
 ];
 
-const pricingPlans = [
-  {
-    name: "Starter",
-    price: "$299",
+const pricingPlans = ALL_TIER_SLUGS.map((slug) => {
+  const tier = TIERS[slug];
+  return {
+    name: tier.name,
+    price: `$${tier.monthlyPrice}`,
     period: "/month",
-    description: "For solo founders who want AI selling for them",
-    features: [
-      "1 AI Agent active",
-      "500 contacts processed/mo",
-      "Email + Chat outreach",
-      "Lead scoring + qualification",
-      "Voice-first CRM",
-      "3 pre-built agent loadouts",
-    ],
-    cta: "Start Free Trial",
-    highlighted: false,
-  },
-  {
-    name: "Growth",
-    price: "$799",
-    period: "/month",
-    description: "Full autonomous sales department for growing teams",
-    features: [
-      "3 AI Agents active",
-      "2,000 contacts processed/mo",
-      "All channels (Email + LinkedIn + WhatsApp)",
-      "AI Calling + cold outreach",
-      "Self-improving templates",
-      "Rep assignment (Mode B)",
-      "All agent loadouts",
-    ],
-    cta: "Start Growth Trial",
-    highlighted: true,
-  },
-  {
-    name: "Scale",
-    price: "$1,999",
-    period: "/month",
-    description: "Full 7-agent team with MCP and custom loadouts",
-    features: [
-      "All 7 AI Agents (full department)",
-      "Unlimited contacts processed",
-      "Everything in Growth",
-      "Custom Agent Loadout Builder",
-      "MCP access (connect any AI tool)",
-      "Marketplace publishing",
-      "Priority support",
-    ],
-    cta: "Start Scale Trial",
-    highlighted: false,
-  },
-];
+    description: tier.tagline,
+    features: tier.features.slice(0, 7),
+    cta: tier.cta,
+    highlighted: tier.popular ?? false,
+  };
+});
 
 function ComparisonCell({ value }: { value: boolean | string }) {
   if (value === true) {
@@ -283,8 +236,8 @@ export default function LandingPage() {
     operatingSystem: "Web",
     offers: {
       "@type": "AggregateOffer",
-      lowPrice: "299",
-      highPrice: "1999",
+      lowPrice: "297",
+      highPrice: "1497",
       priceCurrency: "USD",
     },
     description: "Autonomous AI Sales Department with 7 AI agents — lead generation, qualification, multi-channel outreach, follow-up, closing, and payment collection.",
@@ -341,7 +294,7 @@ export default function LandingPage() {
                 <PhoneCall className="h-3.5 w-3.5" />
                 Call
               </a>
-              <Link href="/dashboard">
+              <Link href="/signup">
                 <Button className="bg-neonblue hover:bg-electricblue text-white text-sm px-4">
                   Start Free
                 </Button>
@@ -571,7 +524,7 @@ export default function LandingPage() {
               <div className="p-4 text-center">
                 <div className="text-sm font-bold text-neonblue">QuotaHit</div>
                 <div className="text-xs text-automationgreen font-medium">
-                  $299-1,999/mo
+                  $297-1,497/mo
                 </div>
               </div>
               <div className="p-4 text-center">
@@ -625,7 +578,7 @@ export default function LandingPage() {
               </div>
               <div className="p-4 text-center">
                 <span className="text-sm font-bold text-automationgreen">
-                  $299-1,999/mo
+                  $297-1,497/mo
                 </span>
               </div>
               <div className="p-4 text-center">
@@ -695,7 +648,7 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/dashboard">
+                <Link href="/signup">
                   <Button
                     className={`w-full cursor-pointer ${
                       plan.highlighted

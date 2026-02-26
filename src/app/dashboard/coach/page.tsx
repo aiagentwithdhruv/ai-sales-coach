@@ -434,7 +434,7 @@ export default function CoachPage() {
           <div>
             <h1 className="text-2xl font-bold text-platinum flex items-center gap-2">
               <MessageSquare className="h-6 w-6 text-neonblue" />
-              AI Objection Coach
+              AI Sales Assistant
             </h1>
             <p className="text-silver mt-1">
               Get AI-powered responses to handle any sales objection
@@ -649,7 +649,7 @@ export default function CoachPage() {
                       ) : (
                         <>
                           <Send className="h-4 w-4 mr-2" />
-                          Get Coaching
+                          Ask AI
                         </>
                       )}
                     </Button>
@@ -664,7 +664,7 @@ export default function CoachPage() {
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="text-platinum flex items-center gap-2">
                     <Lightbulb className="h-5 w-5 text-warningamber" />
-                    AI Coaching Response
+                    AI Response
                   </CardTitle>
                   {response && !isLoading && (
                     <div className="flex items-center gap-2">

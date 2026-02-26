@@ -3,117 +3,112 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import {
-  MessageSquare,
-  Mic,
-  Phone,
-  Swords,
+  UserSearch,
+  PhoneOutgoing,
+  Mail,
+  Contact,
   LucideIcon,
   ArrowRight,
   Sparkles,
 } from "lucide-react";
 
-interface QuickAction {
+interface AgentStatus {
   icon: LucideIcon;
   title: string;
-  description: string;
-  hint: string;
+  status: string;
+  metric: string;
   href: string;
+  cta: string;
   iconColor: string;
   iconBg: string;
   glowColor: string;
-  step: number;
 }
 
-const quickActions: QuickAction[] = [
+const agentStatuses: AgentStatus[] = [
   {
-    icon: MessageSquare,
-    title: "Handle Objection",
-    description: "Get AI-powered responses to common objections",
-    hint: "Try it: Type any objection and get instant coaching",
-    href: "/dashboard/coach",
+    icon: UserSearch,
+    title: "Scout Agent",
+    status: "Finding leads matching your ICP",
+    metric: "Configure your ICP to start",
+    href: "/dashboard/crm",
+    cta: "View Leads",
     iconColor: "text-neonblue",
     iconBg: "bg-neonblue/10",
     glowColor: "rgba(0, 179, 255, 0.4)",
-    step: 1,
   },
   {
-    icon: Mic,
-    title: "Practice Pitch",
-    description: "Role-play with AI to sharpen your skills",
-    hint: "Start a live voice call with an AI prospect",
-    href: "/dashboard/practice",
+    icon: PhoneOutgoing,
+    title: "AI Calling",
+    status: "Ready to make calls",
+    metric: "Set up your first campaign",
+    href: "/dashboard/ai-calling",
+    cta: "Start Campaign",
     iconColor: "text-automationgreen",
     iconBg: "bg-automationgreen/10",
     glowColor: "rgba(0, 255, 136, 0.4)",
-    step: 2,
   },
   {
-    icon: Phone,
-    title: "Analyze Call",
-    description: "Upload a call recording for AI insights",
-    hint: "Upload any sales call to get a full AI scorecard",
-    href: "/dashboard/calls",
+    icon: Mail,
+    title: "Follow-ups",
+    status: "Automated sequences ready",
+    metric: "Create your first sequence",
+    href: "/dashboard/follow-ups",
+    cta: "Set Up Sequences",
     iconColor: "text-warningamber",
     iconBg: "bg-warningamber/10",
     glowColor: "rgba(255, 179, 0, 0.4)",
-    step: 3,
   },
   {
-    icon: Swords,
-    title: "Sales Tools",
-    description: "Email crafter, pitch scorer, battle cards & more",
-    hint: "Generate emails, battle cards, deal strategies",
-    href: "/dashboard/tools",
+    icon: Contact,
+    title: "CRM Pipeline",
+    status: "Track deals from lead to close",
+    metric: "Import or add contacts",
+    href: "/dashboard/crm",
+    cta: "View Pipeline",
     iconColor: "text-purple-400",
     iconBg: "bg-purple-400/10",
     glowColor: "rgba(192, 132, 252, 0.4)",
-    step: 4,
   },
 ];
 
 export function QuickActions() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {quickActions.map((action) => (
-        <Link key={action.href} href={action.href}>
+      {agentStatuses.map((agent) => (
+        <Link key={agent.href + agent.title} href={agent.href}>
           <div
-            className="glow-card group relative rounded-xl bg-onyx border border-gunmetal hover:border-transparent transition-all duration-300 cursor-pointer h-full animate-pulse-glow-subtle"
+            className="glow-card group relative rounded-xl bg-onyx border border-gunmetal hover:border-transparent transition-all duration-300 cursor-pointer h-full"
             style={{
-              "--glow-color": action.glowColor,
+              "--glow-color": agent.glowColor,
             } as React.CSSProperties}
           >
             <div className="relative z-10 p-6 space-y-4">
-              {/* Step badge */}
               <div className="flex items-center justify-between">
                 <div
                   className={cn(
                     "w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-300",
-                    action.iconBg,
+                    agent.iconBg,
                     "group-hover:scale-110"
                   )}
                 >
-                  <action.icon
+                  <agent.icon
                     className={cn(
                       "h-6 w-6 transition-colors duration-200",
-                      action.iconColor
+                      agent.iconColor
                     )}
                   />
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-medium text-mist uppercase tracking-wider">Step {action.step}</span>
-                  <ArrowRight className="h-3.5 w-3.5 text-mist group-hover:text-white group-hover:translate-x-0.5 transition-all" />
-                </div>
+                <ArrowRight className="h-3.5 w-3.5 text-mist group-hover:text-white group-hover:translate-x-0.5 transition-all" />
               </div>
               <div>
                 <h3 className="font-semibold text-platinum group-hover:text-white transition-colors">
-                  {action.title}
+                  {agent.title}
                 </h3>
-                <p className="text-sm text-silver mt-1">{action.description}</p>
+                <p className="text-sm text-silver mt-1">{agent.status}</p>
               </div>
-              {/* Hint text */}
               <div className="flex items-center gap-1.5 pt-1 border-t border-gunmetal/50">
-                <Sparkles className={cn("h-3 w-3 shrink-0", action.iconColor)} />
-                <p className="text-xs text-mist group-hover:text-silver transition-colors">{action.hint}</p>
+                <Sparkles className={cn("h-3 w-3 shrink-0", agent.iconColor)} />
+                <p className="text-xs text-mist group-hover:text-silver transition-colors">{agent.cta}</p>
               </div>
             </div>
           </div>

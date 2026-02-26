@@ -2,45 +2,34 @@
 
 import { useState, useEffect } from "react";
 import { WelcomeSection, QuickActions } from "@/components/features/dashboard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { getSupabaseClient } from "@/lib/supabase/client";
-import { getSessions, getSessionStats } from "@/lib/session-history";
+import { getSessions } from "@/lib/session-history";
 import {
   MessageSquare,
   Phone,
-  Flame,
   Mic,
   ArrowRight,
-  Swords,
-  TrendingUp,
-  Target,
-  PenLine,
+  Sparkles,
   History,
   Calendar,
   ExternalLink,
   Rocket,
+  Send,
+  Swords,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-
-const mockStats = {
-  winRate: 68,
-  winRateChange: 12,
-  pipeline: "$2.4M",
-  pipelineChange: 8,
-  activeDeals: 23,
-  activeDealsChange: 3,
-};
+import { SetupWizard } from "@/components/features/onboarding/SetupWizard";
 
 export default function DashboardPage() {
   const [userName, setUserName] = useState("there");
-  const [sessionStats, setSessionStats] = useState({
-    total: 0,
-    thisWeek: 0,
-    thisMonth: 0,
-    byType: { coach: 0, practice: 0, call: 0, tool: 0 },
-  });
+  const [contactCount, setContactCount] = useState(0);
+  const [commandInput, setCommandInput] = useState("");
+  const [showSetupWizard, setShowSetupWizard] = useState(false);
+  const [wizardChecked, setWizardChecked] = useState(false);
   const [recentSessions, setRecentSessions] = useState<
     { id: string; type: string; title: string; timestamp: number }[]
   >([]);
@@ -58,13 +47,35 @@ export default function DashboardPage() {
           "there";
         const firstName = fullName.split(" ")[0];
         setUserName(firstName);
+
+        // Check if setup wizard should show
+        const localSetup = localStorage.getItem("setup_complete");
+        const metaSetup = user.user_metadata?.setup_complete;
+        if (!localSetup && !metaSetup) {
+          setShowSetupWizard(true);
+        }
       }
+      setWizardChecked(true);
     };
     getUser();
   }, [supabase.auth]);
 
+  // Fetch real contact count from CRM
   useEffect(() => {
-    setSessionStats(getSessionStats());
+    const fetchContacts = async () => {
+      try {
+        const { count } = await supabase
+          .from("contacts")
+          .select("*", { count: "exact", head: true });
+        setContactCount(count || 0);
+      } catch {
+        // Table may not exist yet for new users
+      }
+    };
+    fetchContacts();
+  }, [supabase]);
+
+  useEffect(() => {
     const sessions = getSessions().slice(0, 5);
     setRecentSessions(
       sessions.map((s) => ({
@@ -95,134 +106,102 @@ export default function DashboardPage() {
     return new Date(timestamp).toLocaleDateString();
   };
 
+  const handleCommand = () => {
+    if (!commandInput.trim()) return;
+    window.location.href = `/dashboard/coach?q=${encodeURIComponent(commandInput)}`;
+  };
+
+  // Show setup wizard for new users
+  if (wizardChecked && showSetupWizard) {
+    return <SetupWizard onComplete={() => setShowSetupWizard(false)} />;
+  }
+
   return (
     <div className="space-y-6">
-      <WelcomeSection userName={userName} stats={mockStats} />
+      <WelcomeSection
+        userName={userName}
+        stats={{
+          totalContacts: contactCount,
+          aiCallsMade: 0,
+          followupsSent: 0,
+        }}
+      />
 
-      {/* Progress Stats */}
+      {/* Command Bar */}
       <section>
-        <h2 className="text-lg font-semibold text-platinum mb-4">Your Progress</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <div className="stat-card-premium rounded-xl">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-neonblue/10 flex items-center justify-center">
-                <Target className="h-5 w-5 text-neonblue" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-platinum">{sessionStats.total}</p>
-                <p className="text-xs text-mist">Total Sessions</p>
-              </div>
-            </CardContent>
-          </div>
-          <div className="stat-card-premium rounded-xl">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-automationgreen/10 flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-automationgreen" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-platinum">{sessionStats.thisWeek}</p>
-                <p className="text-xs text-mist">This Week</p>
-              </div>
-            </CardContent>
-          </div>
-          <div className="stat-card-premium rounded-xl">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-neonblue/10 flex items-center justify-center">
-                <MessageSquare className="h-5 w-5 text-neonblue" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-neonblue">{sessionStats.byType.coach}</p>
-                <p className="text-xs text-mist">Coaching</p>
-              </div>
-            </CardContent>
-          </div>
-          <div className="stat-card-premium rounded-xl">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-automationgreen/10 flex items-center justify-center">
-                <Mic className="h-5 w-5 text-automationgreen" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-automationgreen">{sessionStats.byType.practice}</p>
-                <p className="text-xs text-mist">Practice</p>
-              </div>
-            </CardContent>
-          </div>
-          <div className="stat-card-premium rounded-xl">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-warningamber/10 flex items-center justify-center">
-                <Phone className="h-5 w-5 text-warningamber" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-warningamber">{sessionStats.byType.call}</p>
-                <p className="text-xs text-mist">Calls</p>
-              </div>
-            </CardContent>
-          </div>
-          <div className="stat-card-premium rounded-xl">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-purple-400/10 flex items-center justify-center">
-                <Swords className="h-5 w-5 text-purple-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-purple-400">{sessionStats.byType.tool}</p>
-                <p className="text-xs text-mist">Tools</p>
-              </div>
-            </CardContent>
+        <div className="glow-card rounded-xl bg-onyx border border-gunmetal p-4" style={{ "--glow-color": "rgba(0, 179, 255, 0.2)" } as React.CSSProperties}>
+          <div className="flex items-center gap-3">
+            <Sparkles className="h-5 w-5 text-neonblue shrink-0" />
+            <Input
+              type="text"
+              placeholder='Tell your AI what to do... "Find 50 SaaS companies in NYC", "Start a calling campaign"'
+              value={commandInput}
+              onChange={(e) => setCommandInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleCommand()}
+              className="flex-1 bg-transparent border-0 text-platinum placeholder:text-mist/60 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
+            />
+            <Button
+              size="sm"
+              onClick={handleCommand}
+              className="bg-neonblue hover:bg-electricblue text-white shrink-0"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </section>
 
-      {/* Quick Actions */}
+      {/* AI Team Status */}
       <section>
-        <h2 className="text-lg font-semibold text-platinum mb-4">Quick Actions</h2>
+        <h2 className="text-lg font-semibold text-platinum mb-4">Your AI Team</h2>
         <QuickActions />
       </section>
 
-      {/* Start Here - Onboarding Guide */}
+      {/* Getting Started */}
       <div className="card-metallic rounded-xl">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-semibold text-platinum flex items-center gap-2">
             <Rocket className="h-5 w-5 text-neonblue" />
-            Start Here — Try It in 30 Seconds
+            Get Started
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Link href="/dashboard/coach" className="block">
+            <Link href="/dashboard/crm" className="block">
               <div className="glow-card p-4 rounded-xl bg-graphite border border-gunmetal hover:border-neonblue transition-all cursor-pointer group" style={{ "--glow-color": "rgba(0, 179, 255, 0.4)" } as React.CSSProperties}>
                 <div className="flex items-center gap-3 mb-3">
                   <span className="flex items-center justify-center h-7 w-7 rounded-full bg-neonblue/20 text-neonblue text-xs font-bold">1</span>
-                  <h4 className="font-medium text-platinum group-hover:text-neonblue transition-colors">Handle an Objection</h4>
+                  <h4 className="font-medium text-platinum group-hover:text-neonblue transition-colors">Import or Find Leads</h4>
                 </div>
-                <p className="text-sm text-silver mb-3">Type any objection like &quot;Your price is too high&quot; and get an instant AI coaching response.</p>
+                <p className="text-sm text-silver mb-3">Upload a CSV, add contacts manually, or let Scout AI find leads matching your ICP.</p>
                 <div className="flex items-center gap-1.5 text-xs text-neonblue font-medium">
-                  Try it now <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                  Open CRM <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
             </Link>
 
-            <Link href="/dashboard/practice" className="block">
+            <Link href="/dashboard/ai-calling" className="block">
               <div className="glow-card p-4 rounded-xl bg-graphite border border-gunmetal hover:border-automationgreen transition-all cursor-pointer group" style={{ "--glow-color": "rgba(0, 255, 136, 0.4)" } as React.CSSProperties}>
                 <div className="flex items-center gap-3 mb-3">
                   <span className="flex items-center justify-center h-7 w-7 rounded-full bg-automationgreen/20 text-automationgreen text-xs font-bold">2</span>
-                  <h4 className="font-medium text-platinum group-hover:text-automationgreen transition-colors">Practice a Live Call</h4>
+                  <h4 className="font-medium text-platinum group-hover:text-automationgreen transition-colors">Set Up AI Calling</h4>
                 </div>
-                <p className="text-sm text-silver mb-3">Click &quot;Start Live Call&quot; to role-play with an AI prospect using real-time voice.</p>
+                <p className="text-sm text-silver mb-3">Create an AI calling agent and start a campaign. Your AI books meetings while you sleep.</p>
                 <div className="flex items-center gap-1.5 text-xs text-automationgreen font-medium">
-                  Start practicing <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                  Start campaign <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
             </Link>
 
-            <Link href="/dashboard/calls" className="block">
+            <Link href="/dashboard/follow-ups" className="block">
               <div className="glow-card p-4 rounded-xl bg-graphite border border-gunmetal hover:border-warningamber transition-all cursor-pointer group" style={{ "--glow-color": "rgba(255, 179, 0, 0.4)" } as React.CSSProperties}>
                 <div className="flex items-center gap-3 mb-3">
                   <span className="flex items-center justify-center h-7 w-7 rounded-full bg-warningamber/20 text-warningamber text-xs font-bold">3</span>
-                  <h4 className="font-medium text-platinum group-hover:text-warningamber transition-colors">Analyze a Call</h4>
+                  <h4 className="font-medium text-platinum group-hover:text-warningamber transition-colors">Configure Follow-ups</h4>
                 </div>
-                <p className="text-sm text-silver mb-3">Upload any sales call recording and get a full AI scorecard with actionable feedback.</p>
+                <p className="text-sm text-silver mb-3">Set up automated email and SMS sequences triggered by call outcomes and lead activity.</p>
                 <div className="flex items-center gap-1.5 text-xs text-warningamber font-medium">
-                  Upload a call <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                  Create sequence <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
             </Link>
@@ -232,18 +211,17 @@ export default function DashboardPage() {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Book Demo + Sessions */}
         <div className="lg:col-span-2 space-y-6">
           {/* Book a Demo CTA */}
-          <div className="glow-card relative overflow-hidden rounded-xl bg-gradient-to-r from-graphite via-onyx to-graphite border border-neonblue/30 p-6 animate-pulse-glow-subtle" style={{ "--glow-color": "rgba(0, 179, 255, 0.3)" } as React.CSSProperties}>
+          <div className="glow-card relative overflow-hidden rounded-xl bg-gradient-to-r from-graphite via-onyx to-graphite border border-neonblue/30 p-6" style={{ "--glow-color": "rgba(0, 179, 255, 0.3)" } as React.CSSProperties}>
             <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-xl bg-neonblue/10 border border-neonblue/20">
                   <Calendar className="h-8 w-8 text-neonblue" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-platinum">Want AI to Work for Your Sales Team?</h3>
-                  <p className="text-sm text-silver mt-1">Book a free consultation — we&apos;ll show you how QuotaHit can 10x your team&apos;s performance.</p>
+                  <h3 className="text-lg font-semibold text-platinum">Need Help Setting Up?</h3>
+                  <p className="text-sm text-silver mt-1">Book a free consultation — we&apos;ll configure your AI sales department together.</p>
                 </div>
               </div>
               <a
@@ -261,11 +239,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Recent Activity - moved to main area */}
+          {/* Recent AI Activity */}
           <div className="card-metallic rounded-xl">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-semibold text-platinum flex items-center justify-between">
-                Recent Activity
+                Recent AI Activity
                 {recentSessions.length > 0 && (
                   <Link href="/dashboard/history" className="text-xs text-neonblue hover:underline font-normal">View All</Link>
                 )}
@@ -294,39 +272,39 @@ export default function DashboardPage() {
                 <div className="text-center py-6">
                   <History className="h-8 w-8 text-mist mx-auto mb-2" />
                   <p className="text-sm text-silver">No activity yet</p>
-                  <p className="text-xs text-mist">Start a coaching session to see your activity here</p>
+                  <p className="text-xs text-mist">Your AI&apos;s first actions will appear here</p>
                 </div>
               )}
             </CardContent>
           </div>
         </div>
 
-        {/* Sidebar */}
+        {/* Right Sidebar */}
         <div className="space-y-6">
-          {/* Sessions This Week */}
-          <div className="stat-card-premium rounded-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-warningamber/10">
-                  <Flame className="h-8 w-8 text-warningamber" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold text-platinum">{sessionStats.thisWeek || 0}</p>
-                  <p className="text-sm text-silver">Sessions This Week</p>
-                </div>
+          {/* AI Assistant Quick Access */}
+          <div className="card-metallic rounded-xl border-l-2 border-l-neonblue">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <Sparkles className="h-5 w-5 text-neonblue" />
+                <h4 className="font-semibold text-platinum text-sm">AI Assistant</h4>
               </div>
-              <p className="text-xs text-mist mt-4">Keep practicing to sharpen your sales skills!</p>
-              <Link href="/dashboard/practice">
-                <Button className="w-full mt-4 bg-neonblue hover:bg-electricblue">Practice Now</Button>
+              <p className="text-xs text-silver mb-4">
+                Ask anything about sales strategy, research companies, or draft outreach messages.
+              </p>
+              <Link href="/dashboard/coach">
+                <Button className="w-full bg-neonblue hover:bg-electricblue text-sm gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  Open AI Assistant
+                </Button>
               </Link>
             </CardContent>
           </div>
 
-          {/* Get a Consultation - Sidebar CTA */}
-          <div className="card-metallic rounded-xl border-l-2 border-l-neonblue">
+          {/* Consultation CTA */}
+          <div className="card-metallic rounded-xl border-l-2 border-l-automationgreen">
             <CardContent className="p-5">
               <div className="flex items-center gap-3 mb-3">
-                <Calendar className="h-5 w-5 text-neonblue" />
+                <Calendar className="h-5 w-5 text-automationgreen" />
                 <h4 className="font-semibold text-platinum text-sm">Get a Free Consultation</h4>
               </div>
               <p className="text-xs text-silver mb-4">
@@ -338,7 +316,7 @@ export default function DashboardPage() {
                 rel="noopener noreferrer"
                 className="block"
               >
-                <Button className="w-full bg-neonblue hover:bg-electricblue text-sm gap-2">
+                <Button className="w-full bg-automationgreen/90 hover:bg-automationgreen text-black text-sm gap-2">
                   <Calendar className="h-4 w-4" />
                   Book Demo
                   <ExternalLink className="h-3 w-3" />

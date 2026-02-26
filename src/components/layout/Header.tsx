@@ -129,7 +129,7 @@ export function Header({ user, onMobileMenuToggle, sidebarExpanded = true, onSid
       case "manager":
         return <Badge className="bg-warningamber/20 text-warningamber">Manager</Badge>;
       default:
-        return <Badge variant="secondary">Sales Rep</Badge>;
+        return <Badge variant="secondary">Member</Badge>;
     }
   };
 
@@ -150,7 +150,7 @@ export function Header({ user, onMobileMenuToggle, sidebarExpanded = true, onSid
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-mist" />
             <Input
               type="text"
-              placeholder="Search deals, calls, playbooks..."
+              placeholder="Search leads, calls, deals..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 bg-onyx border-gunmetal text-platinum placeholder:text-mist focus:border-neonblue focus:ring-neonblue/20"
@@ -164,7 +164,7 @@ export function Header({ user, onMobileMenuToggle, sidebarExpanded = true, onSid
           <Link href="/dashboard/coach">
             <Button className="bg-neonblue hover:bg-electricblue text-white gap-2 glow-blue">
               <Sparkles className="h-4 w-4" />
-              <span className="hidden sm:inline">Ask AI Coach</span>
+              <span className="hidden sm:inline">Ask AI</span>
             </Button>
           </Link>
 
@@ -198,8 +198,8 @@ export function Header({ user, onMobileMenuToggle, sidebarExpanded = true, onSid
               </DropdownMenuItem>
               <DropdownMenuItem className="text-silver hover:text-platinum hover:bg-onyx focus:bg-onyx focus:text-platinum">
                 <div className="flex flex-col gap-1">
-                  <span className="font-medium">Practice streak: 7 days!</span>
-                  <span className="text-xs text-mist">Keep up the great work</span>
+                  <span className="font-medium">New lead qualified — Score: 87</span>
+                  <span className="text-xs text-mist">AI found a high-potential prospect</span>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuItem className="text-silver hover:text-platinum hover:bg-onyx focus:bg-onyx focus:text-platinum">

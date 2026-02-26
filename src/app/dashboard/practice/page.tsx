@@ -282,7 +282,7 @@ export default function PracticePage() {
           <div>
             <h1 className="text-2xl font-bold text-platinum flex items-center gap-2">
               <Sparkles className="h-6 w-6 text-neonblue" />
-              Practice Session
+              Sales Simulation
             </h1>
             <p className="text-silver mt-1">
               Role-play with AI prospects to sharpen your sales skills
@@ -361,7 +361,7 @@ export default function PracticePage() {
             <CardTitle className="text-platinum flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <BookOpen className="h-5 w-5 text-neonblue" />
-                Practice Scenarios
+                Simulation Scenarios
                 <Badge className="bg-neonblue/10 text-neonblue text-xs">{PRACTICE_SCENARIOS.length} scenarios</Badge>
               </div>
               <ChevronRight className={cn("h-5 w-5 text-silver transition-transform", showScenarios && "rotate-90")} />

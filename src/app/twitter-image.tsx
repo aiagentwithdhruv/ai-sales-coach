@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "QuotaHit — AI Sales Coach | Practice. Coach. Close.";
+export const alt = "QuotaHit — Your AI Sales Department | Find. Qualify. Close.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -124,7 +124,7 @@ export default async function Image() {
               letterSpacing: "-0.02em",
             }}
           >
-            Your AI Sales Coach
+            Your AI Sales Department
           </div>
 
           {/* Colored words row */}
@@ -146,7 +146,7 @@ export default async function Image() {
               }}
             >
               <span style={{ fontSize: 32, fontWeight: 700, color: "#00B3FF" }}>
-                Practice
+                Find
               </span>
             </div>
             <div
@@ -160,7 +160,7 @@ export default async function Image() {
               }}
             >
               <span style={{ fontSize: 32, fontWeight: 700, color: "#2DFF8E" }}>
-                Coach
+                Qualify
               </span>
             </div>
             <div
@@ -189,7 +189,7 @@ export default async function Image() {
               lineHeight: 1.5,
             }}
           >
-            Real-time voice practice, instant objection coaching, and AI call analysis — 10-50x cheaper than Gong.
+            7 AI agents that find leads, qualify prospects, and close deals — while you sleep.
           </div>
 
           {/* Bottom badge */}

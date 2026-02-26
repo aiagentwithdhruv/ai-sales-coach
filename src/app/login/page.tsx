@@ -149,7 +149,7 @@ function LoginForm() {
           <CardHeader className="text-center">
             <CardTitle className="text-xl text-platinum">Welcome Back</CardTitle>
             <p className="text-sm text-silver mt-1">
-              Sign in to continue to your AI Sales Coach
+              Sign in to your AI Sales Department
             </p>
           </CardHeader>
           <CardContent>

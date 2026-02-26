@@ -164,7 +164,10 @@ export const PAID_LIMITS: UsageLimits = {
   analyses_run: -1,
 };
 
-// ─── Legacy Compat (used by sales agent tools) ───────────────────────────
+// ─── @deprecated Legacy Module Pricing ─────────────────────────────────────
+// From the old per-module coaching pricing. Still imported by:
+// sales-agent-tools.ts, stripe.ts, stripe/checkout/route.ts
+// TODO: Migrate those files to TIERS and delete this section.
 
 export type ModuleSlug = "coaching" | "crm" | "calling" | "followups" | "analytics";
 

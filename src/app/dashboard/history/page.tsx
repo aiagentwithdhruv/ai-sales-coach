@@ -37,13 +37,13 @@ const TYPE_CONFIG: Record<
 > = {
   coach: {
     icon: MessageSquare,
-    label: "Coach",
+    label: "AI Chat",
     color: "text-neonblue",
     bg: "bg-neonblue/10",
   },
   practice: {
     icon: Mic,
-    label: "Practice",
+    label: "Simulation",
     color: "text-automationgreen",
     bg: "bg-automationgreen/10",
   },
@@ -118,7 +118,7 @@ export default function HistoryPage() {
           <div>
             <h1 className="text-2xl font-bold text-platinum flex items-center gap-2">
               <History className="h-6 w-6 text-neonblue" />
-              Session History
+              Activity History
             </h1>
             <p className="text-silver mt-1">
               Review your past coaching sessions and tool outputs
@@ -142,7 +142,7 @@ export default function HistoryPage() {
           <Card className="bg-onyx border-gunmetal">
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-platinum">{stats.total}</p>
-              <p className="text-xs text-mist">Total Sessions</p>
+              <p className="text-xs text-mist">Total Activities</p>
             </CardContent>
           </Card>
           <Card className="bg-onyx border-gunmetal">
@@ -205,7 +205,7 @@ export default function HistoryPage() {
           <Card className="bg-graphite border-gunmetal">
             <CardContent className="py-16 text-center">
               <History className="h-12 w-12 text-mist mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-platinum mb-2">No Sessions Yet</h3>
+              <h3 className="text-lg font-medium text-platinum mb-2">No Activity Yet</h3>
               <p className="text-sm text-silver">
                 Your coaching sessions, practice runs, and tool outputs will appear here automatically.
               </p>
@@ -345,7 +345,7 @@ export default function HistoryPage() {
                   <CardContent className="text-center py-16">
                     <History className="h-12 w-12 text-mist mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-platinum mb-2">
-                      Select a Session
+                      Select an Activity
                     </h3>
                     <p className="text-sm text-silver">
                       Click on a session to view details

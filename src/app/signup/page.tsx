@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Sparkles, Mail, Lock, User, ArrowRight, Loader2, AlertCircle, CheckCircle, ChevronDown, Mic, MessageSquare, Phone, Zap } from "lucide-react";
+import { Sparkles, Mail, Lock, User, ArrowRight, Loader2, AlertCircle, CheckCircle, ChevronDown, Mic, MessageSquare, Phone, Zap, UserSearch, Target, Globe, ChevronRight } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 
 export default function SignUpPage() {
   const [fullName, setFullName] = useState("");
@@ -21,6 +22,10 @@ export default function SignUpPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
+  const [showPersonalize, setShowPersonalize] = useState(false);
+  const [productDescription, setProductDescription] = useState("");
+  const [targetCustomer, setTargetCustomer] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState("");
   const router = useRouter();
   const supabase = getSupabaseClient();
 
@@ -52,6 +57,9 @@ export default function SignUpPage() {
         data: {
           full_name: fullName,
           phone: phoneNumber || undefined,
+          product_description: productDescription || undefined,
+          target_customer: targetCustomer || undefined,
+          website_url: websiteUrl || undefined,
         },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
@@ -139,26 +147,26 @@ export default function SignUpPage() {
         {/* Motivational headline */}
         <div className="text-center mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-platinum mb-2">
-            One step away from <span className="text-neonblue">closing more deals</span>
+            Your <span className="text-neonblue">AI sales department</span> awaits
           </h1>
           <p className="text-sm text-silver">
-            Join sales reps who practice smarter with AI
+            7 AI agents that find, qualify, and close deals. Set it up in 60 seconds.
           </p>
         </div>
 
         {/* What you get - mini feature pills */}
         <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neonblue/10 border border-neonblue/20">
-            <Mic className="h-3 w-3 text-neonblue" />
-            <span className="text-xs text-neonblue font-medium">Voice Practice</span>
+            <UserSearch className="h-3 w-3 text-neonblue" />
+            <span className="text-xs text-neonblue font-medium">AI Finds Leads</span>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-automationgreen/10 border border-automationgreen/20">
-            <MessageSquare className="h-3 w-3 text-automationgreen" />
-            <span className="text-xs text-automationgreen font-medium">AI Coach</span>
+            <Target className="h-3 w-3 text-automationgreen" />
+            <span className="text-xs text-automationgreen font-medium">AI Qualifies & Closes</span>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-warningamber/10 border border-warningamber/20">
-            <Phone className="h-3 w-3 text-warningamber" />
-            <span className="text-xs text-warningamber font-medium">Call Analysis</span>
+            <Zap className="h-3 w-3 text-warningamber" />
+            <span className="text-xs text-warningamber font-medium">24/7. Every Channel.</span>
           </div>
         </div>
 
@@ -166,7 +174,7 @@ export default function SignUpPage() {
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-xl text-platinum">Create your account</CardTitle>
             <p className="text-sm text-silver mt-1">
-              Free forever. No credit card needed.
+              14-day free trial. No credit card required.
             </p>
           </CardHeader>
           <CardContent>
@@ -224,6 +232,61 @@ export default function SignUpPage() {
                       disabled={isLoading}
                     />
                   </div>
+                </div>
+
+                {/* Personalize your AI — collapsible ICP fields */}
+                <div className="border border-gunmetal/60 rounded-lg overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setShowPersonalize(!showPersonalize)}
+                    className="w-full flex items-center justify-between px-3 py-2.5 text-sm text-silver hover:text-platinum transition-colors"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Sparkles className="h-3.5 w-3.5 text-neonblue" />
+                      Personalize your AI (optional)
+                    </span>
+                    <ChevronRight className={cn("h-4 w-4 transition-transform", showPersonalize && "rotate-90")} />
+                  </button>
+                  {showPersonalize && (
+                    <div className="px-3 pb-3 space-y-3 border-t border-gunmetal/40">
+                      <div className="space-y-1.5 pt-3">
+                        <label className="text-xs text-mist">What do you sell?</label>
+                        <Input
+                          type="text"
+                          placeholder="e.g. CRM software for mid-market companies"
+                          value={productDescription}
+                          onChange={(e) => setProductDescription(e.target.value)}
+                          className="bg-onyx border-gunmetal text-platinum placeholder:text-mist/60 focus:border-neonblue text-sm"
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-mist">Who&apos;s your ideal customer?</label>
+                        <Input
+                          type="text"
+                          placeholder="e.g. VP Sales at 50-500 person SaaS companies"
+                          value={targetCustomer}
+                          onChange={(e) => setTargetCustomer(e.target.value)}
+                          className="bg-onyx border-gunmetal text-platinum placeholder:text-mist/60 focus:border-neonblue text-sm"
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-mist">Your website</label>
+                        <div className="relative">
+                          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-mist" />
+                          <Input
+                            type="url"
+                            placeholder="https://yourcompany.com"
+                            value={websiteUrl}
+                            onChange={(e) => setWebsiteUrl(e.target.value)}
+                            className="pl-9 bg-onyx border-gunmetal text-platinum placeholder:text-mist/60 focus:border-neonblue text-sm"
+                            disabled={isLoading}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -323,7 +386,7 @@ export default function SignUpPage() {
           <div className="w-px h-3 bg-gunmetal" />
           <div className="flex items-center gap-1.5">
             <Sparkles className="h-3.5 w-3.5 text-warningamber" />
-            <span className="text-xs">Free Trial</span>
+            <span className="text-xs">14-Day Trial</span>
           </div>
         </div>
       </div>
