@@ -54,7 +54,7 @@ export function DashboardLayout({
       <main
         className={`${sidebarExpanded ? "md:ml-[220px]" : "md:ml-[72px]"} pt-16 min-h-screen transition-[margin] duration-200`}
       >
-        <div className="p-4 md:p-6">{children}</div>
+        <div className="p-4 md:p-6 min-w-0 overflow-x-hidden">{children}</div>
       </main>
     </div>
   );

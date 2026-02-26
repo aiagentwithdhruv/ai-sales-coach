@@ -115,7 +115,7 @@ export function Sidebar({
 
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 h-screen flex flex-col bg-graphite border-r border-gunmetal transition-all duration-200",
+          "fixed left-0 top-0 z-40 h-screen flex flex-col bg-graphite border-r border-gunmetal transition-[width] duration-200 overflow-hidden",
           sidebarWidth,
           mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
@@ -173,7 +173,7 @@ export function Sidebar({
                     href={item.href}
                     onClick={handleLinkClick}
                     className={cn(
-                      "sidebar-glow flex items-center gap-3 rounded-lg transition-all duration-200 my-0.5",
+                      "sidebar-glow flex items-center gap-3 rounded-lg transition-all duration-200 my-0.5 whitespace-nowrap",
                       expanded ? "h-9 px-3 mx-2" : "h-10 w-10 justify-center mx-auto",
                       active
                         ? "bg-neonblue/10 text-neonblue"
@@ -185,7 +185,7 @@ export function Sidebar({
                       <span className="text-[13px] font-medium truncate">{item.label}</span>
                     )}
                     {active && expanded && (
-                      <div className="ml-auto w-1.5 h-1.5 rounded-full bg-neonblue" />
+                      <div className="ml-auto w-1.5 h-1.5 rounded-full bg-neonblue shrink-0" />
                     )}
                   </Link>
                 );

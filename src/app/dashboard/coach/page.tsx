@@ -34,6 +34,7 @@ import {
   Key,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { VoiceInput } from "@/components/ui/voice-input";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Link from "next/link";
@@ -437,7 +438,7 @@ export default function CoachPage() {
               AI Sales Assistant
             </h1>
             <p className="text-silver mt-1">
-              Get AI-powered responses to handle any sales objection
+              Your AI teammate for objections, scripts, strategies, and deal advice
             </p>
           </div>
 
@@ -526,15 +527,15 @@ export default function CoachPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-w-0">
           {/* Main Input & Response Area */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-6 min-w-0">
             {/* Input Card */}
             <Card className="bg-graphite border-gunmetal">
               <CardHeader>
                 <CardTitle className="text-platinum flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-neonblue" />
-                  What objection are you facing?
+                  Ask your AI anything about sales
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -542,7 +543,7 @@ export default function CoachPage() {
                   <Textarea
                     value={objection}
                     onChange={(e) => setObjection(e.target.value)}
-                    placeholder='e.g., "Your product is too expensive for our budget..."'
+                    placeholder='e.g., "How do I handle price objections?", "Write a cold email for SaaS CTOs", "Help me prep for a demo"'
                     className="min-h-[100px] bg-onyx border-gunmetal text-platinum placeholder:text-mist focus:border-neonblue"
                   />
 
@@ -636,23 +637,31 @@ export default function CoachPage() {
                       <Cpu className="h-3 w-3" />
                       Using: {currentModel?.name} {currentModel && <span className={API_INFO[currentModel.api].color}>({API_INFO[currentModel.api].label})</span>}
                     </div>
-                    <Button
-                      type="submit"
-                      disabled={!objection.trim() || isLoading}
-                      className="bg-neonblue hover:bg-electricblue text-white"
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="h-4 w-4 mr-2" />
-                          Ask AI
-                        </>
-                      )}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <VoiceInput
+                        mode="transcribe"
+                        onTranscript={(text) => setObjection((prev) => prev ? `${prev} ${text}` : text)}
+                        size="md"
+                        placeholder="Speak your question..."
+                      />
+                      <Button
+                        type="submit"
+                        disabled={!objection.trim() || isLoading}
+                        className="bg-neonblue hover:bg-electricblue text-white"
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="h-4 w-4 mr-2" />
+                            Ask AI
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </form>
               </CardContent>

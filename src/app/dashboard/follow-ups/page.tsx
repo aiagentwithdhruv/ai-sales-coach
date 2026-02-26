@@ -601,9 +601,9 @@ function FollowUpsPageInner() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-w-0">
         {/* ===== LEFT: Main Input & Response (2 columns) ===== */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-6 min-w-0">
           {/* Input Form */}
           <Card className="bg-graphite border-gunmetal">
             <CardHeader>
@@ -964,7 +964,7 @@ function FollowUpsPageInner() {
         </div>
 
         {/* ===== RIGHT: Follow-up Queue Sidebar (1 column) ===== */}
-        <div className="lg:col-span-1 space-y-4">
+        <div className="lg:col-span-1 space-y-4 min-w-0">
           {/* Queue Card */}
           <Card className="bg-graphite border-gunmetal">
             <CardHeader>
