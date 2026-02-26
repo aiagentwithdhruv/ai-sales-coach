@@ -8,6 +8,8 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
+import { quickActivateSchema, validateBody } from "@/lib/validation";
+import { adminRateLimit } from "@/lib/rate-limit";
 
 const ADMIN_EMAILS = [
   "aiwithdhruv@gmail.com",
@@ -53,16 +55,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // Parse request body
-    const body = await req.json();
-    const { email, valid_until } = body;
+    // Rate limit admin actions
+    const rateLimited = adminRateLimit(user.id);
+    if (rateLimited) return rateLimited;
 
-    if (!email) {
-      return new Response(
-        JSON.stringify({ error: "email is required" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
+    // Parse and validate request body
+    const body = await req.json();
+    const validation = validateBody(body, quickActivateSchema);
+    if (!validation.success) return validation.response;
+    const { email, valid_until } = validation.data;
 
     // Find user by email
     const { data: userList, error: searchError } = await supabase.auth.admin.listUsers();

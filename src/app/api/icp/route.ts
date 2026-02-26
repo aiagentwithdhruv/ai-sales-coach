@@ -11,6 +11,7 @@
 
 import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { icpUpdateSchema, validateBody } from "@/lib/validation";
 
 const json = { "Content-Type": "application/json" };
 
@@ -66,6 +67,9 @@ export async function PUT(req: NextRequest) {
   }
 
   const body = await req.json();
+  const validation = validateBody(body, icpUpdateSchema);
+  if (!validation.success) return validation.response;
+
   const {
     product_description,
     target_customer,
@@ -75,7 +79,7 @@ export async function PUT(req: NextRequest) {
     deal_size,
     channels,
     icp_template_id,
-  } = body;
+  } = validation.data;
 
   const supabase = getAdmin();
 

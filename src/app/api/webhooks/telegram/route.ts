@@ -14,12 +14,17 @@ export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
-    // Verify the request is from Telegram (optional secret token)
+    // Verify the request is from Telegram via secret token
     const secretToken = req.headers.get("x-telegram-bot-api-secret-token");
     const expectedToken = process.env.TELEGRAM_WEBHOOK_SECRET;
 
     if (expectedToken && secretToken !== expectedToken) {
+      console.warn("[Telegram Webhook] Invalid secret token");
       return new Response("Unauthorized", { status: 401 });
+    }
+
+    if (!expectedToken && process.env.NODE_ENV === "production") {
+      console.warn("[Telegram Webhook] No TELEGRAM_WEBHOOK_SECRET set in production");
     }
 
     const update = await req.json();

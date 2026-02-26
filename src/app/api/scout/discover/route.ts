@@ -18,6 +18,7 @@ import { resolveUserKeys } from "@/lib/ai/key-resolver";
 import { createContact, authenticateUser } from "@/lib/crm/contacts";
 import { checkUsage, incrementUsage } from "@/lib/usage";
 import { createClient } from "@supabase/supabase-js";
+import { scoutDiscoverSchema, validateBody } from "@/lib/validation";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -47,9 +48,11 @@ export async function POST(req: NextRequest) {
       return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: json });
     }
 
-    // Check usage
+    // Validate and check usage
     const body = await req.json().catch(() => ({}));
-    const count = Math.min(Math.max(body.count || 10, 1), 50);
+    const validation = validateBody(body, scoutDiscoverSchema);
+    if (!validation.success) return validation.response;
+    const count = validation.data.count;
 
     const usage = await checkUsage(auth.userId, "contacts_created", count);
     if (!usage.allowed) {

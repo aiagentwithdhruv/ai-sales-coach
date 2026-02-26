@@ -9,6 +9,7 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createApiKey, listApiKeys, revokeApiKey } from "@/lib/api-keys";
+import { createApiKeySchema, validateBody } from "@/lib/validation";
 
 export const runtime = "nodejs";
 
@@ -61,14 +62,10 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, environment, scopes, ipWhitelist, expiresInDays } = body;
+    const validation = validateBody(body, createApiKeySchema);
+    if (!validation.success) return validation.response;
 
-    if (!name) {
-      return new Response(
-        JSON.stringify({ error: "name is required" }),
-        { status: 400, headers: json }
-      );
-    }
+    const { name, environment, scopes, ipWhitelist, expiresInDays } = validation.data;
 
     const result = await createApiKey(user.id, name, {
       environment,

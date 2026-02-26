@@ -7,6 +7,8 @@
 
 import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { impersonateSchema, validateBody } from "@/lib/validation";
+import { adminRateLimit } from "@/lib/rate-limit";
 
 const json = { "Content-Type": "application/json" };
 
@@ -45,12 +47,14 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ error: admin.error }), { status: 403, headers: json });
   }
 
-  const body = await req.json();
-  const { email } = body;
+  // Rate limit admin actions
+  const rateLimited = adminRateLimit(admin.email);
+  if (rateLimited) return rateLimited;
 
-  if (!email) {
-    return new Response(JSON.stringify({ error: "email is required" }), { status: 400, headers: json });
-  }
+  const body = await req.json();
+  const validation = validateBody(body, impersonateSchema);
+  if (!validation.success) return validation.response;
+  const { email } = validation.data;
 
   const supabase = getAdmin();
 

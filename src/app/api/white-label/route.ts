@@ -16,6 +16,11 @@ import {
   addAgencyClient,
   getAgencyRevenue,
 } from "@/lib/white-label";
+import {
+  whiteLabelConfigSchema,
+  addAgencyClientSchema,
+  validateBody,
+} from "@/lib/validation";
 
 export const runtime = "nodejs";
 
@@ -74,7 +79,9 @@ export async function PUT(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const updated = await updateWhiteLabelConfig(user.id, body);
+    const validation = validateBody(body, whiteLabelConfigSchema);
+    if (!validation.success) return validation.response;
+    const updated = await updateWhiteLabelConfig(user.id, validation.data);
 
     return new Response(
       JSON.stringify({ success: true, config: updated }),
@@ -102,19 +109,14 @@ export async function POST(req: NextRequest) {
     const { action } = body;
 
     if (action === "add_client") {
-      const { name, email, monthlyFee, commissionPercent } = body;
-      if (!name || !email) {
-        return new Response(
-          JSON.stringify({ error: "name and email are required" }),
-          { status: 400, headers: json }
-        );
-      }
+      const validation = validateBody(body, addAgencyClientSchema);
+      if (!validation.success) return validation.response;
 
       const client = await addAgencyClient(user.id, {
-        name,
-        email,
-        monthlyFee,
-        commissionPercent,
+        name: validation.data.name,
+        email: validation.data.email,
+        monthlyFee: validation.data.monthlyFee,
+        commissionPercent: validation.data.commissionPercent,
       });
 
       return new Response(

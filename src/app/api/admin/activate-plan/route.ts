@@ -7,6 +7,8 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest } from "next/server";
+import { activatePlanSchema, validateBody } from "@/lib/validation";
+import { adminRateLimit } from "@/lib/rate-limit";
 
 const ADMIN_EMAILS = [
   "aiwithdhruv@gmail.com",
@@ -52,20 +54,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Parse request body
+    // Rate limit admin actions
+    const rateLimited = adminRateLimit(user.id);
+    if (rateLimited) return rateLimited;
+
+    // Parse and validate request body
     const body = await req.json();
-    const { user_id, tier, valid_until } = body;
+    const validation = validateBody(body, activatePlanSchema);
+    if (!validation.success) return validation.response;
 
-    if (!user_id) {
-      return new Response(
-        JSON.stringify({ error: "user_id is required" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // Default: growth tier, valid for 6 months
-    const validTiers = ["starter", "growth", "enterprise"];
-    const planType = validTiers.includes(tier) ? tier : "growth";
+    const { user_id, tier, valid_until } = validation.data;
+    const planType = tier || "growth";
     const periodEnd = valid_until || new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
 
     // Upsert subscription

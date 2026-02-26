@@ -6,6 +6,7 @@ import {
 } from "@/lib/crm/contacts";
 import { logActivity } from "@/lib/crm/activities";
 import { inngest } from "@/inngest/client";
+import { createContactSchema, validateBody } from "@/lib/validation";
 import type { ContactFilters, DealStage } from "@/types/crm";
 
 const jsonHeaders = { "Content-Type": "application/json" };
@@ -45,14 +46,10 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  if (!body.first_name) {
-    return new Response(
-      JSON.stringify({ error: "first_name is required" }),
-      { status: 400, headers: jsonHeaders }
-    );
-  }
+  const validation = validateBody(body, createContactSchema);
+  if (!validation.success) return validation.response;
 
-  const contact = await createContact(auth.userId, body);
+  const contact = await createContact(auth.userId, validation.data);
   if (!contact) {
     return new Response(
       JSON.stringify({ error: "Failed to create contact" }),

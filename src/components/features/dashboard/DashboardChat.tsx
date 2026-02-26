@@ -10,6 +10,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useChat } from "ai/react";
+import DOMPurify from "dompurify";
 import { getAuthToken } from "@/lib/auth-token";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -247,13 +248,19 @@ function AssistantMessage({ content }: { content: string }) {
 }
 
 function simpleMarkdown(text: string): string {
-  return text
+  const raw = text
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
+    .replace(/\[(.*?)\]\(((?:\/|https?:\/\/)[^\s)]*)\)/g, '<a href="$2" rel="noopener noreferrer">$1</a>')
     .replace(/^- (.*)/gm, "<li>$1</li>")
     .replace(/(<li>.*<\/li>\n?)+/g, "<ul>$&</ul>")
     .replace(/\n\n/g, "<br/><br/>")
     .replace(/\n/g, "<br/>");
+
+  return DOMPurify.sanitize(raw, {
+    ALLOWED_TAGS: ["strong", "a", "li", "ul", "br"],
+    ALLOWED_ATTR: ["href", "rel"],
+    ALLOW_DATA_ATTR: false,
+  });
 }
 
 /** Extract suggested action links from the AI response */
@@ -264,7 +271,7 @@ function extractSuggestedActions(
   const actionsSection = content.split(/\*\*Suggested Actions:\*\*/i)[1];
   if (!actionsSection) return actions;
 
-  const linkRegex = /\[(.*?)\]\((\/[^\s)]+)\)/g;
+  const linkRegex = /\[(.*?)\]\((\/[a-zA-Z0-9\-_/?.=&]+)\)/g;
   let match;
   while ((match = linkRegex.exec(actionsSection)) !== null) {
     actions.push({ label: match[1], href: match[2] });
