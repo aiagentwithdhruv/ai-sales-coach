@@ -41,7 +41,7 @@ export function FeedbackWidget() {
       {isOpen && (
         <div
           ref={panelRef}
-          className="fixed bottom-20 left-4 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[70vh] rounded-2xl bg-graphite border border-gunmetal shadow-2xl shadow-black/60 overflow-hidden flex flex-col"
+          className="fixed bottom-20 right-4 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[70vh] rounded-2xl bg-graphite border border-gunmetal shadow-2xl shadow-black/60 overflow-hidden flex flex-col"
           style={{ animation: "feedbackFadeInUp 0.25s ease-out" }}
         >
           {/* Header */}
@@ -119,7 +119,7 @@ export function FeedbackWidget() {
       {/* Floating button */}
       <button
         onClick={handleToggle}
-        className="fixed bottom-5 left-5 z-50 group"
+        className="fixed bottom-5 right-5 z-50 group"
         aria-label={isOpen ? "Close feedback" : "Give feedback"}
       >
         <style>{`
