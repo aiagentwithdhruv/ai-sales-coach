@@ -752,7 +752,7 @@ export default function CoachPage() {
           </div>
 
           {/* Quick Objections Sidebar */}
-          <div className="space-y-4 lg:sticky lg:top-6 overflow-hidden">
+          <div className="space-y-4 lg:sticky lg:top-6">
             <Card className="bg-graphite border-gunmetal">
               <CardHeader className="pb-3">
                 <CardTitle className="text-platinum text-base">
@@ -775,12 +775,10 @@ export default function CoachPage() {
                           onClick={() => handleQuickObjection(obj)}
                           className={cn(
                             "w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors",
-                            "text-silver hover:text-platinum hover:bg-onyx",
-                            "flex items-center justify-between group"
+                            "text-silver hover:text-platinum hover:bg-onyx group"
                           )}
                         >
-                          <span className="truncate">{obj}</span>
-                          <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          {obj}
                         </button>
                       ))}
                     </div>
