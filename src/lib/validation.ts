@@ -63,6 +63,9 @@ export const icpUpdateSchema = z.object({
 
 export const scoutDiscoverSchema = z.object({
   count: z.number().int().min(1).max(50).optional().default(10),
+  product_description: z.string().max(500).optional(),
+  target_customer: z.string().max(500).optional(),
+  website_url: z.string().max(200).optional(),
 });
 
 // ─── Developer API Keys ──────────────────────────────────────────────────────

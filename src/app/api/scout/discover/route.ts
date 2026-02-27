@@ -59,19 +59,30 @@ export async function POST(req: NextRequest) {
       return new Response(JSON.stringify({ error: usage.error }), { status: 402, headers: json });
     }
 
-    // Get user's ICP from metadata
-    const supabase = getAdmin();
-    const { data: { user } } = await supabase.auth.admin.getUserById(auth.userId);
-    if (!user) {
-      return new Response(JSON.stringify({ error: "User not found" }), { status: 404, headers: json });
-    }
+    // Get user's ICP — prefer body overrides, then fall back to user_metadata
+    const bodyProduct = validation.data.product_description;
+    const bodyCustomer = validation.data.target_customer;
+    const bodyWebsite = validation.data.website_url;
 
-    const meta = user.user_metadata || {};
-    const productDescription = meta.product_description;
-    const targetCustomer = meta.target_customer;
-    const websiteUrl = meta.website_url;
-    const industry = meta.industry;
-    const companySize = meta.company_size;
+    let productDescription = bodyProduct;
+    let targetCustomer = bodyCustomer;
+    let websiteUrl = bodyWebsite;
+    let industry: string | undefined;
+    let companySize: string | undefined;
+
+    // If not provided in body, try user_metadata
+    if (!productDescription && !targetCustomer) {
+      const supabase = getAdmin();
+      const { data: { user } } = await supabase.auth.admin.getUserById(auth.userId);
+      if (user) {
+        const meta = user.user_metadata || {};
+        productDescription = meta.product_description;
+        targetCustomer = meta.target_customer;
+        websiteUrl = websiteUrl || meta.website_url;
+        industry = meta.industry;
+        companySize = meta.company_size;
+      }
+    }
 
     if (!productDescription && !targetCustomer) {
       return new Response(

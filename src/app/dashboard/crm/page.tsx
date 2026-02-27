@@ -90,7 +90,12 @@ export default function CRMPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ count: scoutCount }),
+        body: JSON.stringify({
+          count: scoutCount,
+          product_description: localStorage.getItem("icp_product") || undefined,
+          target_customer: localStorage.getItem("icp_customer") || undefined,
+          website_url: localStorage.getItem("icp_website") || undefined,
+        }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -519,6 +524,23 @@ export default function CRMPage() {
             <SelectItem value="lost">
               <span className="text-errorred">Lost</span>
             </SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Per page selector */}
+        <Select
+          value={String(crm.filters.limit || 50)}
+          onValueChange={(v) => crm.updateFilters({ limit: Number(v), page: 1 })}
+        >
+          <SelectTrigger className="w-[90px] bg-graphite border-gunmetal text-platinum text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-graphite border-gunmetal">
+            {[10, 20, 50, 100].map((n) => (
+              <SelectItem key={n} value={String(n)}>
+                {n} / page
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
