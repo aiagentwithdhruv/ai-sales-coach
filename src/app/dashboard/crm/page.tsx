@@ -45,6 +45,9 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  Sparkles,
+  UserPlus,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -71,6 +74,38 @@ export default function CRMPage() {
   const [webhookInfo, setWebhookInfo] = useState<{ webhook_url: string; webhook_key: string; n8n_setup: Record<string, string> } | null>(null);
   const [webhookLoading, setWebhookLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showScout, setShowScout] = useState(false);
+  const [scoutLoading, setScoutLoading] = useState(false);
+  const [scoutCount, setScoutCount] = useState(10);
+  const [scoutResult, setScoutResult] = useState<{ count: number; message: string; error?: string } | null>(null);
+
+  const handleScoutDiscover = async () => {
+    setScoutLoading(true);
+    setScoutResult(null);
+    try {
+      const token = await getAuthToken();
+      const res = await fetch("/api/scout/discover", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ count: scoutCount }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setScoutResult({ count: data.count, message: data.message });
+        // Refresh CRM data to show new leads
+        crm.fetchContacts();
+        crm.fetchPipeline();
+      } else {
+        setScoutResult({ count: 0, message: data.error || "Failed to discover leads", error: data.error });
+      }
+    } catch {
+      setScoutResult({ count: 0, message: "Network error. Check your connection.", error: "Network error" });
+    }
+    setScoutLoading(false);
+  };
 
   // Fetch pipeline view on mount
   useEffect(() => {
@@ -215,6 +250,19 @@ export default function CRMPage() {
           </Button>
           <Button
             size="sm"
+            onClick={() => setShowScout(!showScout)}
+            className={cn(
+              "gap-2",
+              showScout
+                ? "bg-purple-600 hover:bg-purple-700 text-white"
+                : "bg-gradient-to-r from-purple-600 to-neonblue hover:from-purple-700 hover:to-electricblue text-white"
+            )}
+          >
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden sm:inline">Find Leads</span>
+          </Button>
+          <Button
+            size="sm"
             onClick={() => setShowQuickAdd(true)}
             className="bg-neonblue hover:bg-electricblue text-white gap-2"
           >
@@ -353,6 +401,84 @@ export default function CRMPage() {
             ) : (
               <p className="text-xs text-errorred">Failed to load webhook info. Try again.</p>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Scout AI Discovery Panel */}
+      {showScout && (
+        <Card className="bg-onyx border-purple-500/20">
+          <CardContent className="p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-purple-400" />
+                <h3 className="text-sm font-semibold text-platinum">Scout AI — Find Leads</h3>
+              </div>
+              <Button size="sm" variant="ghost" onClick={() => setShowScout(false)} className="h-7 w-7 p-0 text-silver">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-silver">
+              Scout AI uses your Ideal Customer Profile to discover matching companies and contacts. Leads are saved directly to your CRM.
+            </p>
+
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <label className="text-[10px] text-mist uppercase tracking-wider block mb-1">Number of leads</label>
+                <div className="flex items-center gap-2">
+                  {[10, 25, 50].map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setScoutCount(n)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                        scoutCount === n
+                          ? "bg-purple-600/20 text-purple-400 border border-purple-500/30"
+                          : "bg-graphite text-silver border border-gunmetal hover:border-silver/30"
+                      )}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <Button
+                onClick={handleScoutDiscover}
+                disabled={scoutLoading}
+                className="bg-gradient-to-r from-purple-600 to-neonblue hover:from-purple-700 hover:to-electricblue text-white gap-2"
+              >
+                {scoutLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Discovering...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-4 w-4" />
+                    Find {scoutCount} Leads
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {scoutResult && (
+              <div className={cn(
+                "p-3 rounded-lg text-sm",
+                scoutResult.error
+                  ? "bg-errorred/10 border border-errorred/20 text-errorred"
+                  : "bg-automationgreen/10 border border-automationgreen/20 text-automationgreen"
+              )}>
+                {scoutResult.error ? (
+                  <p>{scoutResult.message}</p>
+                ) : (
+                  <p>{scoutResult.message} — they&apos;re now in your pipeline below.</p>
+                )}
+              </div>
+            )}
+
+            <p className="text-[10px] text-mist">
+              Tip: Configure your ICP in Settings for better results. Scout uses your product description, target customer, and industry to find relevant leads.
+            </p>
           </CardContent>
         </Card>
       )}
