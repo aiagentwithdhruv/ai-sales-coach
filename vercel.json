@@ -1,4 +1,18 @@
 {
+  "functions": {
+    "src/app/api/ai/**/*.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/calling/**/*.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/scout/**/*.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/webhooks/**/*.ts": {
+      "maxDuration": 60
+    }
+  },
   "crons": [
     {
       "path": "/api/notifications/daily-summary",
