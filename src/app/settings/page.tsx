@@ -420,6 +420,13 @@ export default function SettingsPage() {
   const [tempEmail, setTempEmail] = useState("");
   const [profileSaved, setProfileSaved] = useState(false);
 
+  // ICP state (for Scout AI)
+  const [icpProduct, setIcpProduct] = useState("");
+  const [icpCustomer, setIcpCustomer] = useState("");
+  const [icpWebsite, setIcpWebsite] = useState("");
+  const [icpSaving, setIcpSaving] = useState(false);
+  const [icpSaved, setIcpSaved] = useState(false);
+
   // Subscription state
   const [loadingPortal, setLoadingPortal] = useState(false);
   const [currentPlan, setCurrentPlan] = useState("free");
@@ -615,6 +622,20 @@ export default function SettingsPage() {
     if (savedName) setProfileName(savedName);
     if (savedEmail) setProfileEmail(savedEmail);
 
+    // Load ICP from Supabase user_metadata
+    const loadICP = async () => {
+      try {
+        const supabase = getSupabaseClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.user_metadata) {
+          setIcpProduct(user.user_metadata.product_description || "");
+          setIcpCustomer(user.user_metadata.target_customer || "");
+          setIcpWebsite(user.user_metadata.website_url || "");
+        }
+      } catch { /* silent */ }
+    };
+    loadICP();
+
     // Fetch API keys and usage (trial + plan info loaded from DB via fetchUsageData)
     fetchUserKeys();
     fetchUsageData();
@@ -669,6 +690,26 @@ export default function SettingsPage() {
     setIsEditingProfile(false);
     setTempName("");
     setTempEmail("");
+  };
+
+  // Save ICP to Supabase user_metadata
+  const handleSaveICP = async () => {
+    setIcpSaving(true);
+    try {
+      const supabase = getSupabaseClient();
+      await supabase.auth.updateUser({
+        data: {
+          product_description: icpProduct.trim(),
+          target_customer: icpCustomer.trim(),
+          website_url: icpWebsite.trim(),
+        },
+      });
+      setIcpSaved(true);
+      setTimeout(() => setIcpSaved(false), 2000);
+    } catch {
+      // silent
+    }
+    setIcpSaving(false);
   };
 
   // Helper: get key info for a provider
@@ -1362,6 +1403,66 @@ export default function SettingsPage() {
                     </Button>
                   </>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* ICP — Scout AI Config */}
+            <Card className="bg-graphite border-purple-500/20">
+              <CardHeader>
+                <CardTitle className="text-platinum flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-purple-400" />
+                    Scout AI — ICP
+                  </span>
+                  {icpSaved && (
+                    <span className="text-xs text-automationgreen flex items-center gap-1">
+                      <Check className="h-3 w-3" /> Saved
+                    </span>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-xs text-silver">
+                  Scout AI uses this to find matching leads. The more detail, the better.
+                </p>
+                <div>
+                  <label className="text-xs text-mist mb-1 block">What do you sell?</label>
+                  <Input
+                    value={icpProduct}
+                    onChange={(e) => setIcpProduct(e.target.value)}
+                    placeholder="e.g., AI sales automation for B2B SaaS"
+                    className="bg-onyx border-gunmetal text-platinum text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-mist mb-1 block">Who&apos;s your ideal customer?</label>
+                  <Input
+                    value={icpCustomer}
+                    onChange={(e) => setIcpCustomer(e.target.value)}
+                    placeholder="e.g., SaaS founders, 10-100 employees, $1M+ revenue"
+                    className="bg-onyx border-gunmetal text-platinum text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-mist mb-1 block">Your website</label>
+                  <Input
+                    value={icpWebsite}
+                    onChange={(e) => setIcpWebsite(e.target.value)}
+                    placeholder="e.g., quotahit.com"
+                    className="bg-onyx border-gunmetal text-platinum text-sm"
+                  />
+                </div>
+                <Button
+                  onClick={handleSaveICP}
+                  disabled={icpSaving || (!icpProduct.trim() && !icpCustomer.trim())}
+                  className="w-full bg-gradient-to-r from-purple-600 to-neonblue hover:from-purple-700 hover:to-electricblue text-white"
+                >
+                  {icpSaving ? (
+                    <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Saving...</>
+                  ) : (
+                    <><Check className="h-4 w-4 mr-1" /> Save ICP</>
+                  )}
+                </Button>
               </CardContent>
             </Card>
 
