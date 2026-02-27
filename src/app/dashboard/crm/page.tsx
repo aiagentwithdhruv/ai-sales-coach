@@ -601,14 +601,35 @@ export default function CRMPage() {
       )}
 
       {/* Loading */}
-      {crm.isLoading && (
+      {crm.isLoading && !crm.error && (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-neonblue" />
         </div>
       )}
 
+      {/* Error State */}
+      {crm.error && (
+        <Card className="bg-onyx border-errorred/20">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="h-12 w-12 rounded-full bg-errorred/10 flex items-center justify-center mb-4">
+              <Target className="h-6 w-6 text-errorred" />
+            </div>
+            <h3 className="text-lg text-platinum font-medium mb-1">Connection Issue</h3>
+            <p className="text-sm text-silver mb-4 max-w-sm">
+              {crm.error}
+            </p>
+            <Button
+              onClick={() => { crm.fetchPipeline(); crm.fetchContacts(); }}
+              className="bg-neonblue hover:bg-electricblue text-white gap-2"
+            >
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Pipeline View */}
-      {!crm.isLoading && view === "pipeline" && (
+      {!crm.isLoading && !crm.error && view === "pipeline" && (
         <PipelineBoard
           pipeline={crm.pipeline}
           onStageChange={handleStageChange}
@@ -617,7 +638,7 @@ export default function CRMPage() {
       )}
 
       {/* List View */}
-      {!crm.isLoading && view === "list" && (
+      {!crm.isLoading && !crm.error && view === "list" && (
         <ContactsTable
           contacts={crm.contacts}
           filters={crm.filters}

@@ -30,14 +30,29 @@ const API_BASE = "/api/contacts";
 async function authFetch(url: string, options: RequestInit = {}) {
   const token = await getAuthToken();
   if (!token) throw new Error("Not authenticated");
-  return fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      ...options.headers,
-    },
-  });
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+
+  try {
+    const res = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        ...options.headers,
+      },
+    });
+    return res;
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error("Request timed out. Check your connection.");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export function useCRM(initialFilters?: ContactFilters) {
