@@ -426,6 +426,7 @@ export default function SettingsPage() {
   const [icpWebsite, setIcpWebsite] = useState("");
   const [icpSaving, setIcpSaving] = useState(false);
   const [icpSaved, setIcpSaved] = useState(false);
+  const [icpError, setIcpError] = useState<string | null>(null);
 
   // Subscription state
   const [loadingPortal, setLoadingPortal] = useState(false);
@@ -622,15 +623,24 @@ export default function SettingsPage() {
     if (savedName) setProfileName(savedName);
     if (savedEmail) setProfileEmail(savedEmail);
 
-    // Load ICP from Supabase user_metadata
+    // Load ICP — localStorage first (instant), then session metadata
+    const lsProduct = localStorage.getItem("icp_product");
+    const lsCustomer = localStorage.getItem("icp_customer");
+    const lsWebsite = localStorage.getItem("icp_website");
+    if (lsProduct) setIcpProduct(lsProduct);
+    if (lsCustomer) setIcpCustomer(lsCustomer);
+    if (lsWebsite) setIcpWebsite(lsWebsite);
+
+    // Also try session (has updated metadata from Supabase cookie)
     const loadICP = async () => {
       try {
         const supabase = getSupabaseClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.user_metadata) {
-          setIcpProduct(user.user_metadata.product_description || "");
-          setIcpCustomer(user.user_metadata.target_customer || "");
-          setIcpWebsite(user.user_metadata.website_url || "");
+        const { data: { session } } = await supabase.auth.getSession();
+        const meta = session?.user?.user_metadata;
+        if (meta) {
+          if (meta.product_description) setIcpProduct(meta.product_description);
+          if (meta.target_customer) setIcpCustomer(meta.target_customer);
+          if (meta.website_url) setIcpWebsite(meta.website_url);
         }
       } catch { /* silent */ }
     };
@@ -692,22 +702,36 @@ export default function SettingsPage() {
     setTempEmail("");
   };
 
-  // Save ICP to Supabase user_metadata
+  // Save ICP to Supabase user_metadata (with 10s timeout)
   const handleSaveICP = async () => {
     setIcpSaving(true);
     try {
       const supabase = getSupabaseClient();
-      await supabase.auth.updateUser({
-        data: {
-          product_description: icpProduct.trim(),
-          target_customer: icpCustomer.trim(),
-          website_url: icpWebsite.trim(),
-        },
-      });
-      setIcpSaved(true);
-      setTimeout(() => setIcpSaved(false), 2000);
-    } catch {
-      // silent
+      const result = await Promise.race([
+        supabase.auth.updateUser({
+          data: {
+            product_description: icpProduct.trim(),
+            target_customer: icpCustomer.trim(),
+            website_url: icpWebsite.trim(),
+          },
+        }),
+        new Promise<{ error: { message: string } }>((_, reject) =>
+          setTimeout(() => reject(new Error("Save timed out. Supabase may be slow — try again.")), 10000)
+        ),
+      ]);
+      if (result && "error" in result && result.error) {
+        setIcpError(result.error.message);
+      } else {
+        // Save to localStorage as instant backup
+        localStorage.setItem("icp_product", icpProduct.trim());
+        localStorage.setItem("icp_customer", icpCustomer.trim());
+        localStorage.setItem("icp_website", icpWebsite.trim());
+        setIcpSaved(true);
+        setIcpError(null);
+        setTimeout(() => setIcpSaved(false), 2000);
+      }
+    } catch (err) {
+      setIcpError(err instanceof Error ? err.message : "Failed to save. Try again.");
     }
     setIcpSaving(false);
   };

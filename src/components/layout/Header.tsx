@@ -41,7 +41,12 @@ const ADMIN_EMAILS = [
 
 export function Header({ user, onMobileMenuToggle, sidebarExpanded = true, onSidebarToggle }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [profileName, setProfileName] = useState("");
+  const [profileName, setProfileName] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("profile_name") || "";
+    }
+    return "";
+  });
   const [profileEmail, setProfileEmail] = useState("");
   const [profileAvatar, setProfileAvatar] = useState<string | undefined>();
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
@@ -49,35 +54,49 @@ export function Header({ user, onMobileMenuToggle, sidebarExpanded = true, onSid
   const router = useRouter();
   const supabase = getSupabaseClient();
 
-  // Get user from Supabase auth only
+  // Get user from Supabase — session first (instant), then getUser for fresh data
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setSupabaseUser(user);
+    const loadUser = async () => {
+      // 1. Session (instant, from cookie — no network call)
+      const { data: { session } } = await supabase.auth.getSession();
+      const sessionUser = session?.user;
+      if (sessionUser) {
+        setSupabaseUser(sessionUser);
+        setProfileName(sessionUser.user_metadata?.full_name || sessionUser.email?.split("@")[0] || "User");
+        setProfileEmail(sessionUser.email || "");
+        setProfileAvatar(sessionUser.user_metadata?.avatar_url);
+      }
 
-      if (user) {
-        setProfileName(user.user_metadata?.full_name || user.email?.split("@")[0] || "User");
-        setProfileEmail(user.email || "");
-        setProfileAvatar(user.user_metadata?.avatar_url);
+      // 2. getUser (network call — may be slow, updates with fresh data)
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setSupabaseUser(user);
+          setProfileName(user.user_metadata?.full_name || user.email?.split("@")[0] || "User");
+          setProfileEmail(user.email || "");
+          setProfileAvatar(user.user_metadata?.avatar_url);
 
-        // Fetch plan validity
-        try {
-          const { data: subscription } = await supabase
-            .from("user_subscriptions")
-            .select("current_period_end")
-            .eq("user_id", user.id)
-            .maybeSingle();
+          // Fetch plan validity
+          try {
+            const { data: subscription } = await supabase
+              .from("user_subscriptions")
+              .select("current_period_end")
+              .eq("user_id", user.id)
+              .maybeSingle();
 
-          if (subscription?.current_period_end) {
-            setPlanValidUntil(subscription.current_period_end);
+            if (subscription?.current_period_end) {
+              setPlanValidUntil(subscription.current_period_end);
+            }
+          } catch {
+            // Plan not found or error, no worries
           }
-        } catch (err) {
-          // Plan not found or error, no worries
         }
+      } catch {
+        // Network call failed — session data is already loaded above
       }
     };
 
-    getUser();
+    loadUser();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
