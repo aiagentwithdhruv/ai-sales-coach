@@ -431,7 +431,7 @@ export default function CoachPage() {
     <DashboardLayout>
       <div className="p-6 space-y-6">
         {/* Page Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-platinum flex items-center gap-2">
               <MessageSquare className="h-6 w-6 text-neonblue" />
@@ -527,7 +527,7 @@ export default function CoachPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-w-0">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-w-0 items-start">
           {/* Main Input & Response Area */}
           <div className="lg:col-span-2 space-y-6 min-w-0">
             {/* Input Card */}
@@ -752,35 +752,35 @@ export default function CoachPage() {
           </div>
 
           {/* Quick Objections Sidebar */}
-          <div className="space-y-4">
+          <div className="space-y-4 lg:sticky lg:top-6 overflow-hidden">
             <Card className="bg-graphite border-gunmetal">
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <CardTitle className="text-platinum text-base">
                   Quick Objections
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 max-h-[60vh] overflow-y-auto">
                 {OBJECTION_CATEGORIES.map((category) => (
                   <div key={category.id}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span>{category.icon}</span>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-sm">{category.icon}</span>
                       <span className="text-sm font-medium text-platinum">
                         {category.name}
                       </span>
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                       {category.objections.map((obj) => (
                         <button
                           key={obj}
                           onClick={() => handleQuickObjection(obj)}
                           className={cn(
-                            "w-full text-left px-3 py-2 rounded-lg text-sm transition-colors",
+                            "w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors",
                             "text-silver hover:text-platinum hover:bg-onyx",
                             "flex items-center justify-between group"
                           )}
                         >
                           <span className="truncate">{obj}</span>
-                          <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </button>
                       ))}
                     </div>
@@ -793,7 +793,8 @@ export default function CoachPage() {
             <Card className="bg-onyx border-gunmetal">
               <CardContent className="p-4">
                 <h4 className="font-medium text-platinum mb-2 flex items-center gap-2">
-                  💡 Pro Tips
+                  <Lightbulb className="h-4 w-4 text-warningamber" />
+                  Pro Tips
                 </h4>
                 <ul className="space-y-2 text-xs text-silver">
                   <li>• Acknowledge the objection first</li>
