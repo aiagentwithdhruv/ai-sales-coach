@@ -143,7 +143,7 @@ export default async function BlogPage({
                 <Link key={post.id} href={`/blog/${post.slug}`} className="group">
                   <article className="h-full rounded-xl border border-gunmetal bg-graphite/50 hover:bg-graphite hover:border-neonblue/30 transition-all overflow-hidden">
                     {/* Hero image */}
-                    {post.hero_image_url && (
+                    {post.hero_image_url ? (
                       <div className="aspect-video bg-onyx overflow-hidden">
                         <img
                           src={post.hero_image_url}
@@ -151,10 +151,21 @@ export default async function BlogPage({
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
-                    )}
-                    {!post.hero_image_url && (
-                      <div className="aspect-video bg-gradient-to-br from-onyx to-graphite flex items-center justify-center">
-                        <BookOpen className="h-10 w-10 text-gunmetal" />
+                    ) : (
+                      <div
+                        className="aspect-video relative overflow-hidden flex items-end p-5"
+                        style={{
+                          background: `linear-gradient(135deg, ${
+                            ["#0f172a,#1e3a5f", "#1a0a2e,#2d1b69", "#0a1628,#164e63", "#1c1917,#78350f", "#0f1b0f,#166534"][
+                              post.id.charCodeAt(0) % 5
+                            ]
+                          })`,
+                        }}
+                      >
+                        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "24px 24px" }} />
+                        <p className="relative text-sm font-medium text-white/60 line-clamp-2 leading-snug">
+                          {post.title}
+                        </p>
                       </div>
                     )}
                     {/* Content */}
